@@ -1,5 +1,0 @@
-RewriteEngine on
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteCond %{REQUEST_FILENAME}\.png -f
-RewriteRule ^(.*)$ $1.png
-# Replace html with your file extension, eg: php, htm, asp
