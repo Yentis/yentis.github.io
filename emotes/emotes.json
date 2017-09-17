@@ -25,8 +25,8 @@
     "24": "yentisAngryDog.png",
     "25": "yentisTrumpWhew.png",
     "26": "yentisLegacyBlobPinged.png",
-    "27": "yentisBlobReach.png",
-    "28": "yentisLegacyBlobReach.png",
+    "27": "yentisBlobReached.png",
+    "28": "yentisLegacyBlobReached.png",
     "29": "yentisAwooGasm.png",
     "30": "yentisWink.png",
     "31": "yentisSip.png",
@@ -101,8 +101,8 @@
     "100": "yentisCEASEEVERYTHING.png",
     "101": "yentisDekuBang.gif",
     "102": "yentisPatHand.png",
-    "103": "yentisBlobReached.png",
-    "104": "yentisLegacyBlobReached.png",
+    "103": "yentisBlobReach.png",
+    "104": "yentisLegacyBlobReach.png",
 	"105": "yentisKannaNoLewd.png",
 	"106": "yentisKannaLooking.png"
 }
