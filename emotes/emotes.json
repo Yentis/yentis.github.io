@@ -91,7 +91,7 @@
     "90": "yentisBlobHyperSweat.png",
     "91": "yentisVeryTru.png",
     "92": "yentisVeryFals.png",
-    "93": "yentisTarnation.png",
+    "93": "yentisGmHammer.png",
     "94": "yentisAiGasm.png",
     "95": "yentisAiNani.png",
     "96": "yentisMeguGun.png",
@@ -120,5 +120,8 @@
 	"119": "yentisAquaCry3.png",
 	"120": "yentisPantsuCat.gif",
 	"121": "yentisFeelsJoyMan.png",
-	"122": "yentisGmHammer.png"
+	"122": "yentisAwooYeah.png",
+	"123": "yentisAwooFeelsRageMan.png",
+	"124": "yentisAwooJustRight.png",
+	"125": "yentisAwooFeelsgood.png"
 }
