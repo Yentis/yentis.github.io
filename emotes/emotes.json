@@ -76,7 +76,7 @@
     "75":"yentisPepoCallPolice.png",
     "76":"yentisPepoPolice.png",
     "77":"yentisAngeryCry.png",
-    "78":"yentisFeelsHappyHugged.png",
+    "78":"yentisFeelsHappyhugged.png",
     "79":"yentisWendySmug.png",
     "80":"yentisMeguAngry.png",
     "81":"yentisFetDoge.png",
@@ -175,5 +175,6 @@
     "174":"yentisKms.png",
     "175":"yentisKumiLove.png",
     "176":"yentisAwooAngryShake.gif",
-    "177":"yentisHyperAngryPing.gif"
+    "177":"yentisHyperAngryPing.gif",
+    "178":"yentisHug.png"
 }
