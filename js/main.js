@@ -104,16 +104,17 @@ document.querySelector('form').addEventListener('submit', function (event) {
    gitHub.repository.getContents('master', 'emotes/images', false, function (result1, result2) {
       emoteNumber = result2.length + 1;
       emoteName = document.getElementById('emotename').value;
+      var message = document.getElementById('message');
       var files = document.getElementById('file').files;
       var commitTitle = 'Adding new emote';
 
       uploadFiles(files, commitTitle)
           .then(function() {
-             alert('Your file has been saved correctly.');
+             message.innerHTML = 'Your file has been saved correctly. \n Restart Discord with CTRL + R or go <a href="https://yentis.github.io/emotes">here</a> to see your new emote.';
           })
           .catch(function(err) {
              console.error(err);
-             alert('Something went wrong. Please, try again.');
+             message.innerHTML = 'Something went wrong. Please, try again.';
           });
    });
 });
