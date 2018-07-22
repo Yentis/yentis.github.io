@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+   <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width" />
+      <title>Upload a new emote</title>
+      <link rel="stylesheet" href="css/style.css" />
+   </head>
+   <body>
+      <h1>Upload a new emote</h1>
+
+      <form action="/" method="POST">
+         <label for="file">Select your emote (png or gif):</label>
+         <input name="file" id="file" type="file" />
+         <label for="emotename">Emote name:</label>
+         <input name="emotename" id="emotename" placeholder="yentisEmoteNameHere" type="text">
+         <input type="submit" />
+      </form>
+
+      <script src="dist.js" defer async></script>
+   </body>
+</html>
