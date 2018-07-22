@@ -35,7 +35,7 @@ function readFile(file) {
 
          gitHub.repository.getContents('master', 'emotes/emotes.json', false, function (result1, result2) {
             var oldJson = atob(result2.content);
-            var newJson = oldJson.substr(0, oldJson.length - 3) + ',\n    "' + emoteNumber + '":"' + emoteName + extension + '"' + '\n}';
+            var newJson = oldJson.substr(0, oldJson.length - 2) + ',\n    "' + emoteNumber + '":"' + emoteName + extension + '"' + '\n}';
 
             resolve({
                filename: 'emotes/images/' + emoteNumber + extension,
