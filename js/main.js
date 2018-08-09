@@ -9,7 +9,6 @@ var config = {
    branchName: 'master'
 };
 var gitHub = new GitHub(config);
-var emoteNumber;
 var emoteName;
 
 /**
@@ -36,6 +35,8 @@ function readFile(file) {
          gitHub.repository.getContents('master', 'emotes/emotes.json', false, function (result1, result2) {
             var oldJson = atob(result2.content);
             var jsonObj = JSON.parse(oldJson);
+            var emoteNumber = Object.keys(jsonObj).length + 1;
+
             jsonObj[emoteNumber] = emoteName + extension;
 
             var newJson = JSON.stringify(jsonObj);
@@ -104,19 +105,56 @@ function uploadFiles(files, commitTitle) {
 document.querySelector('form').addEventListener('submit', function (event) {
    event.preventDefault();
 
-   gitHub.repository.getContents('master', 'emotes/images', false, function (result1, result2) {
-      emoteNumber = result2.length + 1;
-      emoteName = document.getElementById('emotename').value;
-      var files = document.getElementById('file').files;
+   var message = document.getElementById('message');
+
+   document.getElementById("submit").disabled = true;
+   document.getElementById("message").innerHTML = 'Adding emote...';
+   emoteName = filterEmoteName(document.getElementById('emotename').value);
+
+   var files = document.getElementById('file').files;
+
+   if(files.length === 0) {
+      message.innerHTML = 'Please select an emote before submitting.';
+      resetSubmit();
+      return;
+   } else if(emoteName.length === 0) {
+      message.innerHTML = 'Please enter an emote name before submitting.';
+      resetSubmit();
+      return;
+   }
+
+   gitHub.repository.getContents('master', 'emotes/images', false, function () {
       var commitTitle = 'Adding new emote';
+
+      readFile(files[0]);
 
       uploadFiles(files, commitTitle)
           .then(function() {
-             document.getElementById('message').innerHTML = 'Your file has been saved correctly. \n Restart Discord with CTRL + R or go <a href="https://yentis.github.io/emotes">here</a> to see your new emote.';
+             message.innerHTML = 'Your file has been saved correctly. \n Restart Discord with CTRL + R or go <a href="https://yentis.github.io/emotes">here</a> to see your new emote.';
+             resetSubmit();
           })
           .catch(function(err) {
              console.error(err);
-             document.getElementById('message').innerHTML = 'Something went wrong. Please, try again.';
+             message.innerHTML = 'Something went wrong. Please, try again.';
+             resetSubmit();
           });
-   });
+   })
 });
+
+function resetSubmit() {
+   document.getElementById("submit").disabled = false;
+}
+
+function filterEmoteName(emoteName) {
+   if(emoteName.length === 0) {
+      return '';
+   } else {
+      if(emoteName.substring(0, 6) === 'yentis') {
+         emoteName = emoteName.substring(6, emoteName.length);
+      } else if(emoteName.substring(0, 4) === 'yent') {
+         emoteName = emoteName.substring(4, emoteName.length);
+      }
+
+      return 'yent' + emoteName.charAt(0).toUpperCase() + emoteName.slice(1);
+   }
+}
