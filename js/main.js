@@ -126,8 +126,6 @@ document.querySelector('form').addEventListener('submit', function (event) {
    gitHub.repository.getContents('master', 'emotes/images', false, function () {
       var commitTitle = 'Adding new emote';
 
-      readFile(files[0]);
-
       uploadFiles(files, commitTitle)
           .then(function() {
              message.innerHTML = 'Your file has been saved correctly. \n Restart Discord with CTRL + R or go <a href="https://yentis.github.io/emotes">here</a> to see your new emote.';
