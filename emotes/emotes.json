@@ -166,9 +166,9 @@
     "165": "yentKumiAngry.png",
     "166": "yentKumiWave.png",
     "167": "yentNotLikeAyano.png",
-    "168": "yentDestroyed1.png",
-    "169": "yentDestroyed2.png",
-    "170": "yentDestroyed3.png",
+    "168": "yentRooThink.png",
+    "169": "yentSansDab.gif",
+    "170": "yentSansDance.gif",
     "171": "yentBlobDance.gif",
     "172": "yentPepoSadDJ.png",
     "173": "yentTableSlam.gif",
@@ -245,8 +245,5 @@
     "244": "yentPepoShrug.png",
     "245": "yentPepoSweat.png",
     "246": "yentPepoWow2.png",
-    "247": "yentPepoYay4.png",
-    "248": "yentSansDab.gif",
-    "249": "yentSansDance.gif",
-    "250": "yentRooThink.png"
+    "247": "yentPepoYay4.png"
 }
