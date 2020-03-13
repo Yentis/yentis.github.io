@@ -56,7 +56,9 @@ $(document).ready(function () {
         container.appendChild(document.createElement('br'));
     }
 
-    $('#search').keyup(search);
+	const searchElement = $('#search');
+    searchElement.keyup(search);
+	searchElement.focus();
 
     function search() {
         let filter = $('#search')[0].value.toUpperCase();
