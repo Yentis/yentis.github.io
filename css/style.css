@@ -11,6 +11,7 @@ body {
 header {
    background-color: teal;
    margin-bottom: 10px;
+   text-align: center;
 }
 
 .mdl-textfield__label {
@@ -22,6 +23,7 @@ header {
    color: white;
 }
 
-#searchBox {
-   text-align: center;
+#mudae-inputs {
+   display: flex;
+   justify-content: space-evenly;
 }

@@ -61,7 +61,7 @@ $(document).ready(function () {
 	searchElement.focus();
 
     function search() {
-        let filter = $('#search')[0].value.toUpperCase();
+        let filter = searchElement[0].value.toUpperCase();
         let images = $('#list').children();
 
         for (let i = 0; i < images.length; i++) {
