@@ -23,7 +23,7 @@ $(document).ready(function () {
             const rank = rankText.substring(rankText.indexOf('#') + 1).trim();
             character = character.replace(rankText, '');
 
-            const kakeraMatch = character.substring(0, character.length - 1).trim().match(/\b\d+\b/g);
+            const kakeraMatch = character.substring(0, character.length - 1).trim().match(/\b\d+ ka\b/g);
             const kakera = (kakeraMatch !== null && kakeraMatch.length > 0) ? kakeraMatch[kakeraMatch.length - 1] : 0;
             character = character.replace(kakera + ' ka', '');
 
