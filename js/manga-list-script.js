@@ -104,8 +104,8 @@ function createBodyRowElement(item, bodyElement) {
   const siteTdElement = createTdElement(bodyRowElement)
   const siteElement = document.createElement('a')
   siteElement.href = `https://${item.site}`
-
-  siteTdElement.textContent = item.site
+  siteElement.textContent = item.site
+  siteTdElement.append(siteElement)
   
   const ratingTdElement = createTdElement(bodyRowElement)
   ratingTdElement.textContent = item.rating ? `${item.rating}/10` : '-'
