@@ -28,9 +28,9 @@ $(document).ready(function () {
       createHeaderElement('Title', headerRowElement)
       createHeaderElement('Progress', headerRowElement)
       createHeaderElement('Status', headerRowElement)
-      createHeaderElement('Rating', headerRowElement)
-      createHeaderElement('Notes', headerRowElement)
       createHeaderElement('Site', headerRowElement)
+      createHeaderElement('Notes', headerRowElement)
+      createHeaderElement('Rating', headerRowElement)
       
       const bodyElement = document.createElement('tbody')
       tableElement.append(bodyElement)
@@ -84,14 +84,14 @@ function createBodyRowElement(item, bodyElement) {
   const titleTdElement = createTdElement(bodyRowElement)
   const titleElement = document.createElement('a')
   titleElement.href = item.url
-  titleElement.textContent = item.title.replace('â��S', '\'')
+  titleElement.textContent = item.title
   titleTdElement.id = item.url
   titleTdElement.append(titleElement)
   
   const progressTdElement = createTdElement(bodyRowElement)
   if (item.readUrl) {
     const progressElement = document.createElement('a')
-    progressElement.href = item.readUrl.replace('â��S', '\'')
+    progressElement.href = item.readUrl
     progressElement.textContent = item.read
     progressTdElement.append(progressElement)
   } else {
