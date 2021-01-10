@@ -82,23 +82,36 @@ function createBodyRowElement(item, bodyElement) {
   imageTdElement.append(imageElement)
   
   const titleTdElement = createTdElement(bodyRowElement)
+  const titleElement = document.createElement('a')
+  titleElement.href = item.url
+  titleElement.textContent = item.title.replace('â��S', '\'')
   titleTdElement.id = item.url
-  titleTdElement.textContent = item.title
+  titleTdElement.append(titleElement)
   
   const progressTdElement = createTdElement(bodyRowElement)
-  progressTdElement.textContent = item.read
+  if (item.readUrl) {
+    const progressElement = document.createElement('a')
+    progressElement.href = item.readUrl.replace('â��S', '\'')
+    progressElement.textContent = item.read
+    progressTdElement.append(progressElement)
+  } else {
+    progressTdElement.textContent = item.read
+  }
   
   const statusTdElement = createTdElement(bodyRowElement)
   statusTdElement.textContent = item.status
+  
+  const siteTdElement = createTdElement(bodyRowElement)
+  const siteElement = document.createElement('a')
+  siteElement.href = `https://${item.site}`
+
+  siteTdElement.textContent = item.site
   
   const ratingTdElement = createTdElement(bodyRowElement)
   ratingTdElement.textContent = item.rating ? `${item.rating}/10` : '-'
   
   const notesTdElement = createTdElement(bodyRowElement)
   notesTdElement.textContent = item.notes ? item.notes : '-'
-  
-  const siteTdElement = createTdElement(bodyRowElement)
-  siteTdElement.textContent = item.site
 }
 
 function createTdElement(rowElement) {
