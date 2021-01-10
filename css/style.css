@@ -14,6 +14,10 @@ header {
    text-align: center;
 }
 
+table {
+   width: 100%
+}
+
 .mdl-textfield__label {
    color: white;
 }
