@@ -8,7 +8,7 @@ $(document).ready(function () {
   $.ajax({
     url: `https://gitlab.com/api/v4/snippets/${id}/raw`,
     success: (data) => {
-    	mangaList = atob(data)
+    	mangaList = Base64.decode(data)
       mangaList = mangaList.substring(mangaList.indexOf('['), mangaList.lastIndexOf(']') + 1)
       mangaList = JSON.parse(mangaList)
       
