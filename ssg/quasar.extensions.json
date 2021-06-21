@@ -1,0 +1,6 @@
+{
+  "ssg": {
+    "scripts": true,
+    "criticalCss": true
+  }
+}
