@@ -17,9 +17,9 @@ quasar dev
 yarn run lint
 ```
 
-### Build the app for production
+### Build the app
 ```bash
-quasar build
+yarn build:ssg
 ```
 
 ### Customize the configuration
