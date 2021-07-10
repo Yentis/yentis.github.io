@@ -113,8 +113,9 @@ export default defineComponent({
     const sortedBy = localStorage.getItem('sorted_by') || SortType.TITLE
     this.sortedBy = sortedBy as SortType
 
-    const id = this.$route.query.id as string
+    let id = this.$route.query.id as string
     if (id === undefined) return
+    if (id === '2059191') id = '2147898'
 
     axios.get(`https://gitlab.com/api/v4/snippets/${id}/raw`)
       .then(response => {
