@@ -47,11 +47,16 @@
       />
     </q-btn-dropdown>
 
+    <a
+      href="https://github.com/Yentis/manga-reader"
+      class="text-primary text-bold"
+    >Click here to make your own</a>
+
     <div class="q-mt-sm q-px-sm full-width" style="display: inline-block">
       <q-intersection
         v-for="manga in filteredMangaList"
         :key="manga.url"
-        class="q-mb-sm full-width manga-item"
+        class="q-mb-xs full-width manga-item"
       >
         <manga-item :mangaJson="JSON.stringify(manga)" />
       </q-intersection>
@@ -66,7 +71,7 @@ import { SortType } from 'src/enums/sorting'
 import axios from 'axios'
 import { Base64 } from 'js-base64'
 import { mangaSort } from 'src/service/sortService'
-import MangaItem from 'src/components/MangaItem.vue'
+import MangaItem from 'src/components/manga-item/MangaItem.vue'
 import { Status } from 'src/enums/status'
 
 export default defineComponent({
