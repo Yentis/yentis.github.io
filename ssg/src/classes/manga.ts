@@ -1,8 +1,9 @@
+import { SiteType } from 'src/enums/sites'
 import { Status } from 'src/enums/status'
 
 export class Manga {
   url: string
-  site: ''
+  site: SiteType
   chapter = 'Unknown'
   chapterNum = 0
   image = ''
@@ -17,7 +18,7 @@ export class Manga {
   notes: string | undefined
   rating: number | undefined
 
-  constructor (url: string, site: '') {
+  constructor (url: string, site: SiteType) {
     this.url = url
     this.site = site
     this.linkedSites = {}

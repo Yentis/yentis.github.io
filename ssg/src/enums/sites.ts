@@ -14,6 +14,7 @@ export enum SiteType {
   ManhwaClub = 'manhwa.club',
   MangaTx = 'mangatx.com',
   Mangago = 'mangago.me',
+  Kitsu = 'kitsu.io',
   SleepingKnightScans = 'skscans.com',
   ZeroScans = 'zeroscans.com',
   LynxScans = 'lynxscans.com',

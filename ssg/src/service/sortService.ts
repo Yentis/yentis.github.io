@@ -1,7 +1,36 @@
 import { Manga } from 'src/classes/manga'
 import { SortType } from 'src/enums/sorting'
+import { Status } from 'src/enums/status'
 
 export function mangaSort (a: Manga, b: Manga, sortedBy: SortType): number {
+  if ((a.status !== Status.READING || undefined) && (b.status === Status.READING || undefined)) {
+    return 1
+  }
+  if ((b.status !== Status.READING || undefined) && (a.status === Status.READING || undefined)) {
+    return -1
+  }
+
+  if (a.status === Status.DROPPED && b.status !== Status.DROPPED) {
+    return 1
+  }
+  if (b.status === Status.DROPPED && a.status !== Status.DROPPED) {
+    return -1
+  }
+
+  if (a.status === Status.PLAN_TO_READ && b.status !== Status.PLAN_TO_READ) {
+    return 1
+  }
+  if (b.status === Status.PLAN_TO_READ && a.status !== Status.PLAN_TO_READ) {
+    return -1
+  }
+
+  if (a.status === Status.ON_HOLD && b.status !== Status.ON_HOLD) {
+    return 1
+  }
+  if (b.status === Status.ON_HOLD && a.status !== Status.ON_HOLD) {
+    return -1
+  }
+
   switch (sortedBy) {
     case SortType.SITE:
       return sortSite(a, b)

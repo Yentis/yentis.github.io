@@ -73,6 +73,7 @@ import { Base64 } from 'js-base64'
 import { mangaSort } from 'src/service/sortService'
 import MangaItem from 'src/components/manga-item/MangaItem.vue'
 import { Status } from 'src/enums/status'
+import { SiteName } from 'src/enums/sites'
 
 export default defineComponent({
   name: 'PageManga',
@@ -93,9 +94,31 @@ export default defineComponent({
 
   computed: {
     filteredMangaList (): Manga[] {
-      return this.mangaList.filter(manga => {
-        return manga.title.toLowerCase().includes(this.searchValue.toLowerCase()) &&
-               this.filters.includes(manga.status)
+      return this.mangaList.filter((manga) => {
+        if (!this.filters.includes(manga.status)) return false
+
+        const searchWords = this.searchValue.split(' ')
+        let title = true
+        let notes = true
+        let site = true
+
+        return searchWords.every((word) => {
+          const lowerCaseWord = word.toLowerCase()
+
+          if (!manga.title.toLowerCase().includes(lowerCaseWord)) {
+            title = false
+          }
+
+          if (!manga.notes?.toLowerCase().includes(lowerCaseWord)) {
+            notes = false
+          }
+
+          if (!SiteName[manga.site].toLowerCase().includes(lowerCaseWord)) {
+            site = false
+          }
+
+          return title || notes || site
+        })
       }).sort((a, b) => {
         return mangaSort(a, b, this.sortedBy)
       })

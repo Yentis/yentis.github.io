@@ -5,8 +5,7 @@
       'on-hold-container': manga.status === status.ON_HOLD,
       'plan-to-read-container': manga.status === status.PLAN_TO_READ,
       'dropped-container': manga.status === status.DROPPED,
-      'unread-container': isUnread,
-      'read-container': manga.status === status.READING && !isUnread
+      'read-container': manga.status === status.READING
     }"
   >
     <q-card-section
@@ -129,13 +128,6 @@ export default defineComponent({
       status: Status,
       siteNames: SiteName,
       statusIcon: StatusIcon
-    }
-  },
-
-  methods: {
-    isUnread () {
-      return this.manga.status === Status.READING &&
-      !(this.manga.chapter === this.manga.read || (this.manga.readNum !== undefined && this.manga.chapterNum <= this.manga.readNum))
     }
   }
 })
