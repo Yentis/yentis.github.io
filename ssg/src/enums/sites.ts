@@ -23,7 +23,8 @@ export enum SiteType {
   EdelgardeScans = 'edelgardescans.com',
   Genkan = 'genkan.io',
   FlameScans = 'flamescans.org',
-  ResetScans = 'reset-scans.com'
+  ResetScans = 'reset-scans.com',
+  CatManga = 'catmanga.org'
 }
 
 export enum SiteName {
@@ -51,5 +52,6 @@ export enum SiteName {
   'edelgardescans.com' = 'Edelgarde Scans',
   'genkan.io' = 'Genkan',
   'flamescans.org' = 'Flame Scans',
-  'reset-scans.com' = 'Reset Scans'
+  'reset-scans.com' = 'Reset Scans',
+  'catmanga.org' = 'CatManga'
 }

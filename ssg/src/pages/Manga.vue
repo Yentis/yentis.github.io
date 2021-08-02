@@ -113,7 +113,7 @@ export default defineComponent({
             notes = false
           }
 
-          if (!SiteName[manga.site].toLowerCase().includes(lowerCaseWord)) {
+          if (!SiteName[manga.site]?.toLowerCase().includes(lowerCaseWord)) {
             site = false
           }
 
