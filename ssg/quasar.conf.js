@@ -208,6 +208,17 @@ module.exports = configure(function (ctx) {
           use: { loader: 'worker-loader' }
         })
       }
+    },
+
+    ssg: {
+      routes: [
+        '/emotes',
+        '/mangalist',
+        '/mangareader',
+        '/mangareader/redirect',
+        '/mangareader/redirect_gitlab',
+        '/mudae'
+      ]
     }
   }
 })
