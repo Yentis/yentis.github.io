@@ -18,7 +18,7 @@
     "@cliqz/adblocker-electron": "^1.22.2",
     "@quasar/cli": "^1.2.1",
     "@quasar/extras": "^1.0.0",
-    "axios": "^0.19.2",
+    "axios": "^0.21.2",
     "browserfs": "^1.4.3",
     "cheerio": "^1.0.0-rc.3",
     "core-js": "^3.6.5",
