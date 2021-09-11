@@ -17,6 +17,19 @@
     }
   }
 
+  .unread-container {
+    border: $unread-light 0.1em solid;
+    border-left: $unread-light 1em solid;
+
+    a {
+      color: $unread-light;
+    }
+
+    .status-text {
+      color: $unread-light;
+    }
+  }
+
   .completed-container {
     border: $completed 0.1em solid;
     border-left: $completed 1em solid;
@@ -69,6 +82,10 @@
     }
   }
 
+  .bg-unread {
+    background: $unread-light;
+  }
+
   .bg-button {
     background: $completed;
   }
@@ -94,6 +111,19 @@
 
     .status-text {
       color: $read;
+    }
+  }
+
+  .unread-container {
+    border: $unread 0.1em solid;
+    border-left: $unread 1em solid;
+
+    a {
+      color: $unread;
+    }
+
+    .status-text {
+      color: $unread;
     }
   }
 
@@ -147,6 +177,10 @@
     .status-text {
       color: $dropped;
     }
+  }
+
+  .bg-unread {
+    background: $unread;
   }
 
   .bg-button {

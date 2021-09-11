@@ -1,17 +1,25 @@
 <template>
   <q-page>
     <q-input
+      v-model="content"
       dense
       outlined
       autogrow
-      v-model="content"
       label="Enter content from the $mmlist (or variations of it) here"
       class="q-mt-sm q-px-sm full-width input-area"
       input-style="max-height: 5rem"
     >
-      <template v-slot:append>
-        <q-icon v-if="content === ''" name="navigate_next" />
-        <q-icon v-else name="clear" class="cursor-pointer" @click="content = ''" />
+      <template #append>
+        <q-icon
+          v-if="content === ''"
+          name="navigate_next"
+        />
+        <q-icon
+          v-else
+          name="clear"
+          class="cursor-pointer"
+          @click="content = ''"
+        />
       </template>
     </q-input>
 
@@ -21,14 +29,17 @@
         :key="index"
         class="intersection-item"
       >
-        <q-card  class="q-pa-xs">
+        <q-card class="q-pa-xs">
           <q-card-section class="q-pb-xs q-px-none q-pt-none text-center">
             <span class="text-bold">#{{ character.rank }}</span>
             <br>
             {{ character.name }}
           </q-card-section>
 
-          <img class="image" :src="character.url">
+          <img
+            class="image"
+            :src="character.url"
+          >
 
           <q-card-section class="q-pt-xs q-px-none q-pb-none text-center">
             {{ character.kakera }} ka
@@ -40,24 +51,20 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from '@vue/composition-api'
-import { Character } from 'src/classes/character'
+import { defineComponent, ref, Ref, watch } from 'vue'
+import { Character } from 'src/classes/mudae/character'
 
 export default defineComponent({
   name: 'PageMudae',
 
-  data () {
-    return {
-      characterList: [] as Character[],
-      content: ''
-    }
-  },
+  setup () {
+    const characterList: Ref<Character[]> = ref([])
+    const content = ref('')
 
-  watch: {
-    content (content: string) {
-      const lines = content.split('\n')
+    watch(content, (newContent: string) => {
+      const lines = newContent.split('\n')
 
-      const characterList = lines.filter(line => line.trim() !== '').map(line => {
+      const newCharacterList = lines.filter(line => line.trim() !== '').map(line => {
         const imageText = line.substring(line.lastIndexOf('-') + 1)
         const url = imageText.substring(1).trim()
         line = line.replace(imageText, '')
@@ -82,7 +89,12 @@ export default defineComponent({
         )
       })
 
-      this.characterList = characterList
+      characterList.value = newCharacterList
+    })
+
+    return {
+      characterList,
+      content
     }
   }
 })

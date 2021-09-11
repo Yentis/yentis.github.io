@@ -1,133 +1,469 @@
 <template>
   <q-card
     :class="{
-      'completed-container': manga.status === status.COMPLETED,
-      'on-hold-container': manga.status === status.ON_HOLD,
-      'plan-to-read-container': manga.status === status.PLAN_TO_READ,
-      'dropped-container': manga.status === status.DROPPED,
-      'read-container': manga.status === status.READING
+      'completed-container': mangaStatus === status.COMPLETED,
+      'on-hold-container': mangaStatus === status.ON_HOLD,
+      'plan-to-read-container': mangaStatus === status.PLAN_TO_READ,
+      'dropped-container': mangaStatus === status.DROPPED,
+      'unread-container': isUnread,
+      'read-container': mangaStatus === status.READING && !isUnread
     }"
   >
     <q-card-section
-      class="manga-item q-pa-none"
-      horizontal
+      class="q-pa-none"
     >
-      <q-img
-        contain
-        class="manga-image q-my-sm q-ml-xs q-mr-sm"
-        fit="scale-down"
-        :src="manga.image"
-      >
-        <template #error>
-          <q-icon
-            class="full-width full-height"
-            size="xl"
-            name="image_not_supported"
-          />
-        </template>
-      </q-img>
-
       <q-card-section
-        class="full-width q-pl-none q-pt-sm q-pb-none q-pr-sm column"
+        class="manga-item q-pa-none"
+        horizontal
       >
-        <q-card-section
-          horizontal
-          class="text-h6"
+        <q-img
+          contain
+          class="manga-image q-my-sm q-ml-xs q-mr-sm"
+          fit="scale-down"
+          :src="mangaImage"
+          @error="offerRefresh"
         >
-          <a
-            :href="manga.url"
-          >{{ manga.title }}</a>
-        </q-card-section>
-
-        <div>
-          <div
-            class="text-body2 manga-subtitle"
-          >
-            Progress:&nbsp; <a
-              v-if="manga.readUrl"
-              :href="manga.readUrl"
-            >{{ manga.read }}</a>
-            <span v-else>{{ manga.read }}</span>
-          </div>
-
-          <div
-            v-if="manga.notes"
-            class="text-body2 manga-subtitle"
-          >
-            Notes:&nbsp;&nbsp; <span>{{ manga.notes }}</span>
-          </div>
-
-          <q-rating
-            v-if="manga.rating"
-            v-model="manga.rating"
-            readonly
-            size="1em"
-            class="q-mt-sm"
-            :max="10"
-            :color="manga.rating > 6 ? 'positive' : manga.rating > 3 ? 'warning' : 'negative'"
-          />
-        </div>
-
-        <q-space />
+          <template #error>
+            <q-icon
+              class="full-width full-height"
+              size="xl"
+              name="image_not_supported"
+            />
+          </template>
+        </q-img>
 
         <q-card-section
-          horizontal
-          class="q-mb-sm"
+          class="full-width q-pl-none q-pt-sm q-pb-none q-pr-sm column"
         >
           <q-card-section
-            class="q-pa-none"
+            horizontal
+            :class="{ 'text-subtitle2': mobileView, 'text-h6': !mobileView }"
           >
-            <span
-              class="status-text"
-            >
-              {{ manga.status }}
-            </span>
+            <a
+              :href="url"
+              @click.prevent="navigate(url)"
+            >{{ mangaTitle }}</a>
+
+            <q-space />
+
+            <q-btn
+              v-if="editing"
+              flat
+              icon="close"
+              :size="itemSize"
+              @click="toggleEditing()"
+            />
+          </q-card-section>
+
+          <div v-if="!editing">
+            <div :class="{ 'text-caption': mobileView, 'text-body2': !mobileView, 'manga-subtitle': true }">
+              Read:&nbsp;&nbsp;&nbsp;&nbsp; <a
+                v-if="mangaReadUrl"
+                :href="mangaReadUrl"
+                @click.prevent="navigate(mangaReadUrl || '#')"
+              >{{ mangaRead }}</a>
+              <span v-else>{{ mangaRead }}</span>
+            </div>
+
+            <div :class="{ 'text-caption': mobileView, 'text-body2': !mobileView, 'manga-subtitle': true }">
+              Current: <a
+                v-if="mangaChapterUrl"
+                :href="mangaChapterUrl"
+                @click.prevent="navigate(mangaChapterUrl)"
+              >{{ mangaChapter }}</a>
+              <span v-else>{{ mangaChapter }}</span>
+            </div>
 
             <div
-              class="text-body2 end-self"
+              v-if="mangaNotes"
+              :class="{ 'text-caption': mobileView, 'text-body2': !mobileView, 'manga-subtitle': true }"
             >
-              <q-icon
-                class="q-mr-xs q-mb-xs"
-                :name="statusIcon[manga.status]"
-                size="xs"
-              />
-              <span>{{ siteNames[manga.site] }}</span>
+              Notes:&nbsp;&nbsp; <span>{{ mangaNotes }}</span>
             </div>
+
+            <div
+              v-if="mangaChapterDate"
+              :class="{ 'text-caption': mobileView, 'text-body2': !mobileView }"
+            >
+              {{ mangaChapterDate }}
+            </div>
+
+            <q-rating
+              v-if="mangaRating"
+              v-model="mangaRating"
+              readonly
+              size="1em"
+              class="q-mt-sm"
+              :max="10"
+              :color="mangaRating > 6 ? 'positive' : mangaRating > 3 ? 'warning' : 'negative'"
+            />
+          </div>
+
+          <div
+            v-if="editing"
+            style="max-width: 75%"
+          >
+            <q-input
+              v-model="newReadNum"
+              label="Read:"
+              stack-label
+              dense
+              class="q-mb-sm"
+            />
+
+            <q-input
+              v-model="newNotes"
+              stack-label
+              label="Notes:"
+              class="q-mb-sm"
+            />
+
+            <q-card-actions
+              class="q-px-none"
+            >
+              <q-input
+                v-model="newUrl"
+                stack-label
+                label="URL:"
+                class="q-mb-sm"
+                style="flex-grow: 1"
+              />
+
+              <q-btn
+                color="button"
+                text-color="button"
+                class="q-ml-xs"
+                padding="sm md"
+                icon="search"
+                :size="itemSize"
+                @click="openSearchDialog()"
+              />
+            </q-card-actions>
+          </div>
+
+          <q-space />
+
+          <q-card-section
+            horizontal
+            class="q-mb-sm"
+          >
+            <q-card-section
+              class="q-pa-none"
+            >
+              <q-card-section
+                v-if="!editing"
+                horizontal
+                class="status-text"
+              >
+                <span>{{ isUnread ? 'New Chapter' : mangaStatus }}</span>
+                <q-icon
+                  v-if="isUnread"
+                  class="q-ml-xs"
+                  name="celebration"
+                  size="xs"
+                />
+              </q-card-section>
+
+              <div
+                v-if="!editing"
+                :class="{ 'text-caption': mobileView, 'text-body2': !mobileView, 'end-self': true }"
+              >
+                <q-icon
+                  class="q-mr-xs q-mb-xs"
+                  :name="statusIcon[mangaStatus]"
+                  size="xs"
+                />
+                <span>{{ siteNames[mangaSite] }}</span>
+
+                <q-icon
+                  v-if="mangaShouldUpdate"
+                  class="q-ml-xs center-self"
+                  name="refresh"
+                  color="positive"
+                />
+                <q-icon
+                  class="q-ml-xs center-self"
+                  :name="hasLinkedSites ? 'link' : 'link_off'"
+                  :color="hasLinkedSites ? 'positive' : 'negative'"
+                />
+                <span
+                  v-for="(id, site) in mangaLinkedSites"
+                  :key="site"
+                  class="q-mx-xs"
+                >
+                  <q-img
+                    class="q-ma-none q-pa-none"
+                    height="1rem"
+                    width="1rem"
+                    :src="'https://' + site + '/favicon.ico'"
+                  >
+                    <template #error>
+                      <q-icon
+                        class="absolute-full full-height full-width"
+                        name="image_not_supported"
+                      />
+                    </template>
+                  </q-img>
+                </span>
+              </div>
+            </q-card-section>
+
+            <q-space />
+
+            <q-card-section
+              v-if="!editing"
+              horizontal
+              class="q-gutter-sm end-self"
+            >
+              <q-btn
+                color="button"
+                text-color="button"
+                padding="sm md"
+                icon="edit"
+                :size="itemSize"
+                @click="toggleEditing()"
+              />
+
+              <q-btn
+                v-if="isUnread"
+                color="unread"
+                text-color="button"
+                padding="sm md"
+                icon="done"
+                :size="itemSize"
+                @click="readManga()"
+              />
+            </q-card-section>
           </q-card-section>
         </q-card-section>
       </q-card-section>
+    </q-card-section>
+
+    <q-card-section
+      v-if="editing"
+      horizontal
+    >
+      <q-card-actions
+        align="left"
+        vertical
+      >
+        <q-checkbox
+          v-if="mangaStatus !== status.READING"
+          v-model="newShouldUpdate"
+          dense
+          class="q-mb-xs"
+          :size="itemSize"
+          label="Check on refresh"
+        />
+
+        <q-btn-dropdown
+          no-caps
+          class="editing-box"
+          :size="itemSize"
+          :label="newStatus"
+        >
+          <q-list
+            v-for="curStatus in Object.values(status)"
+            :key="curStatus"
+          >
+            <q-item
+              v-close-popup
+              clickable
+              class="center-items"
+              @click="newStatus = curStatus"
+            >
+              <q-icon
+                size="sm"
+                class="q-mr-sm"
+                :name="statusIcon[curStatus]"
+              />
+              <span class="full-width text-center">{{ curStatus }}</span>
+            </q-item>
+          </q-list>
+        </q-btn-dropdown>
+
+        <q-card-actions
+          class="q-pa-none"
+        >
+          <q-btn-dropdown
+            no-caps
+            class="editing-box q-mt-xs"
+            :label="'Rating: ' + newRating"
+            :size="itemSize"
+          >
+            <q-list
+              v-for="index in 10"
+              :key="index"
+            >
+              <q-item
+                v-close-popup
+                dense
+                clickable
+                @click="newRating = index"
+              >
+                <q-item-section>
+                  <q-item-label>{{ index }}</q-item-label>
+                </q-item-section>
+              </q-item>
+            </q-list>
+          </q-btn-dropdown>
+
+          <q-btn
+            v-if="newRating > 0"
+            flat
+            icon="close"
+            :size="itemSize"
+            @click="newRating = 0"
+          />
+        </q-card-actions>
+
+        <q-btn
+          no-caps
+          class="editing-box q-mt-xs"
+          label="Progress Linking"
+          :size="itemSize"
+          @click="openLinkingDialog()"
+        />
+
+        <q-btn
+          no-caps
+          class="editing-box"
+          label="Alternate Sources"
+          :size="itemSize"
+          @click="openAltSourceDialog()"
+        />
+      </q-card-actions>
+
+      <q-space />
+
+      <q-card-actions
+        vertical
+      >
+        <q-btn
+          color="unread"
+          text-color="button"
+          padding="sm md"
+          icon="save"
+          :loading="saving"
+          :size="itemSize"
+          @click="saveManga()"
+        />
+
+        <q-space />
+
+        <q-btn
+          color="negative"
+          text-color="button"
+          padding="sm md"
+          icon="delete"
+          :size="itemSize"
+          @click="deleteManga()"
+        />
+      </q-card-actions>
     </q-card-section>
   </q-card>
 </template>
 
 <script lang="ts">
-import { defineComponent } from '@vue/composition-api'
-import { Manga } from 'src/classes/manga'
-import { SiteName } from 'src/enums/sites'
-import { Status, StatusIcon } from 'src/enums/status'
+import { defineComponent, computed } from 'vue'
+import { SiteName } from 'src/enums/siteEnum'
+import { Status, StatusIcon } from 'src/enums/statusEnum'
+import useMobileView from 'src/composables/useMobileView'
+import useUrlNavigation from 'src/composables/useUrlNavigation'
+import { useMangaItem } from 'src/composables/useManga'
+import useProgressLinking from 'src/composables/useProgressLinking'
+import useAltSources from 'src/composables/useAltSources'
+import useMangaList from 'src/composables/useMangaList'
+import { isMangaRead } from 'src/services/sortService'
+import useRefreshing from 'src/composables/useRefreshing'
 
 export default defineComponent({
-  name: 'manga-item',
+  name: 'MangaItem',
 
   props: {
-    mangaJson: {
+    url: {
       type: String,
       required: true
     }
   },
 
-  computed: {
-    manga (): Manga {
-      const manga = JSON.parse(this.mangaJson) as Manga
-      return manga
-    }
-  },
+  setup (props) {
+    const manga = useMangaItem(props.url)
+    const { mobileView } = useMobileView()
+    const { openLinkingDialog } = useProgressLinking(props.url, manga.newLinkedSites)
+    const { openAltSourceDialog } = useAltSources(props.url, manga.newSources)
+    const { showUpdateMangaDialog } = useMangaList()
+    const { offerRefresh } = useRefreshing()
 
-  data () {
+    const itemSize = computed(() => {
+      return mobileView.value ? 'sm' : 'md'
+    })
+
+    const hasLinkedSites = computed(() => {
+      return Object.keys(manga.linkedSites.value).length > 0
+    })
+    const isUnread = computed(() => {
+      return manga.status.value === Status.READING &&
+      !isMangaRead(
+        manga.chapter.value,
+        manga.chapterNum.value,
+        manga.read.value,
+        manga.readNum.value
+      )
+    })
+
+    const { navigate } = useUrlNavigation()
+
+    const openSearchDialog = async () => {
+      const url = await showUpdateMangaDialog(manga.title.value)
+      if (url === null) return
+
+      manga.newUrl.value = url
+    }
+
     return {
-      status: Status,
       siteNames: SiteName,
-      statusIcon: StatusIcon
+      status: Status,
+      statusIcon: StatusIcon,
+      editing: manga.editing,
+      saving: manga.saving,
+
+      newUrl: manga.newUrl,
+      newReadNum: manga.newReadNum,
+      newStatus: manga.newStatus,
+      newNotes: manga.newNotes,
+      newShouldUpdate: manga.newShouldUpdate,
+      newRating: manga.newRating,
+
+      mangaSite: manga.site,
+      mangaChapter: manga.chapter,
+      mangaChapterUrl: manga.chapterUrl,
+      mangaChapterDate: manga.chapterDate,
+      mangaTitle: manga.title,
+      mangaRead: manga.read,
+      mangaReadUrl: manga.readUrl,
+      mangaLinkedSites: manga.linkedSites,
+      mangaStatus: manga.status,
+      mangaNotes: manga.notes,
+      mangaRating: manga.rating,
+      mangaShouldUpdate: manga.shouldUpdate,
+      mangaImage: manga.image,
+
+      mobileView,
+      itemSize,
+      navigate,
+      offerRefresh,
+
+      hasLinkedSites,
+      openLinkingDialog,
+      openAltSourceDialog,
+      openSearchDialog,
+
+      isUnread,
+      deleteManga: manga.deleteManga,
+      readManga: manga.readManga,
+      toggleEditing: manga.toggleEditing,
+      saveManga: manga.saveManga
     }
   }
 })

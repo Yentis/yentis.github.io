@@ -1,15 +1,23 @@
 <template>
   <q-page>
     <q-input
+      v-model="searchValue"
       dense
       outlined
       autofocus
-      v-model="searchValue"
       class="q-mt-sm q-px-sm full-width"
     >
-      <template v-slot:append>
-        <q-icon v-if="searchValue === ''" name="search" />
-        <q-icon v-else name="clear" class="cursor-pointer" @click="searchValue = ''" />
+      <template #append>
+        <q-icon
+          v-if="searchValue === ''"
+          name="search"
+        />
+        <q-icon
+          v-else
+          name="clear"
+          class="cursor-pointer"
+          @click="searchValue = ''"
+        />
       </template>
     </q-input>
 
@@ -20,7 +28,10 @@
         class="intersection-item"
       >
         <q-card class="q-pa-xs">
-          <img class="image" :src="image.url">
+          <img
+            class="image"
+            :src="image.url"
+          >
 
           <q-card-section class="q-pt-xs q-px-none q-pb-none text-center">
             {{ image.name }}
@@ -32,42 +43,44 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from '@vue/composition-api'
+import { defineComponent, ref, Ref, computed, onMounted } from 'vue'
 import axios from 'axios'
-import { Image } from 'src/classes/image'
+import { Image } from 'src/classes/emotes/image'
 
 export default defineComponent({
   name: 'PageEmotes',
 
-  data () {
+  setup () {
+    const imageList: Ref<Image[]> = ref([])
+    const searchValue = ref('')
+
+    const filteredImageList = computed(() => {
+      return imageList.value.filter((image) => {
+        return image.name.toLowerCase().includes(searchValue.value.toLowerCase())
+      })
+    })
+
+    onMounted(() => {
+      axios.get('https://yentis.github.io/emotes/emotes.json')
+        .then((response) => {
+          const data = (response as { data: Record<string, string> }).data
+          imageList.value = Object.keys(data).map(key => {
+            const split = data[key].split('.')
+            return new Image(
+              key,
+              `https://yentis.github.io/emotes/images/${key}.${split[1]}`,
+              split[0].replace('yent', '')
+            )
+          }).reverse()
+        })
+        .catch((error) => console.error(error))
+    })
+
     return {
-      imageList: [] as Image[],
-      searchValue: ''
+      imageList,
+      searchValue,
+      filteredImageList
     }
-  },
-
-  computed: {
-    filteredImageList (): Image[] {
-      return this.imageList.filter(image => {
-        return image.name.toLowerCase().includes(this.searchValue.toLowerCase())
-      })
-    }
-  },
-
-  mounted () {
-    axios.get('https://yentis.github.io/emotes/emotes.json')
-      .then(response => {
-        const data = (response as { data: Record<string, string> }).data
-        this.imageList = Object.keys(data).map(key => {
-          const split = data[key].split('.')
-          return new Image(
-            key,
-            `https://yentis.github.io/emotes/images/${key}.${split[1]}`,
-            split[0].replace('yent', '')
-          )
-        }).reverse()
-      })
-      .catch(error => console.error(error))
   }
 })
 </script>

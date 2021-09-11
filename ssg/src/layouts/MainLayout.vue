@@ -1,6 +1,9 @@
 <template>
   <q-layout view="lHh Lpr lFf">
-    <q-header elevated class="bg-grey-7">
+    <q-header
+      elevated
+      class="bg-grey-7"
+    >
       <q-toolbar>
         <q-btn
           flat
@@ -51,6 +54,7 @@
 
 <script lang="ts">
 import Navigation from 'components/Navigation.vue'
+import { useQuasar } from 'quasar'
 
 const pagesData = [
   {
@@ -60,8 +64,13 @@ const pagesData = [
   },
   {
     title: 'Manga List',
-    icon: 'library_books',
+    icon: 'list',
     link: 'https://yentis.github.io/mangalist?id=2059191'
+  },
+  {
+    title: 'Manga Reader',
+    icon: 'library_books',
+    link: 'https://yentis.github.io/mangareader'
   },
   {
     title: 'Mudae Visualizer',
@@ -70,32 +79,35 @@ const pagesData = [
   }
 ]
 
-import { defineComponent } from '@vue/composition-api'
+import { defineComponent, onMounted, ref } from 'vue'
 
 export default defineComponent({
   name: 'MainLayout',
   components: { Navigation },
 
-  data () {
-    return {
-      leftDrawerOpen: false,
-      darkModeEnabled: false,
-      pages: pagesData
+  setup () {
+    const $q = useQuasar()
+    const darkModeEnabled = ref(false)
+    const leftDrawerOpen = ref(false)
+
+    onMounted(() => {
+      const storedDarkMode: boolean = localStorage.getItem('dark_mode') === 'true' || false
+      darkModeEnabled.value = storedDarkMode
+
+      $q.dark.set(darkModeEnabled.value)
+    })
+
+    const updateDarkMode = () => {
+      darkModeEnabled.value = !darkModeEnabled.value
+      $q.dark.set(darkModeEnabled.value)
+      localStorage.setItem('dark_mode', darkModeEnabled.value.toString())
     }
-  },
 
-  mounted () {
-    const darkModeEnabled: boolean = localStorage.getItem('dark_mode') === 'true' || false
-    this.darkModeEnabled = darkModeEnabled
-
-    this.$q.dark.set(this.darkModeEnabled)
-  },
-
-  methods: {
-    updateDarkMode () {
-      this.darkModeEnabled = !this.darkModeEnabled
-      this.$q.dark.set(this.darkModeEnabled)
-      localStorage.setItem('dark_mode', this.darkModeEnabled.toString())
+    return {
+      leftDrawerOpen,
+      darkModeEnabled,
+      pages: pagesData,
+      updateDarkMode
     }
   }
 })
