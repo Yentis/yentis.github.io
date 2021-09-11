@@ -60,22 +60,22 @@ const pagesData = [
   {
     title: 'Emote List',
     icon: 'sentiment_satisfied_alt',
-    link: 'https://yentis.github.io/emotes'
+    link: 'emotes'
   },
   {
     title: 'Manga List',
     icon: 'list',
-    link: 'https://yentis.github.io/mangalist?id=2059191'
+    link: 'mangalist?id=2059191'
   },
   {
     title: 'Manga Reader',
     icon: 'library_books',
-    link: 'https://yentis.github.io/mangareader'
+    link: 'mangareader'
   },
   {
     title: 'Mudae Visualizer',
     icon: 'calculate',
-    link: 'https://yentis.github.io/mudae'
+    link: 'mudae'
   }
 ]
 
