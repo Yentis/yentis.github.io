@@ -95,11 +95,11 @@ export function useStaticAuth () {
     const $route = useRoute()
     const path = $route.path
 
-    if (path.startsWith('/mangareader/redirect_gitlab/#')) {
+    if (path.startsWith('/mangareader/redirect_gitlab')) {
       const queryString = qs.parse($route.fullPath.replace('/mangareader/redirect_gitlab/#', ''))
       const token = queryString.access_token as string
       onGitlabRedirect(token)
-    } else if (path.startsWith('/mangareader/redirect/#')) {
+    } else if (path.startsWith('/mangareader/redirect')) {
       const queryString = qs.parse($route.fullPath.replace('/mangareader/redirect/#', ''))
       const token = queryString.access_token as string
       onDropboxRedirect(token)
