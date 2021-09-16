@@ -43,7 +43,6 @@ import {
 import {
   LinkingSiteType
 } from '../enums/linkingSiteEnum'
-import { AxiosRequestConfig } from 'axios'
 import PQueue from 'p-queue'
 import {
   ArangScans
@@ -86,7 +85,8 @@ const linkingSiteMap = new Map<string, BaseSite>([
   [LinkingSiteType.Kitsu, new Kitsu()]
 ])
 const siteAliases = [
-  { url: 'manganato.com', site: SiteType.Manganelo }
+  { url: 'manganato.com', site: SiteType.Manganelo },
+  { url: '1stkissmanga.io', site: SiteType.FirstKissManga }
 ]
 
 function createRace (promise: Promise<Error | Manga[]>): Promise<Error | Manga[]> {
@@ -95,12 +95,6 @@ function createRace (promise: Promise<Error | Manga[]>): Promise<Error | Manga[]
     promise,
     timeoutPromise
   ])
-}
-
-export function setRequestConfig (requestConfig: AxiosRequestConfig) {
-  siteMap.forEach(site => {
-    site.requestConfig = requestConfig
-  })
 }
 
 export function checkSites (): void {

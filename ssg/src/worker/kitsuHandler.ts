@@ -1,48 +1,30 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
-
 import { KitsuWorker } from 'src/classes/sites/kitsu/kitsuWorker'
-import { WorkerRequest } from 'src/classes/workerRequest'
+import { SiteWorkerMessage } from 'src/classes/workerMessage/siteMessage'
 import { KitsuRequestType } from 'src/enums/workerEnum'
+import { handlePromise } from './helper'
 
-export default function handleKitsuRequest (request: WorkerRequest, worker: KitsuWorker): boolean {
+export default function handleKitsuRequest (request: SiteWorkerMessage, worker: KitsuWorker): boolean {
+  let promise: Promise<unknown> | undefined
+
   switch (request.type) {
     case KitsuRequestType.USER_ID:
-      worker.getUserId().then(result => {
-        // @ts-ignore
-        postMessage(result)
-      }).catch(error => {
-        // @ts-ignore
-        postMessage(Error(error))
-      })
-      return true
+      promise = worker.getUserId()
+      break
     case KitsuRequestType.MANGA_SLUG:
-      worker.searchMangaSlug(request.data.get('url') as string).then(result => {
-        // @ts-ignore
-        postMessage(result)
-      }).catch(error => {
-        // @ts-ignore
-        postMessage(Error(error))
-      })
-      return true
+      promise = worker.searchMangaSlug(request.data.get('url') as string)
+      break
     case KitsuRequestType.LIBRARY_INFO:
-      worker.getLibraryInfo(request.data.get('mangaId') as string, request.data.get('userId') as string).then(result => {
-        // @ts-ignore
-        postMessage(result)
-      }).catch(error => {
-        // @ts-ignore
-        postMessage(Error(error))
-      })
-      return true
+      promise = worker.getLibraryInfo(request.data.get('mangaId') as string, request.data.get('userId') as string)
+      break
     case KitsuRequestType.LOGIN:
-      worker.doLogin({ username: request.data.get('username') as string, password: request.data.get('password') as string }).then(result => {
-        // @ts-ignore
-        postMessage(result)
-      }).catch(error => {
-        // @ts-ignore
-        postMessage(Error(error))
-      })
-      return true
-    default:
-      return false
+      promise = worker.doLogin({ username: request.data.get('username') as string, password: request.data.get('password') as string })
+      break
   }
+
+  if (promise) {
+    handlePromise(request.type, promise)
+    return true
+  }
+
+  return false
 }

@@ -5,6 +5,7 @@ import { Manga } from '../../manga'
 import cheerio, { Cheerio, Element } from 'cheerio'
 import { SiteType } from '../../../enums/siteEnum'
 import { LinkingSiteType } from 'src/enums/linkingSiteEnum'
+import { ContentType } from 'src/enums/contentTypeEnum'
 
 interface AsuraScansSearch {
   series: {
@@ -59,6 +60,10 @@ export class AsuraScansWorker extends BaseWorker {
     }
   }
 
+  getImage (data: BaseData): string {
+    return data.image?.attr('content') || ''
+  }
+
   async readUrl (url: string): Promise<Error | Manga> {
     const response = await axios.get(url)
     const $ = cheerio.load(response.data)
@@ -69,7 +74,7 @@ export class AsuraScansWorker extends BaseWorker {
     data.chapterUrl = chapterItem.find('a').first()
     data.chapterNum = chapterItem.first()
     data.chapterDate = chapterItem.find('.chapterdate').first()
-    data.image = $('div[itemprop="image"] img').first()
+    data.image = $('meta[property="og:image"]').first()
     data.title = $('.entry-title').first()
 
     return this.buildManga(data)
@@ -81,7 +86,7 @@ export class AsuraScansWorker extends BaseWorker {
       method: 'post',
       url: `${AsuraScansWorker.getUrl(this.siteType)}/wp-admin/admin-ajax.php`,
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+        'Content-Type': `${ContentType.URLENCODED}; charset=UTF-8`
       },
       data
     })

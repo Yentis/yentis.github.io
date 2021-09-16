@@ -1,8 +1,8 @@
 import { Manga } from 'src/classes/manga'
-import { SortType } from 'src/enums/sortingEnum'
+import { SimpleSortType, SortType } from 'src/enums/sortingEnum'
 import { Status } from 'src/enums/statusEnum'
 
-export function mangaSort (a: Manga, b: Manga, sortedBy: SortType): number {
+export function mangaSort (a: Manga, b: Manga, sortedBy: SortType | SimpleSortType): number {
   if ((a.status !== Status.READING || undefined) && (b.status === Status.READING || undefined)) {
     return 1
   }
@@ -43,12 +43,14 @@ export function mangaSort (a: Manga, b: Manga, sortedBy: SortType): number {
 
   switch (sortedBy) {
     case SortType.SITE:
+    case SimpleSortType.SITE:
       return sortSite(a, b)
     case SortType.CURRENT:
       return sortCurrent(a, b)
     case SortType.DATE:
       return sortDate(a, b)
     case SortType.READ:
+    case SimpleSortType.READ:
       return sortRead(a, b)
     default:
       return sortTitle(a, b)

@@ -12,6 +12,9 @@ import useUrlNavigation from 'src/composables/useUrlNavigation'
 import { UrlNavigation } from 'src/classes/urlNavigation'
 import usePushNotification from 'src/composables/usePushNotification'
 import { SiteName } from 'src/enums/siteEnum'
+import { LocalStorage, useQuasar } from 'quasar'
+import constants from 'src/classes/constants'
+import ConfirmationDialog from 'src/components/ConfirmationDialog.vue'
 
 export default function useRefreshing () {
   const autoRefreshing = ref(false)
@@ -37,8 +40,30 @@ export default function useRefreshing () {
     set: (val) => $store.commit('reader/updateRefreshing', val)
   })
 
-  const refreshAllManga = (forceRefresh = false) => {
+  const $q = useQuasar()
+  const refreshAllManga = async (forceRefresh = false) => {
     if (refreshing.value) return
+
+    const warnedCors = LocalStorage.has(constants.CORS_WARNED)
+    if (!warnedCors) {
+      const resume = await new Promise<boolean>((resolve) => {
+        $q.dialog({
+          component: ConfirmationDialog,
+          componentProps: {
+            title: 'Action required',
+            content: 'Due to browser limitations any refresh requests will not work unless you use an extension to disable CORS.\nAlternatively, please use the dedicated Manga Reader app.'
+          }
+        }).onOk(() => {
+          resolve(true)
+        }).onCancel(() => {
+          resolve(false)
+        }).onDismiss(() => {
+          LocalStorage.set(constants.CORS_WARNED, true)
+        })
+      })
+      if (!resume) return
+    }
+
     refreshProgress.value = 0.01
     refreshing.value = true
 
@@ -97,7 +122,7 @@ export default function useRefreshing () {
     refreshInterval.value = setInterval(() => {
       if (!refreshOptions.enabled || refreshing.value) return
       autoRefreshing.value = true
-      refreshAllManga()
+      refreshAllManga().catch((error) => console.error(error))
     }, refreshOptions.period * 60 * 1000)
   }
 

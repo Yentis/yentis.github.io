@@ -100,15 +100,15 @@
 <script lang="ts">
 import { defineComponent, ref, watch, onMounted } from 'vue'
 import { Ref } from '@vue/runtime-core/dist/runtime-core'
-import { Status } from 'src/enums/statusEnum'
-import { SortType } from 'src/enums/sortingEnum'
-import { Settings } from 'src/classes/settings'
-import useSettings from 'src/composables/useSettings'
-import useRefreshing from 'src/composables/useRefreshing'
-import useMangaList from 'src/composables/useMangaList'
-import useMobileView from 'src/composables/useMobileView'
-import useSearchValue from 'src/composables/useSearchValue'
-import useCloudSync from 'src/composables/useCloudSync'
+import { Status } from '../enums/statusEnum'
+import { SortType } from '../enums/sortingEnum'
+import { Settings } from '../classes/settings'
+import useSettings from '../composables/useSettings'
+import useRefreshing from '../composables/useRefreshing'
+import useMangaList from '../composables/useMangaList'
+import useMobileView from '../composables/useMobileView'
+import useSearchValue from '../composables/useSearchValue'
+import useCloudSync from '../composables/useCloudSync'
 
 export default defineComponent({
   name: 'MangaHeader',

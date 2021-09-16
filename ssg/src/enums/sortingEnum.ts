@@ -5,3 +5,9 @@ export enum SortType {
   CURRENT = 'Current chapter',
   DATE = 'Last updated'
 }
+
+export enum SimpleSortType {
+  TITLE = 'Title',
+  SITE = 'Site',
+  READ = 'Progress'
+}

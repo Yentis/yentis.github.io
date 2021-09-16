@@ -1,11 +1,12 @@
 import { BaseData, BaseWorker } from '../baseWorker'
 import moment from 'moment'
-import axios, { AxiosRequestConfig } from 'axios'
+import axios from 'axios'
 import cheerio from 'cheerio'
 import { Manga } from '../../manga'
 import qs from 'qs'
 import { SiteType } from '../../../enums/siteEnum'
 import constants from 'src/classes/constants'
+import { ContentType } from 'src/enums/contentTypeEnum'
 
 interface MangakakalotSearch {
   name: string
@@ -19,8 +20,8 @@ export class MangakakalotWorker extends BaseWorker {
   static url = BaseWorker.getUrl(MangakakalotWorker.siteType)
   static testUrl = `${MangakakalotWorker.url}/read-qu4wd158504821675`
 
-  constructor (requestConfig: AxiosRequestConfig | undefined = undefined) {
-    super(MangakakalotWorker.siteType, requestConfig)
+  constructor () {
+    super(MangakakalotWorker.siteType)
   }
 
   getChapterNum (data: BaseData): number {
@@ -70,7 +71,7 @@ export class MangakakalotWorker extends BaseWorker {
     })
     const response = await axios.post(`${MangakakalotWorker.url}/home_json_search`, data, {
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
+        'Content-Type': ContentType.URLENCODED
       }
     })
 

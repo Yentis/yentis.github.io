@@ -4,9 +4,10 @@ export default {
   MIGRATION_VERSION: 'migration_version',
   SETTINGS: 'settings',
   SHARE_ID: 'share_id',
-  GITLAB_TOKEN: 'gitlab_token',
+  SHARE_EDIT_CODE: 'share_edit_code',
   MANGA_LIST_FILENAME: 'manga-reader.json',
   SHARE_FILENAME: 'share.json',
   DROPBOX_TOKEN: 'dropbox_token',
-  REDIRECT_PREFIX: 'REDIRECT:'
+  REDIRECT_PREFIX: 'REDIRECT:',
+  CORS_WARNED: 'cors_warned'
 }

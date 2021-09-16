@@ -66,7 +66,8 @@
         >
           <q-btn
             no-caps
-            label="Share List"
+            disabled
+            label="Share List (Not supported in browser)"
             :loading="loading"
             @click="onShareList"
           />
@@ -95,18 +96,18 @@
 </template>
 
 <script lang="ts">
-import { useDialogPluginComponent, copyToClipboard, useQuasar } from 'quasar'
+import { useDialogPluginComponent, copyToClipboard } from 'quasar'
 import { defineComponent, onMounted, ref } from 'vue'
-import { Settings } from 'src/classes/settings'
-import { getShareId } from 'src/services/gitlabService'
-import { NotifyOptions } from 'src/classes/notifyOptions'
-import useUrlNavigation from 'src/composables/useUrlNavigation'
-import useNotification from 'src/composables/useNotification'
-import useSettings from 'src/composables/useSettings'
-import TestComponent from 'src/components/TestComponent.vue'
-import useSharing from 'src/composables/useSharing'
-import { getPlatform } from 'src/services/platformService'
-import { Platform } from 'src/enums/platformEnum'
+import { Settings } from '../classes/settings'
+import { NotifyOptions } from '../classes/notifyOptions'
+import useUrlNavigation from '../composables/useUrlNavigation'
+import useNotification from '../composables/useNotification'
+import useSettings from '../composables/useSettings'
+import TestComponent from '../components/TestComponent.vue'
+import useSharing from '../composables/useSharing'
+import { getPlatform } from '../services/platformService'
+import { Platform } from '../enums/platformEnum'
+import { getShareId } from '../services/rentryService'
 
 export default defineComponent({
   components: { TestComponent },
@@ -114,7 +115,6 @@ export default defineComponent({
   emits: [...useDialogPluginComponent.emits],
 
   setup () {
-    const $q = useQuasar()
     const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } = useDialogPluginComponent()
     const { navigate } = useUrlNavigation()
     const { notification } = useNotification()
@@ -157,7 +157,7 @@ export default defineComponent({
     }
 
     const isStatic = () => {
-      return getPlatform($q) === Platform.Static
+      return getPlatform() === Platform.Static
     }
 
     return {

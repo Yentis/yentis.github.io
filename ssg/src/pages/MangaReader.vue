@@ -24,19 +24,16 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed, onMounted } from 'vue'
-import moment from 'moment'
-import { SiteName, SiteType } from 'src/enums/siteEnum'
-import MangaHeader from 'src/components/Header.vue'
-import MangaItem from 'src/components/manga-item/MangaItem.vue'
-import useMangaList from 'src/composables/useMangaList'
-import useSettings from 'src/composables/useSettings'
-import useSearchValue from 'src/composables/useSearchValue'
-import useRefreshing from 'src/composables/useRefreshing'
-import useRefreshProgress from 'src/composables/useRefreshProgress'
-import useInitialized from 'src/composables/useInitialized'
-import { useElectronAuth, useStaticAuth } from 'src/composables/useAuthCallback'
-import { useQuasar } from 'quasar'
+import { defineComponent, computed } from 'vue'
+import { SiteName } from '../enums/siteEnum'
+import MangaHeader from '../components/Header.vue'
+import MangaItem from '../components/manga-item/MangaItem.vue'
+import useMangaList from '../composables/useMangaList'
+import useSettings from '../composables/useSettings'
+import useSearchValue from '../composables/useSearchValue'
+import useRefreshing from '../composables/useRefreshing'
+import useRefreshProgress from '../composables/useRefreshProgress'
+import { useStaticAuth } from '../composables/useAuthCallback'
 
 export default defineComponent({
   components: {
@@ -45,13 +42,11 @@ export default defineComponent({
   },
 
   setup () {
-    const $q = useQuasar()
     const { mangaList } = useMangaList()
     const { settings } = useSettings()
     const { searchValue } = useSearchValue()
     const { refreshing } = useRefreshing()
     const { refreshProgress } = useRefreshProgress()
-    const { main: mainInitialized, clearInitialized } = useInitialized()
 
     const filteredMangaList = computed(() => {
       return mangaList.value.filter(manga => {
@@ -82,33 +77,7 @@ export default defineComponent({
       })
     })
 
-    if ($q.platform.is.cordova) {
-      onMounted(() => {
-        window.cookieMaster.setCookieValue(
-          `.${SiteType.Webtoons}`,
-          'ageGatePass',
-          'true',
-          () => undefined,
-          (error) => console.error(error)
-        )
-        window.cookieMaster.setCookieValue(
-          `.${SiteType.Webtoons}`,
-          'timezoneOffset',
-          (moment().utcOffset() / 60).toString(),
-          () => undefined,
-          (error) => console.error(error)
-        )
-
-        document.addEventListener('resume', () => {
-          if (!mainInitialized.value) return
-          clearInitialized()
-        })
-      })
-    } else if ($q.platform.is.electron) {
-      useElectronAuth()
-    } else {
-      useStaticAuth()
-    }
+    useStaticAuth()
 
     return {
       mangaList,

@@ -79,14 +79,14 @@
 import { defineComponent, ref, computed, onMounted } from 'vue'
 import { Ref } from '@vue/runtime-core/dist/runtime-core'
 import { useRoute } from 'vue-router'
-import { Manga } from 'src/classes/manga'
-import { SortType } from 'src/enums/sortingEnum'
+import { Manga } from '../classes/manga'
+import { SimpleSortType } from '../enums/sortingEnum'
 import axios from 'axios'
 import { Base64 } from 'js-base64'
-import { mangaSort } from 'src/services/sortService'
-import MangaItemSimple from 'src/components/manga-item-simple/MangaItemSimple.vue'
-import { Status } from 'src/enums/statusEnum'
-import { SiteName } from 'src/enums/siteEnum'
+import { mangaSort } from '../services/sortService'
+import MangaItemSimple from '../components/manga-item-simple/MangaItemSimple.vue'
+import { Status } from '../enums/statusEnum'
+import { SiteName } from '../enums/siteEnum'
 
 export default defineComponent({
   name: 'PageManga',
@@ -99,7 +99,7 @@ export default defineComponent({
     const mangaList: Ref<Manga[]> = ref([])
     const searchValue = ref('')
     const filters: Ref<Status[]> = ref([])
-    const sortedBy = ref(SortType.TITLE)
+    const sortedBy = ref(SimpleSortType.TITLE)
 
     const filteredMangaList = computed(() => {
       return mangaList.value.filter((manga) => {
@@ -141,7 +141,7 @@ export default defineComponent({
       })
     })
 
-    const updateSortedBy = (newSortedBy: SortType) => {
+    const updateSortedBy = (newSortedBy: SimpleSortType) => {
       sortedBy.value = newSortedBy
       localStorage.setItem('sorted_by', newSortedBy)
     }
@@ -152,19 +152,27 @@ export default defineComponent({
 
     const $route = useRoute()
 
-    onMounted(() => {
-      const storedFilters = localStorage.getItem('filters') || JSON.stringify(Object.values(Status))
-      filters.value = JSON.parse(storedFilters) as Status[]
+    const fetchFromRentry = (id: string) => {
+      axios.get(`https://rentry.co/api/raw/${id}`)
+        .then((response) => {
+          const data = (response.data as { status: string, content: string })
+          if (data.status !== '200') {
+            fetchFromGitlab(id)
+            return
+          }
 
-      const storedSortedBy = localStorage.getItem('sorted_by') || SortType.TITLE
-      sortedBy.value = storedSortedBy as SortType
+          const parsedMangalist = JSON.parse(data.content) as Manga[]
+          mangaList.value = parsedMangalist
+        })
+        .catch((error) => {
+          console.error(error)
+          fetchFromGitlab(id)
+        })
+    }
 
-      let id = $route.query.id as string
-      if (id === undefined) return
-      if (id === '2059191') id = '2147898'
-
+    const fetchFromGitlab = (id: string) => {
       axios.get(`https://gitlab.com/api/v4/snippets/${id}/raw`)
-        .then(response => {
+        .then((response) => {
           let data = response.data as string
           data = Base64.decode(data)
           data = data.substring(data.indexOf('['), data.lastIndexOf(']') + 1).trim()
@@ -172,7 +180,20 @@ export default defineComponent({
           const parsedMangalist = JSON.parse(data) as Manga[]
           mangaList.value = parsedMangalist
         })
-        .catch(error => console.error(error))
+        .catch((error) => console.error(error))
+    }
+
+    onMounted(() => {
+      const storedFilters = localStorage.getItem('filters') || JSON.stringify(Object.values(Status))
+      filters.value = JSON.parse(storedFilters) as Status[]
+
+      const storedSortedBy = localStorage.getItem('sorted_by') || SimpleSortType.TITLE
+      sortedBy.value = storedSortedBy as SimpleSortType
+
+      const id = $route.query.id as string
+      if (id === undefined) return
+
+      fetchFromRentry(id)
     })
 
     return {
@@ -184,7 +205,7 @@ export default defineComponent({
       statusList,
       updateSortedBy,
       updateFilters,
-      sortType: SortType
+      sortType: SimpleSortType
     }
   }
 })
