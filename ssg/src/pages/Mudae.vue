@@ -51,7 +51,8 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, Ref, watch } from 'vue'
+import { defineComponent, ref, watch } from 'vue'
+import { Ref } from '@vue/runtime-core/dist/runtime-core'
 import { Character } from 'src/classes/mudae/character'
 
 export default defineComponent({

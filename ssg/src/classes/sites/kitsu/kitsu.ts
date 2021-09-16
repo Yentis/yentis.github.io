@@ -1,4 +1,5 @@
-import { LocalStorage, QVueGlobals } from 'quasar'
+import { LocalStorage } from 'quasar'
+import { QVueGlobals } from 'quasar/dist/types'
 import { BaseSite } from '../baseSite'
 import { NotifyOptions } from '../../notifyOptions'
 import LoginDialog from '../../../components/LoginDialog.vue'

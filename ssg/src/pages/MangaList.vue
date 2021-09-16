@@ -76,7 +76,8 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, Ref, computed, onMounted } from 'vue'
+import { defineComponent, ref, computed, onMounted } from 'vue'
+import { Ref } from '@vue/runtime-core/dist/runtime-core'
 import { useRoute } from 'vue-router'
 import { Manga } from 'src/classes/manga'
 import { SortType } from 'src/enums/sortingEnum'
