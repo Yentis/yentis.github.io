@@ -11,6 +11,7 @@ import { Manga } from '../../manga'
 import { Data, KitsuWorker, LoginResponse } from './kitsuWorker'
 import { Store } from 'vuex'
 import constants from 'src/classes/constants'
+import { getSiteNameByUrl } from 'src/services/siteService'
 
 export class Kitsu extends BaseSite {
   token: string = LocalStorage.getItem(constants.KITSU_TOKEN) || ''
@@ -39,10 +40,16 @@ export class Kitsu extends BaseSite {
 
   openLogin ($q: QVueGlobals, store: Store<unknown>): Promise<Error | boolean> {
     return new Promise((resolve) => {
+      const siteName = getSiteNameByUrl(this.siteType)
+      if (siteName === undefined) {
+        resolve(Error('Valid site not found'))
+        return
+      }
+
       $q.dialog({
         component: LoginDialog,
         componentProps: {
-          siteName: SiteName[this.siteType]
+          siteName
         }
       }).onOk((data: { username: string, password: string }) => {
         $q.loading.show({

@@ -87,10 +87,11 @@
 import { useDialogPluginComponent } from 'quasar'
 import { defineComponent, ref, onMounted } from 'vue'
 import { Ref } from '@vue/runtime-core/dist/runtime-core'
-import { SiteName } from 'src/enums/siteEnum'
-import { LinkingSiteType } from 'src/enums/linkingSiteEnum'
+import { SiteName } from '../enums/siteEnum'
+import { LinkingSiteType } from '../enums/linkingSiteEnum'
 import MangaSearch from './SearchComponent.vue'
-import { useClearingSearchResults } from 'src/composables/useSearchResults'
+import { useClearingSearchResults } from '../composables/useSearchResults'
+import { getSiteNameByUrl } from '../services/siteService'
 
 interface Rows {
   name: SiteName,
@@ -135,17 +136,20 @@ export default defineComponent({
 
     const rows: Ref<Rows[]> = ref([])
     const getRows = () => {
-      rows.value = Object.values(LinkingSiteType).map(site => {
+      const rowList: typeof rows.value = []
+      Object.values(LinkingSiteType).forEach((site) => {
+        const siteName = getSiteNameByUrl(site)
+        if (siteName === undefined) return
         const linkedSites: Record<string, number> = props.linkedSites
         const id = linkedSites ? linkedSites[site] : ''
-
-        return {
-          name: SiteName[site],
+        rowList.push({
+          name: siteName,
           value: site,
           id,
           deleted: false
-        }
+        })
       })
+      rows.value = rowList
     }
     onMounted(getRows)
 

@@ -173,7 +173,7 @@
                   :name="statusIcon[mangaStatus]"
                   size="xs"
                 />
-                <span>{{ siteNames[mangaSite] }}</span>
+                <span>{{ getSiteNameByUrl(mangaSite) || 'Unknown site' }}</span>
 
                 <q-icon
                   v-if="mangaShouldUpdate"
@@ -366,16 +366,16 @@
 
 <script lang="ts">
 import { defineComponent, computed } from 'vue'
-import { SiteName } from 'src/enums/siteEnum'
-import { Status, StatusIcon } from 'src/enums/statusEnum'
-import useMobileView from 'src/composables/useMobileView'
-import useUrlNavigation from 'src/composables/useUrlNavigation'
-import { useMangaItem } from 'src/composables/useManga'
-import useProgressLinking from 'src/composables/useProgressLinking'
-import useAltSources from 'src/composables/useAltSources'
-import useMangaList from 'src/composables/useMangaList'
-import { isMangaRead } from 'src/services/sortService'
-import useRefreshing from 'src/composables/useRefreshing'
+import { Status, StatusIcon } from '../../enums/statusEnum'
+import useMobileView from '../../composables/useMobileView'
+import useUrlNavigation from '../../composables/useUrlNavigation'
+import { useMangaItem } from '../../composables/useManga'
+import useProgressLinking from '../../composables/useProgressLinking'
+import useAltSources from '../../composables/useAltSources'
+import useMangaList from '../../composables/useMangaList'
+import { isMangaRead } from '../../services/sortService'
+import useRefreshing from '../../composables/useRefreshing'
+import { getSiteNameByUrl } from '../../services/siteService'
 
 export default defineComponent({
   name: 'MangaItem',
@@ -422,7 +422,6 @@ export default defineComponent({
     }
 
     return {
-      siteNames: SiteName,
       status: Status,
       statusIcon: StatusIcon,
       editing: manga.editing,
@@ -453,6 +452,7 @@ export default defineComponent({
       itemSize,
       navigate,
       offerRefresh,
+      getSiteNameByUrl,
 
       hasLinkedSites,
       openLinkingDialog,

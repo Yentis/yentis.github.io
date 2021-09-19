@@ -78,12 +78,12 @@
 import { useDialogPluginComponent, useQuasar } from 'quasar'
 import { defineComponent, ref, onMounted } from 'vue'
 import { Ref } from '@vue/runtime-core/dist/runtime-core'
-import { SiteName, SiteType } from 'src/enums/siteEnum'
-import { NotifyOptions } from 'src/classes/notifyOptions'
+import { SiteName, SiteType } from '../enums/siteEnum'
+import { NotifyOptions } from '../classes/notifyOptions'
 import SearchDialog from './SearchDialog.vue'
-import { useClearingSearchResults } from 'src/composables/useSearchResults'
-import useNotification from 'src/composables/useNotification'
-import { getSiteByUrl } from 'src/services/siteService'
+import { useClearingSearchResults } from '../composables/useSearchResults'
+import useNotification from '../composables/useNotification'
+import { getSiteByUrl, getSiteNameByUrl } from '../services/siteService'
 
 export default defineComponent({
   props: {
@@ -127,15 +127,18 @@ export default defineComponent({
     }
 
     const getData = () => {
-      data.value = Object.keys(sources.value).map(source => {
-        const siteType = source as SiteType
-
-        return {
-          name: SiteName[siteType],
+      const dataList: typeof data.value = []
+      Object.keys(sources.value).forEach((source) => {
+        const siteType = getSiteByUrl(source)
+        const siteName = getSiteNameByUrl(source)
+        if (siteType === undefined || siteName === undefined) return
+        dataList.push({
+          name: siteName,
           site: siteType,
           url: sources.value[source]
-        }
+        })
       })
+      data.value = dataList
     }
     onMounted(getData)
 
@@ -152,13 +155,14 @@ export default defineComponent({
           excludedUrls: data.value.map((item) => item.url)
         }
       }).onOk((url: string) => {
-        const site = getSiteByUrl(url)
-        if (site === undefined) {
+        const siteType = getSiteByUrl(url)
+        const siteName = getSiteNameByUrl(url)
+        if (siteType === undefined || siteName === undefined) {
           notification.value = new NotifyOptions(Error('Valid site not found'))
           return
         }
 
-        data.value.push({ name: SiteName[site], site, url })
+        data.value.push({ name: siteName, site: siteType, url })
       })
     }
 

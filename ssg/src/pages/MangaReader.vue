@@ -25,7 +25,7 @@
 
 <script lang="ts">
 import { defineComponent, computed } from 'vue'
-import { SiteName } from '../enums/siteEnum'
+import { SiteType } from '../enums/siteEnum'
 import MangaHeader from '../components/Header.vue'
 import MangaItem from '../components/manga-item/MangaItem.vue'
 import useMangaList from '../composables/useMangaList'
@@ -34,6 +34,7 @@ import useSearchValue from '../composables/useSearchValue'
 import useRefreshing from '../composables/useRefreshing'
 import useRefreshProgress from '../composables/useRefreshProgress'
 import { useStaticAuth } from '../composables/useAuthCallback'
+import { getSiteNameByUrl } from '../services/siteService'
 
 export default defineComponent({
   components: {
@@ -68,7 +69,8 @@ export default defineComponent({
             notes = false
           }
 
-          if (!SiteName[manga.site].toLowerCase().includes(lowerCaseWord)) {
+          const siteName = getSiteNameByUrl(manga.site)
+          if (!siteName?.toLowerCase().includes(lowerCaseWord)) {
             site = false
           }
 
