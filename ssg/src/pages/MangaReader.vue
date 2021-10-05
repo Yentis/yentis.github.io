@@ -25,7 +25,6 @@
 
 <script lang="ts">
 import { defineComponent, computed } from 'vue'
-import { SiteType } from '../enums/siteEnum'
 import MangaHeader from '../components/Header.vue'
 import MangaItem from '../components/manga-item/MangaItem.vue'
 import useMangaList from '../composables/useMangaList'

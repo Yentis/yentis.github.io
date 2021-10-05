@@ -153,7 +153,7 @@ export default defineComponent({
     const $route = useRoute()
 
     const fetchFromRentry = (id: string) => {
-      axios.get(`https://rentry.co/api/raw/${id}`)
+      axios.get(`https://api.allorigins.win/raw?url=${encodeURIComponent(`https://rentry.co/api/raw/${id}`)}`)
         .then((response) => {
           const data = (response.data as { status: string, content: string })
           if (data.status !== '200') {
