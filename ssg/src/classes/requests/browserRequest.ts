@@ -7,7 +7,7 @@ import { ContentType } from 'src/enums/contentTypeEnum'
 export default class BrowserRequest extends BaseRequest {
   async sendRequest (request: HttpRequest): Promise<HttpResponse> {
     const headers = request.headers || {}
-    if (headers['Content-Type'] === ContentType.URLENCODED) {
+    if (headers['Content-Type'] === ContentType.URLENCODED && typeof request.data === 'string') {
       request.data = this.convertToUrlEncoded(request.data)
     }
 
@@ -20,7 +20,7 @@ export default class BrowserRequest extends BaseRequest {
 
     return {
       headers: response.headers as Record<string, string>,
-      data: response.data as string
+      data: JSON.stringify(response.data)
     }
   }
 }

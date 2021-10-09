@@ -49,35 +49,36 @@
 <script lang="ts">
 import { defineComponent, ref } from 'vue'
 import { Ref } from '@vue/runtime-core/dist/runtime-core'
-import testAll from 'src/services/testService'
-import { SiteType } from 'src/enums/siteEnum'
-import { testArangScans } from 'src/services/test/arangscans'
-import { testAsuraScans } from 'src/services/test/asurascans'
-import { testBatoto } from 'src/services/test/batoto'
-import { testEdelgardeScans } from 'src/services/test/edelgardescans'
-import { testFirstKissManga } from 'src/services/test/firstkissmanga'
-import { testGenkanio } from 'src/services/test/genkanio'
-import { testHatigarmScans } from 'src/services/test/hatigarmscans'
-import { testHiperDEX } from 'src/services/test/hiperdex'
-import { testLeviatanScans } from 'src/services/test/leviatanscans'
-import { testLynxScans } from 'src/services/test/lynxscans'
-import { testMangaDex } from 'src/services/test/mangadex'
-import { testMangago } from 'src/services/test/mangago'
-import { testMangakakalot } from 'src/services/test/mangakakalot'
-import { testMangaKomi } from 'src/services/test/mangakomi'
-import { testManganelo } from 'src/services/test/manganelo'
-import { testMangaTx } from 'src/services/test/mangatx'
-import { testManhwaClub } from 'src/services/test/manhwaclub'
-import { testMethodScans } from 'src/services/test/methodscans'
-import { testReaperScans } from 'src/services/test/reaperscans'
-import { testSleepingKnightScans } from 'src/services/test/sleepingknightscans'
-import { testWebtoons } from 'src/services/test/webtoons'
-import { testZeroScans } from 'src/services/test/zeroscans'
-import { testFlameScans } from 'src/services/test/flamescans'
+import testAll from '../services/testService'
+import { SiteType } from '../enums/siteEnum'
+import { testArangScans } from '../services/test/arangscans'
+import { testAsuraScans } from '../services/test/asurascans'
+import { testBatoto } from '../services/test/batoto'
+import { testEdelgardeScans } from '../services/test/edelgardescans'
+import { testFirstKissManga } from '../services/test/firstkissmanga'
+import { testGenkanio } from '../services/test/genkanio'
+import { testHatigarmScans } from '../services/test/hatigarmscans'
+import { testHiperDEX } from '../services/test/hiperdex'
+import { testLeviatanScans } from '../services/test/leviatanscans'
+import { testLynxScans } from '../services/test/lynxscans'
+import { testMangaDex } from '../services/test/mangadex'
+import { testMangago } from '../services/test/mangago'
+import { testMangakakalot } from '../services/test/mangakakalot'
+import { testMangaKomi } from '../services/test/mangakomi'
+import { testManganelo } from '../services/test/manganelo'
+import { testMangaTx } from '../services/test/mangatx'
+import { testManhwaClub } from '../services/test/manhwaclub'
+import { testMethodScans } from '../services/test/methodscans'
+import { testReaperScans } from '../services/test/reaperscans'
+import { testSleepingKnightScans } from '../services/test/sleepingknightscans'
+import { testWebtoons } from '../services/test/webtoons'
+import { testZeroScans } from '../services/test/zeroscans'
+import { testFlameScans } from '../services/test/flamescans'
 import { useQuasar } from 'quasar'
-import { LinkingSiteType } from 'src/enums/linkingSiteEnum'
-import { testResetScans } from 'src/services/test/resetscans'
-import { testCatManga } from 'src/services/test/catmanga'
+import { LinkingSiteType } from '../enums/linkingSiteEnum'
+import { testResetScans } from '../services/test/resetscans'
+import { testCatManga } from '../services/test/catmanga'
+import { testBiliBiliComics } from '../services/test/bilibilicomics'
 
 export default defineComponent({
   name: 'MangaTest',
@@ -136,6 +137,9 @@ export default defineComponent({
           break
         case SiteType.Batoto:
           await doTest(testBatoto)
+          break
+        case SiteType.BiliBiliComics:
+          await doTest(testBiliBiliComics)
           break
         case SiteType.CatManga:
           await doTest(testCatManga)

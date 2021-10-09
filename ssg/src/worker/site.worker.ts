@@ -20,6 +20,7 @@ import { GenkanWorker } from 'src/classes/sites/genkan/genkanWorker'
 import { WordPressWorker } from 'src/classes/sites/wordpress/wordpressWorker'
 import { SiteWorkerMessage } from 'src/classes/workerMessage/siteMessage'
 import { RequestType } from 'src/enums/workerEnum'
+import { BiliBiliComicsWorker } from 'src/classes/sites/bilibilicomics/bilibilicomicsWorker'
 
 addEventListener('message', event => {
   const request = event.data as SiteWorkerMessage
@@ -101,6 +102,9 @@ addEventListener('message', event => {
       break
     case SiteType.CatManga:
       worker = new CatMangaWorker()
+      break
+    case SiteType.BiliBiliComics:
+      worker = new BiliBiliComicsWorker()
       break
     case LinkingSiteType.Kitsu: {
       const kitsuWorker = new KitsuWorker(request.data.get('token') as string)

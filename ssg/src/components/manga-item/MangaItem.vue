@@ -57,8 +57,14 @@
 
           <div v-if="!editing">
             <div :class="{ 'text-caption': mobileView, 'text-body2': !mobileView, 'manga-subtitle': true }">
-              Read:&nbsp;&nbsp;&nbsp;&nbsp; <a
-                v-if="mangaReadUrl"
+              Read:&nbsp;&nbsp;&nbsp;&nbsp; <router-link
+                v-if="mangaReadUrl?.startsWith('/')"
+                :to="mangaReadUrl"
+              >
+                {{ mangaRead }}
+              </router-link>
+              <a
+                v-else-if="mangaReadUrl"
                 :href="mangaReadUrl"
                 @click.prevent="navigate(mangaReadUrl || '#')"
               >{{ mangaRead }}</a>
@@ -66,8 +72,14 @@
             </div>
 
             <div :class="{ 'text-caption': mobileView, 'text-body2': !mobileView, 'manga-subtitle': true }">
-              Current: <a
-                v-if="mangaChapterUrl"
+              Current: <router-link
+                v-if="mangaChapterUrl?.startsWith('/')"
+                :to="mangaChapterUrl"
+              >
+                {{ mangaChapter }}
+              </router-link>
+              <a
+                v-else-if="mangaChapterUrl"
                 :href="mangaChapterUrl"
                 @click.prevent="navigate(mangaChapterUrl)"
               >{{ mangaChapter }}</a>

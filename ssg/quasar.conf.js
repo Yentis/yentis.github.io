@@ -217,6 +217,7 @@ module.exports = configure(function (ctx) {
         '/mangareader',
         '/mangareader/redirect',
         '/mangareader/redirect_gitlab',
+        '/mangaviewer',
         '/mudae'
       ]
     }

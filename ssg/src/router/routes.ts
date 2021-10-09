@@ -9,7 +9,8 @@ const routes: RouteRecordRaw[] = [
       { path: 'emotes', name: 'Emote List', component: () => import('pages/Emotes.vue') },
       { path: 'mudae', name: 'Mudae Visualizer', component: () => import('pages/Mudae.vue') },
       { path: 'mangalist', name: 'Manga List', component: () => import('pages/MangaList.vue') },
-      { path: 'mangareader/:redirect(.*)?', name: 'Manga Reader', component: () => import('pages/MangaReader.vue') }
+      { path: 'mangareader/:redirect(.*)?', name: 'Manga Reader', component: () => import('pages/MangaReader.vue') },
+      { path: 'mangaviewer', name: 'Manga Viewer', component: () => import('pages/MangaViewer.vue') }
     ]
   },
 
