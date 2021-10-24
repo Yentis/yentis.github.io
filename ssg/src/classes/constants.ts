@@ -8,6 +8,5 @@ export default {
   MANGA_LIST_FILENAME: 'manga-reader.json',
   SHARE_FILENAME: 'share.json',
   DROPBOX_TOKEN: 'dropbox_token',
-  REDIRECT_PREFIX: 'REDIRECT:',
-  CORS_WARNED: 'cors_warned'
+  REDIRECT_PREFIX: 'REDIRECT:'
 }

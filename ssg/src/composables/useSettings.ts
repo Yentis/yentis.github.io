@@ -2,7 +2,6 @@ import { useStore } from '../store/index'
 import { computed, watch, onMounted } from 'vue'
 import { Settings } from '../classes/settings'
 import { LocalStorage, useQuasar } from 'quasar'
-import useMangaList from './useMangaList'
 import { tryMigrateSettings } from '../services/migrationService'
 import SettingsDialog from '../components/SettingsDialog.vue'
 import { SortType } from 'src/enums/sortingEnum'
@@ -23,6 +22,13 @@ export default function useSettings () {
     })
   }
 
+  const toggleDarkMode = () => {
+    const newSettings = Settings.clone(settings.value)
+    newSettings.darkMode = !newSettings.darkMode
+
+    settings.value = newSettings
+  }
+
   const setSortedBy = (sortType: SortType) => {
     const newSettings = Settings.clone(settings.value)
     newSettings.sortedBy = sortType
@@ -40,14 +46,15 @@ export default function useSettings () {
   return {
     settings,
     showSettingsDialog,
+    toggleDarkMode,
     setSortedBy,
     setFilters
   }
 }
 
 export function useAppSettings () {
+  const $q = useQuasar()
   const { settings } = useSettings()
-  const { sortMangaList } = useMangaList()
 
   onMounted(() => {
     tryMigrateSettings()
@@ -56,9 +63,9 @@ export function useAppSettings () {
     settings.value = localSettings
   })
 
-  const applySettings = (newSettings: Settings, oldSettings?: Settings) => {
-    if (newSettings.sortedBy !== oldSettings?.sortedBy || newSettings.filters !== oldSettings?.filters) {
-      sortMangaList()
+  const applySettings = (newSettings: Settings) => {
+    if (newSettings.darkMode !== $q.dark.isActive) {
+      $q.dark.set(newSettings.darkMode)
     }
   }
   applySettings(settings.value)
@@ -67,8 +74,7 @@ export function useAppSettings () {
     newSettings = Settings.clone(newSettings)
     if (newSettings.equals(oldSettings)) return
 
-    applySettings(newSettings, oldSettings)
-
+    applySettings(newSettings)
     LocalStorage.set(constants.SETTINGS, newSettings)
   })
 }

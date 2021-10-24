@@ -200,14 +200,7 @@ module.exports = configure(function (ctx) {
       },
 
       // More info: https://quasar.dev/quasar-cli/developing-electron-apps/node-integration
-      nodeIntegration: true,
-
-      extendWebpack (cfg) {
-        cfg.module.rules.unshift({
-          test: /\.worker\.ts$/,
-          use: { loader: 'worker-loader' }
-        })
-      }
+      nodeIntegration: true
     },
 
     ssg: {
@@ -216,7 +209,6 @@ module.exports = configure(function (ctx) {
         '/mangalist',
         '/mangareader',
         '/mangareader/redirect',
-        '/mangareader/redirect_gitlab',
         '/mangaviewer',
         '/mudae'
       ]

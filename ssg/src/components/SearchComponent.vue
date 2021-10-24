@@ -82,7 +82,7 @@ import { defineComponent, ref } from 'vue'
 import useMangaList from '../composables/useMangaList'
 import { useSearchResults } from '../composables/useSearchResults'
 import useMobileView from '../composables/useMobileView'
-import { getSiteNameByUrl } from '../services/siteService'
+import { getSiteNameByUrl } from '../utils/siteUtils'
 
 export default defineComponent({
   name: 'MangaSearch',

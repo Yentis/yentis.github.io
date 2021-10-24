@@ -91,7 +91,7 @@ import { SiteName } from '../enums/siteEnum'
 import { LinkingSiteType } from '../enums/linkingSiteEnum'
 import MangaSearch from './SearchComponent.vue'
 import { useClearingSearchResults } from '../composables/useSearchResults'
-import { getSiteNameByUrl } from '../services/siteService'
+import { getSiteNameByUrl } from '../utils/siteUtils'
 
 interface Rows {
   name: SiteName,
@@ -141,7 +141,8 @@ export default defineComponent({
         const siteName = getSiteNameByUrl(site)
         if (siteName === undefined) return
         const linkedSites: Record<string, number> = props.linkedSites
-        const id = linkedSites ? linkedSites[site] : ''
+        const id = (linkedSites ? linkedSites[site] : '') || ''
+
         rowList.push({
           name: siteName,
           value: site,
@@ -171,9 +172,10 @@ export default defineComponent({
     }
 
     const setLinkDeleted = (siteType: string, enabled: boolean) => {
-      const index = rows.value.findIndex(site => site.value === siteType)
-      if (index === -1) return
-      rows.value[index].deleted = enabled
+      const row = rows.value.find(site => site.value === siteType)
+      if (!row) return
+
+      row.deleted = enabled
     }
 
     return {
@@ -185,7 +187,7 @@ export default defineComponent({
       onOKClick: () => {
         onDialogOK({
           url: url.value,
-          siteType: selected.value[0].value,
+          siteType: selected.value[0]?.value,
           linkedSites: getLinkedSites()
         })
       },

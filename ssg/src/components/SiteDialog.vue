@@ -81,7 +81,7 @@ import useSiteList from '../composables/useSiteList'
 import useSiteListVisible from '../composables/useSiteListVisible'
 import useUrlNavigation from '../composables/useUrlNavigation'
 import { useSearchResults } from '../composables/useSearchResults'
-import { getSiteNameByUrl } from '../services/siteService'
+import { getSiteNameByUrl } from '../utils/siteUtils'
 
 export default defineComponent({
   props: {

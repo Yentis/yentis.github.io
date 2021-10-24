@@ -83,7 +83,7 @@ import { NotifyOptions } from '../classes/notifyOptions'
 import SearchDialog from './SearchDialog.vue'
 import { useClearingSearchResults } from '../composables/useSearchResults'
 import useNotification from '../composables/useNotification'
-import { getSiteByUrl, getSiteNameByUrl } from '../services/siteService'
+import { getSiteByUrl, getSiteNameByUrl } from '../utils/siteUtils'
 
 export default defineComponent({
   props: {
@@ -128,14 +128,15 @@ export default defineComponent({
 
     const getData = () => {
       const dataList: typeof data.value = []
-      Object.keys(sources.value).forEach((source) => {
+      Object.entries(sources.value).forEach(([source, url]) => {
         const siteType = getSiteByUrl(source)
         const siteName = getSiteNameByUrl(source)
-        if (siteType === undefined || siteName === undefined) return
+
+        if (!siteType || !siteName) return
         dataList.push({
           name: siteName,
           site: siteType,
-          url: sources.value[source]
+          url
         })
       })
       data.value = dataList

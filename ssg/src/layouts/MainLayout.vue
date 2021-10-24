@@ -22,7 +22,7 @@
           round
           icon="settings_brightness"
           aria-label="Dark Mode"
-          @click="updateDarkMode"
+          @click="toggleDarkMode"
         />
       </q-toolbar>
     </q-header>
@@ -53,8 +53,10 @@
 </template>
 
 <script lang="ts">
-import Navigation from 'components/Navigation.vue'
-import { useQuasar } from 'quasar'
+import Navigation from '../components/Navigation.vue'
+import { defineComponent, ref } from 'vue'
+import useSettings from '../composables/useSettings'
+import { Settings } from '../classes/settings'
 
 const pagesData = [
   {
@@ -79,35 +81,18 @@ const pagesData = [
   }
 ]
 
-import { defineComponent, onMounted, ref } from 'vue'
-
 export default defineComponent({
   name: 'MainLayout',
   components: { Navigation },
 
   setup () {
-    const $q = useQuasar()
-    const darkModeEnabled = ref(false)
     const leftDrawerOpen = ref(false)
-
-    onMounted(() => {
-      const storedDarkMode: boolean = localStorage.getItem('dark_mode') === 'true' || false
-      darkModeEnabled.value = storedDarkMode
-
-      $q.dark.set(darkModeEnabled.value)
-    })
-
-    const updateDarkMode = () => {
-      darkModeEnabled.value = !darkModeEnabled.value
-      $q.dark.set(darkModeEnabled.value)
-      localStorage.setItem('dark_mode', darkModeEnabled.value.toString())
-    }
+    const { toggleDarkMode } = useSettings()
 
     return {
       leftDrawerOpen,
-      darkModeEnabled,
       pages: pagesData,
-      updateDarkMode
+      toggleDarkMode
     }
   }
 })

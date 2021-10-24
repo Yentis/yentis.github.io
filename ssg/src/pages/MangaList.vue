@@ -81,12 +81,16 @@ import { Ref } from '@vue/runtime-core/dist/runtime-core'
 import { useRoute } from 'vue-router'
 import { Manga } from '../classes/manga'
 import { SimpleSortType } from '../enums/sortingEnum'
-import axios from 'axios'
 import { Base64 } from 'js-base64'
 import { mangaSort } from '../services/sortService'
 import MangaItemSimple from '../components/manga-item-simple/MangaItemSimple.vue'
 import { Status } from '../enums/statusEnum'
 import { SiteName } from '../enums/siteEnum'
+import useNotification from '../composables/useNotification'
+import { NotifyOptions } from '../classes/notifyOptions'
+import HttpRequest from '../interfaces/httpRequest'
+import HttpResponse from '../interfaces/httpResponse'
+import { requestHandler } from '../services/requestService'
 
 export default defineComponent({
   name: 'PageManga',
@@ -100,6 +104,7 @@ export default defineComponent({
     const searchValue = ref('')
     const filters: Ref<Status[]> = ref([])
     const sortedBy = ref(SimpleSortType.TITLE)
+    const { notification } = useNotification()
 
     const filteredMangaList = computed(() => {
       return mangaList.value.filter((manga) => {
@@ -153,9 +158,10 @@ export default defineComponent({
     const $route = useRoute()
 
     const fetchFromRentry = (id: string) => {
-      axios.get(`https://api.allorigins.win/raw?url=${encodeURIComponent(`https://rentry.co/api/raw/${id}`)}`)
-        .then((response) => {
-          const data = (response.data as { status: string, content: string })
+      const request: HttpRequest = { method: 'GET', url: `https://api.allorigins.win/raw?url=${encodeURIComponent(`https://rentry.co/api/raw/${id}`)}` }
+      requestHandler.sendRequest(request)
+        .then((response: HttpResponse) => {
+          const data = JSON.parse(response.data) as { status: string, content: string }
           if (data.status !== '200') {
             fetchFromGitlab(id)
             return
@@ -163,24 +169,24 @@ export default defineComponent({
 
           const parsedMangalist = JSON.parse(data.content) as Manga[]
           mangaList.value = parsedMangalist
-        })
-        .catch((error) => {
+        }).catch((error) => {
           console.error(error)
           fetchFromGitlab(id)
         })
     }
 
     const fetchFromGitlab = (id: string) => {
-      axios.get(`https://gitlab.com/api/v4/snippets/${id}/raw`)
-        .then((response) => {
-          let data = response.data as string
-          data = Base64.decode(data)
+      const request: HttpRequest = { method: 'GET', url: `https://gitlab.com/api/v4/snippets/${id}/raw` }
+      requestHandler.sendRequest(request)
+        .then((response: HttpResponse) => {
+          let data = Base64.decode(response.data)
           data = data.substring(data.indexOf('['), data.lastIndexOf(']') + 1).trim()
 
           const parsedMangalist = JSON.parse(data) as Manga[]
           mangaList.value = parsedMangalist
+        }).catch((error) => {
+          notification.value = new NotifyOptions(error, 'Failed to retrieve manga list')
         })
-        .catch((error) => console.error(error))
     }
 
     onMounted(() => {

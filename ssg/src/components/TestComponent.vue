@@ -54,7 +54,6 @@ import { SiteType } from '../enums/siteEnum'
 import { testArangScans } from '../services/test/arangscans'
 import { testAsuraScans } from '../services/test/asurascans'
 import { testBatoto } from '../services/test/batoto'
-import { testEdelgardeScans } from '../services/test/edelgardescans'
 import { testFirstKissManga } from '../services/test/firstkissmanga'
 import { testGenkanio } from '../services/test/genkanio'
 import { testHatigarmScans } from '../services/test/hatigarmscans'
@@ -79,6 +78,7 @@ import { LinkingSiteType } from '../enums/linkingSiteEnum'
 import { testResetScans } from '../services/test/resetscans'
 import { testCatManga } from '../services/test/catmanga'
 import { testBiliBiliComics } from '../services/test/bilibilicomics'
+import { testKitsu } from '../services/test/kitsu'
 
 export default defineComponent({
   name: 'MangaTest',
@@ -90,7 +90,7 @@ export default defineComponent({
 
     let sortedSites: (SiteType | LinkingSiteType)[] = Object.values(SiteType)
     sortedSites = sortedSites.concat(Object.values(LinkingSiteType).filter((site) => !sortedSites.includes(site))).sort()
-    const selectedSite: Ref<SiteType | LinkingSiteType> = ref(sortedSites[0])
+    const selectedSite: Ref<SiteType | LinkingSiteType | undefined> = ref(sortedSites[0])
 
     const testAllSites = () => {
       testing.value = true
@@ -144,9 +144,6 @@ export default defineComponent({
         case SiteType.CatManga:
           await doTest(testCatManga)
           break
-        case SiteType.EdelgardeScans:
-          await doTest(testEdelgardeScans)
-          break
         case SiteType.FirstKissManga:
           await doTest(testFirstKissManga)
           break
@@ -161,6 +158,9 @@ export default defineComponent({
           break
         case SiteType.HiperDEX:
           await doTest(testHiperDEX)
+          break
+        case LinkingSiteType.Kitsu:
+          await doTest(testKitsu($q))
           break
         case SiteType.LeviatanScans:
           await doTest(testLeviatanScans)
@@ -202,7 +202,7 @@ export default defineComponent({
           await doTest(testSleepingKnightScans)
           break
         case SiteType.Webtoons:
-          await doTest(testWebtoons($q))
+          await doTest(testWebtoons)
           break
         case SiteType.ZeroScans:
           await doTest(testZeroScans)

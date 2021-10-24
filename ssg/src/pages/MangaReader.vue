@@ -1,6 +1,8 @@
 <template>
   <q-page class="q-ma-sm">
-    <MangaHeader />
+    <MangaHeader
+      v-model:refresh-progress="refreshProgress"
+    />
 
     <q-linear-progress
       v-if="refreshing"
@@ -13,27 +15,33 @@
 
     <div class="manga-container q-mt-sm full-width">
       <q-intersection
-        v-for="manga in filteredMangaList"
-        :key="manga.url"
+        v-for="url in mangaUrls"
+        :key="url"
         class="q-mb-xs full-width manga-item"
       >
-        <MangaItem :url="manga.url" />
+        <MangaItem
+          :url="url"
+          @image-load-failed="offerRefresh"
+        />
       </q-intersection>
     </div>
   </q-page>
 </template>
 
 <script lang="ts">
-import { defineComponent, computed } from 'vue'
+import { defineComponent, computed, ref } from 'vue'
 import MangaHeader from '../components/Header.vue'
 import MangaItem from '../components/manga-item/MangaItem.vue'
-import useMangaList from '../composables/useMangaList'
 import useSettings from '../composables/useSettings'
 import useSearchValue from '../composables/useSearchValue'
 import useRefreshing from '../composables/useRefreshing'
-import useRefreshProgress from '../composables/useRefreshProgress'
-import { useStaticAuth } from '../composables/useAuthCallback'
-import { getSiteNameByUrl } from '../services/siteService'
+import { getSiteNameByUrl } from '../utils/siteUtils'
+import { useAppInitialized, useCordovaInitialized, useElectronInitialized, useStaticInitialized } from '../composables/useInitialized'
+import { getPlatform } from '../services/platformService'
+import { Platform } from '../enums/platformEnum'
+import { useStore } from '../store'
+import { Manga } from '../classes/manga'
+import { mangaSort } from '../services/sortService'
 
 export default defineComponent({
   components: {
@@ -42,22 +50,27 @@ export default defineComponent({
   },
 
   setup () {
-    const { mangaList } = useMangaList()
+    useAppInitialized()
+
+    const $store = useStore()
     const { settings } = useSettings()
     const { searchValue } = useSearchValue()
-    const { refreshing } = useRefreshing()
-    const { refreshProgress } = useRefreshProgress()
+    const refreshProgress = ref(0)
+    const { refreshing, offerRefresh } = useRefreshing(refreshProgress)
 
-    const filteredMangaList = computed(() => {
-      return mangaList.value.filter(manga => {
-        if (!settings.value.filters.includes(manga.status)) return false
+    const mangaMap = computed(() => $store.state.reader.mangaMap)
+    const mangaUrls = computed(() => {
+      const matchedManga: Manga[] = []
+
+      mangaMap.value.forEach((manga) => {
+        if (!settings.value.filters.includes(manga.status)) return
 
         const searchWords = searchValue.value.split(' ')
         let title = true
         let notes = true
         let site = true
 
-        return searchWords.every((word) => {
+        const containsWords = searchWords.every((word) => {
           const lowerCaseWord = word.toLowerCase()
 
           if (!manga.title.toLowerCase().includes(lowerCaseWord)) {
@@ -75,16 +88,33 @@ export default defineComponent({
 
           return title || notes || site
         })
+        if (!containsWords) return
+
+        matchedManga.push(manga)
       })
+
+      return matchedManga.sort((a, b) => {
+        return mangaSort(a, b, $store.state.reader.settings.sortedBy)
+      }).map((manga) => manga.url)
     })
 
-    useStaticAuth()
+    switch (getPlatform()) {
+      case Platform.Cordova:
+        useCordovaInitialized()
+        break
+      case Platform.Electron:
+        useElectronInitialized()
+        break
+      case Platform.Static:
+        useStaticInitialized()
+        break
+    }
 
     return {
-      mangaList,
-      filteredMangaList,
+      mangaUrls,
       refreshing,
-      refreshProgress
+      refreshProgress,
+      offerRefresh
     }
   }
 })

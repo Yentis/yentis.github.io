@@ -1,6 +1,6 @@
 {
   "name": "yentis.github.io",
-  "version": "0.0.1",
+  "version": "2.13.0",
   "description": "Yentis' static site",
   "productName": "yentis.github.io",
   "author": "Yentis#5218",
@@ -18,11 +18,8 @@
     "@cliqz/adblocker-electron": "^1.22.2",
     "@quasar/cli": "^1.2.1",
     "@quasar/extras": "^1.0.0",
-    "axios": "^0.21.2",
-    "cheerio": "^1.0.0-rc.3",
     "core-js": "^3.6.5",
     "dropbox": "^10.1.0",
-    "form-data": "^3.0.0",
     "isomorphic-fetch": "^2.2.1",
     "js-base64": "^3.7.0",
     "moment": "^2.27.0",
@@ -35,13 +32,10 @@
   "devDependencies": {
     "@babel/eslint-parser": "^7.0.0",
     "@quasar/app": "3",
-    "@types/cheerio": "^0.22.29",
     "@types/isomorphic-fetch": "0.0.35",
     "@types/node": "^10.17.15",
-    "@types/tough-cookie": "^4.0.0",
     "@typescript-eslint/eslint-plugin": "^4.28.0",
     "@typescript-eslint/parser": "^4.28.0",
-    "axios-cookiejar-support": "^1.0.1",
     "cordova-plugin-inappbrowser": "^5.0.0",
     "devtron": "^1.4.0",
     "dotenv": "^10.0.0",
@@ -59,10 +53,8 @@
     "eslint-plugin-vue": "^7.0.0",
     "eslint-webpack-plugin": "^2.4.0",
     "jsdom-global": "^3.0.2",
-    "quasar-app-extension-ssg": "^3.0.1",
-    "tough-cookie": "^4.0.0",
-    "ts-node": "^8.10.2",
-    "worker-loader": "^3.0.7"
+    "quasar-app-extension-ssg": "^3.0.5",
+    "ts-node": "^8.10.2"
   },
   "browserslist": [
     "last 10 Chrome versions",

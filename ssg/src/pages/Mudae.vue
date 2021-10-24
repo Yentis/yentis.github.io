@@ -53,7 +53,7 @@
 <script lang="ts">
 import { defineComponent, ref, watch } from 'vue'
 import { Ref } from '@vue/runtime-core/dist/runtime-core'
-import { Character } from 'src/classes/mudae/character'
+import { Character } from '../classes/mudae/character'
 
 export default defineComponent({
   name: 'PageMudae',
@@ -74,8 +74,8 @@ export default defineComponent({
         const rank = rankText.substring(rankText.indexOf('#') + 1).trim()
         line = line.replace(rankText, '')
 
-        const kakeraMatch = line.substring(0, line.length - 1).trim().match(/\b\d+ ka\b/g)
-        const kakera = (kakeraMatch !== null && kakeraMatch.length > 0) ? kakeraMatch[kakeraMatch.length - 1] : ''
+        const kakeraMatch = line.substring(0, line.length - 1).trim().match(/\b\d+ ka\b/g) || []
+        const kakera = kakeraMatch[kakeraMatch.length - 1] || ''
         line = line.replace(kakera, '')
 
         const nameText = line.substring(0, Math.max(0, line.lastIndexOf('-')))

@@ -45,13 +45,18 @@
 <script lang="ts">
 import { defineComponent, ref, computed, onMounted } from 'vue'
 import { Ref } from '@vue/runtime-core/dist/runtime-core'
-import axios from 'axios'
-import { Image } from 'src/classes/emotes/image'
+import { Image } from '../classes/emotes/image'
+import useNotification from '../composables/useNotification'
+import { NotifyOptions } from '../classes/notifyOptions'
+import HttpRequest from '../interfaces/httpRequest'
+import HttpResponse from '../interfaces/httpResponse'
+import { requestHandler } from '../services/requestService'
 
 export default defineComponent({
   name: 'PageEmotes',
 
   setup () {
+    const { notification } = useNotification()
     const imageList: Ref<Image[]> = ref([])
     const searchValue = ref('')
 
@@ -62,19 +67,24 @@ export default defineComponent({
     })
 
     onMounted(() => {
-      axios.get('https://yentis.github.io/emotes/emotes.json')
-        .then((response) => {
-          const data = (response as { data: Record<string, string> }).data
-          imageList.value = Object.keys(data).map(key => {
-            const split = data[key].split('.')
-            return new Image(
-              key,
-              `https://yentis.github.io/emotes/images/${key}.${split[1]}`,
-              split[0].replace('yent', '')
-            )
-          }).reverse()
-        })
-        .catch((error) => console.error(error))
+      const request: HttpRequest = { method: 'GET', url: 'https://yentis.github.io/emotes/emotes.json' }
+      requestHandler.sendRequest(request).then((response: HttpResponse) => {
+        const data = JSON.parse(response.data) as Record<string, string>
+
+        imageList.value = Object.keys(data).map(key => {
+          const split = data[key]?.split('.') || []
+          const name = split[0]?.replace('yent', '') || ''
+          const extension = split[1] || 'png'
+
+          return new Image(
+            key,
+            `https://yentis.github.io/emotes/images/${key}.${extension}`,
+            name
+          )
+        }).reverse()
+      }).catch((error) => {
+        notification.value = new NotifyOptions(error, 'Failed to retrieve emotes')
+      })
     })
 
     return {

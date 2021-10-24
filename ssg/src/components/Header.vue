@@ -98,7 +98,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, watch, onMounted } from 'vue'
+import { defineComponent, ref, watch, onMounted, computed } from 'vue'
 import { Ref } from '@vue/runtime-core/dist/runtime-core'
 import { Status } from '../enums/statusEnum'
 import { SortType } from '../enums/sortingEnum'
@@ -113,7 +113,16 @@ import useCloudSync from '../composables/useCloudSync'
 export default defineComponent({
   name: 'MangaHeader',
 
-  setup () {
+  props: {
+    refreshProgress: {
+      type: Number,
+      required: true
+    }
+  },
+
+  emits: ['update:refreshProgress'],
+
+  setup (props, context) {
     const { importList, exportList } = useCloudSync()
 
     const {
@@ -123,12 +132,17 @@ export default defineComponent({
       fetchManga
     } = useMangaList()
 
+    const refreshProgress = computed({
+      get: () => props.refreshProgress,
+      set: (val) => { context.emit('update:refreshProgress', val) }
+    })
+
     const {
       refreshing,
       refreshInterval,
       createRefreshInterval,
       refreshAllManga
-    } = useRefreshing()
+    } = useRefreshing(refreshProgress)
 
     const onAddManga = async () => {
       const url = await showAddMangaDialog()

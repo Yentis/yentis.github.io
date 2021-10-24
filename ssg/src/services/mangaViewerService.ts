@@ -1,10 +1,10 @@
 import { SiteType } from '../enums/siteEnum'
 import { requestHandler } from './requestService'
-import { BiliBiliComicsQueryData, BiliBiliComicsWorker, ComicDetailResponse } from '../classes/sites/bilibilicomics/bilibilicomicsWorker'
+import { BiliBiliComics, BiliBiliComicsQueryData, ComicDetailResponse } from '../classes/sites/bilibilicomics'
 import qs from 'qs'
 import { ContentType } from 'src/enums/contentTypeEnum'
 
-const BASE_BILIBILICOMICS_API_URL = `${BiliBiliComicsWorker.url}/twirp/comic.v1.Comic`
+const BASE_BILIBILICOMICS_API_URL = `${BiliBiliComics.getUrl()}/twirp/comic.v1.Comic`
 
 export interface ChapterData {
   id: number,
@@ -46,7 +46,7 @@ export async function getImagesFromData (type: string, data: string): Promise<Im
   const imageIndexResponse = await requestHandler.sendRequest({
     method: 'POST',
     url: `${BASE_BILIBILICOMICS_API_URL}/GetImageIndex?${queryString}`,
-    data: { ep_id: bilibiliComicsData.chapter },
+    data: `{"ep_id":${bilibiliComicsData.chapter}}`,
     headers: { 'Content-Type': ContentType.JSON }
   })
   const imageIndexData = JSON.parse(imageIndexResponse.data) as ImageIndexData
@@ -54,7 +54,7 @@ export async function getImagesFromData (type: string, data: string): Promise<Im
   const imageTokenResponse = await requestHandler.sendRequest({
     method: 'POST',
     url: `${BASE_BILIBILICOMICS_API_URL}/ImageToken?${queryString}`,
-    data: { urls: JSON.stringify(imageIndexData.data.images.map((image) => image.path)) },
+    data: `{"urls":"[${imageIndexData.data.images.map((image) => `\\"${image.path}\\"`).join(',')}]"}`,
     headers: { 'Content-Type': ContentType.JSON }
   })
   const imageTokenData = JSON.parse(imageTokenResponse.data) as ImageTokenData
@@ -84,7 +84,7 @@ export async function getChaptersFromData (type: string, data: string): Promise<
   const response = await requestHandler.sendRequest({
     method: 'POST',
     url: `${BASE_BILIBILICOMICS_API_URL}/ComicDetail?${queryString}`,
-    data: { comic_id: bilibiliComicsData.id },
+    data: `{"comic_id":"${bilibiliComicsData.id}"}`,
     headers: { 'Content-Type': ContentType.JSON }
   })
 
