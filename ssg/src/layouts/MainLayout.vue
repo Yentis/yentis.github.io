@@ -56,7 +56,6 @@
 import Navigation from '../components/Navigation.vue'
 import { defineComponent, ref } from 'vue'
 import useSettings from '../composables/useSettings'
-import { Settings } from '../classes/settings'
 
 const pagesData = [
   {
