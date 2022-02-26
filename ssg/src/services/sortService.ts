@@ -33,18 +33,6 @@ export function mangaSort (a: Manga | undefined, b: Manga, sortedBy: SortType | 
     return -1
   }
 
-  if (a.status === Status.READING && b.status === Status.READING) {
-    const isARead = isMangaRead(a.chapter, a.chapterNum, a.read, a.readNum)
-    const isBRead = isMangaRead(b.chapter, b.chapterNum, b.read, b.readNum)
-
-    if (!isARead && isBRead) {
-      return -1
-    }
-    if (!isBRead && isARead) {
-      return 1
-    }
-  }
-
   switch (sortedBy) {
     case SortType.SITE:
     case SimpleSortType.SITE:

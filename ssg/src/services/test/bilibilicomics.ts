@@ -1,3 +1,4 @@
+import moment from 'moment'
 import { Manga } from 'src/classes/manga'
 import { BaseSite } from 'src/classes/sites/baseSite'
 import { SiteType } from 'src/enums/siteEnum'
@@ -23,6 +24,7 @@ async function readUrl (site: BaseSite): Promise<void> {
   desired.title = 'Tales of Demons and Gods'
   desired.chapterUrl = 'https://www.bilibilicomics.com/mc215/30056'
   desired.chapterNum = 618
+  desired.chapterDate = moment('2021-12-02', 'YYYY-MM-DD').fromNow()
 
   mangaEqual(manga, desired, false)
 }
@@ -31,7 +33,7 @@ async function search (): Promise<void> {
   const results = await searchManga(QUERY, SITE_TYPE)
   const desired = new Manga('https://www.bilibilicomics.com/detail/mc245', SITE_TYPE)
   desired.image = 'http://i0.hdslb.com/bfs/comic-static/798919b4975940465d33396b4a8a874517caafdd.png@300w.webp'
-  desired.chapter = '47 Is He Possessed?'
+  desired.chapter = '58 Why is Your Face Red?'
 
   return searchValid(results, desired, 'My Beloved Liu Yu\'an')
 }

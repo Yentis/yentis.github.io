@@ -1,3 +1,4 @@
+import moment from 'moment'
 import { Manga } from 'src/classes/manga'
 import { BaseSite } from 'src/classes/sites/baseSite'
 import { SiteType } from 'src/enums/siteEnum'
@@ -24,6 +25,7 @@ async function readUrl (site: BaseSite): Promise<void> {
   desired.title = 'Arata Primal'
   desired.chapterUrl = 'https://hiperdex.com/manga/arata-primal-the-new-primitive/35-end/'
   desired.chapterNum = 35
+  desired.chapterDate = moment('June 7, 2020', 'MMMM DD, YYYY').fromNow()
 
   mangaEqual(manga, desired)
 }
@@ -31,11 +33,12 @@ async function readUrl (site: BaseSite): Promise<void> {
 async function readUrl2 (): Promise<void> {
   const manga = await getMangaInfo('https://hiperdex.com/manga/touch-on/', SITE_TYPE)
   const desired = new Manga('https://hiperdex.com/manga/touch-on/', SITE_TYPE)
-  desired.chapter = '106'
+  desired.chapter = '109.1'
   desired.image = 'https://hiperdex.com/wp-content/uploads/2020/06/Touch-On-193x278.jpg'
   desired.title = 'Touch On'
-  desired.chapterUrl = 'https://hiperdex.com/manga/touch-on-0411/106/'
-  desired.chapterNum = 106
+  desired.chapterUrl = 'https://hiperdex.com/manga/touch-on-0411/109-1/'
+  desired.chapterNum = 109.1
+  desired.chapterDate = moment('February 13, 2022', 'MMMM DD, YYYY').fromNow()
 
   mangaEqual(manga, desired)
 }

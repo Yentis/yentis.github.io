@@ -1,3 +1,4 @@
+import moment from 'moment'
 import { Manga } from 'src/classes/manga'
 import { BaseSite } from 'src/classes/sites/baseSite'
 import { SiteType } from 'src/enums/siteEnum'
@@ -23,6 +24,7 @@ async function readUrl (site: BaseSite): Promise<void> {
   desired.title = 'Tomo-chan wa Onnanoko!'
   desired.chapterUrl = 'https://mangakakalot.com/chapter/tomochan_wa_onnanoko/chapter_953.6'
   desired.chapterNum = 953.6
+  desired.chapterDate = moment('Oct-16-19', 'MMM-DD-YY').fromNow()
 
   mangaEqual(manga, desired)
 }
@@ -40,7 +42,7 @@ async function search (site: BaseSite): Promise<void> {
   const results2 = await searchManga(query2, SITE_TYPE)
   const desired2 = new Manga('https://readmanganato.com/manga-hv985178', SITE_TYPE)
   desired2.image = 'https://avt.mkklcdnv6temp.com/4/p/21-1587119305.jpg'
-  desired2.chapter = 'Chapter 80'
+  desired2.chapter = 'Chapter 100'
   desired2.url = 'https://readmanganato.com/manga-hv985178'
 
   return searchValid(results2, desired2, query2)

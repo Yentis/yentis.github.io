@@ -11,7 +11,7 @@
         <q-btn
           color="primary"
           icon="refresh"
-          @click="refreshAllManga()"
+          @click="doFullRefresh()"
         />
       </div>
       <div>
@@ -129,6 +129,7 @@ export default defineComponent({
       addManga,
       storeManga,
       showAddMangaDialog,
+      showEditMangaDialog,
       fetchManga
     } = useMangaList()
 
@@ -139,10 +140,18 @@ export default defineComponent({
 
     const {
       refreshing,
-      refreshInterval,
-      createRefreshInterval,
+      refreshTimer,
+      startRefreshTimer,
       refreshAllManga
     } = useRefreshing(refreshProgress)
+
+    const doFullRefresh = () => {
+      if (refreshTimer.value) clearTimeout(refreshTimer.value)
+
+      refreshAllManga()
+        .finally(() => startRefreshTimer(settings.value.refreshOptions))
+        .catch(console.error)
+    }
 
     const onAddManga = async () => {
       const url = await showAddMangaDialog()
@@ -154,9 +163,9 @@ export default defineComponent({
       if (manga === null) return
 
       const added = addManga(manga)
-      if (added) {
-        storeManga()
-      }
+      if (added) storeManga()
+
+      await showEditMangaDialog(url)
       refreshing.value = false
     }
 
@@ -169,17 +178,12 @@ export default defineComponent({
     } = useSettings()
 
     onMounted(() => {
-      createRefreshInterval(settings.value.refreshOptions)
+      startRefreshTimer(settings.value.refreshOptions)
       newFilters.value = settings.value.filters
     })
 
     watch(settings, (newSettings: Settings) => {
-      if (refreshInterval.value !== undefined) {
-        clearInterval(refreshInterval.value)
-        refreshInterval.value = undefined
-      }
-
-      createRefreshInterval(newSettings.refreshOptions)
+      startRefreshTimer(newSettings.refreshOptions)
     })
 
     const importing = ref(false)
@@ -230,7 +234,7 @@ export default defineComponent({
       setFilters,
 
       onAddManga,
-      refreshAllManga
+      doFullRefresh
     }
   }
 })

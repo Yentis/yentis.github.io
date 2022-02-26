@@ -1,3 +1,4 @@
+import moment from 'moment'
 import { Manga } from 'src/classes/manga'
 import { BaseSite } from 'src/classes/sites/baseSite'
 import { MangaDex } from 'src/classes/sites/mangadex'
@@ -27,6 +28,7 @@ async function readUrl (site: BaseSite): Promise<void> {
   desired.title = 'JoJo\'s Bizarre Adventure Part 7 - Steel Ball Run (Official Colored)'
   desired.chapterUrl = 'https://mangadex.org/chapter/8a984365-fd9d-4f6e-85f9-0d58e0a592a3'
   desired.chapterNum = 95
+  desired.chapterDate = moment('31/01/2018, 00:08:19', 'DD/MM/YYYY, hh:mm:ss').fromNow()
 
   mangaEqual(manga, desired)
 }
@@ -34,11 +36,11 @@ async function readUrl (site: BaseSite): Promise<void> {
 async function readUrlMultiVolumes (): Promise<void> {
   const manga = await getMangaInfo('https://mangadex.org/title/3e873799-6f86-4f17-bc50-8b6ba07b9978', SITE_TYPE)
   const desired = new Manga('https://mangadex.org/title/3e873799-6f86-4f17-bc50-8b6ba07b9978', SITE_TYPE)
-  desired.chapter = 'Volume 2 - Chapter 57'
-  desired.image = 'https://uploads.mangadex.org/covers/3e873799-6f86-4f17-bc50-8b6ba07b9978/3205ab00-84e2-4df5-bd80-48d89450fbce.jpg'
+  desired.chapter = 'Volume 2 - Chapter 71'
+  desired.image = 'https://uploads.mangadex.org/covers/3e873799-6f86-4f17-bc50-8b6ba07b9978/0bd8ccaa-a1b7-4750-9018-5f2fd43d788b.jpg'
   desired.title = 'Revival Man'
-  desired.chapterUrl = 'https://mangadex.org/chapter/78a5f71a-12ff-4e99-89f9-2a5ff52a164f'
-  desired.chapterNum = 57
+  desired.chapterUrl = 'https://mangadex.org/chapter/258db744-76a9-43d6-b160-2e944fb796bf'
+  desired.chapterNum = 71
 
   mangaEqual(manga, desired)
 }

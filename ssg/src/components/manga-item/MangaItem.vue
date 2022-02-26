@@ -21,14 +21,28 @@
           class="manga-image q-my-sm q-ml-xs q-mr-sm"
           fit="scale-down"
           :src="mangaImage"
-          @error="onImageLoadFailed"
         >
           <template #error>
-            <q-icon
-              class="full-width full-height"
-              size="xl"
-              name="image_not_supported"
-            />
+            <div
+              class="column full-width full-height"
+              style="background: inherit"
+            >
+              <q-icon
+                class="full-width col"
+                size="xl"
+                name="image_not_supported"
+              />
+
+              <q-btn
+                class="col-3"
+                color="button"
+                text-color="button"
+                icon="refresh"
+                :size="itemSize"
+                :loading="refreshing"
+                @click="onRefreshRequested"
+              />
+            </div>
           </template>
         </q-img>
 
@@ -377,7 +391,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed } from 'vue'
+import { defineComponent, computed, ref } from 'vue'
 import { Status, StatusIcon } from '../../enums/statusEnum'
 import useMobileView from '../../composables/useMobileView'
 import useUrlNavigation from '../../composables/useUrlNavigation'
@@ -385,6 +399,7 @@ import { useMangaItem } from '../../composables/useManga'
 import useProgressLinking from '../../composables/useProgressLinking'
 import useAltSources from '../../composables/useAltSources'
 import useMangaList from '../../composables/useMangaList'
+import useRefreshing from 'src/composables/useRefreshing'
 import { isMangaRead } from '../../services/sortService'
 import { getSiteNameByUrl } from '../../utils/siteUtils'
 
@@ -395,10 +410,14 @@ export default defineComponent({
     url: {
       type: String,
       required: true
+    },
+    initialEditing: {
+      type: Boolean,
+      default: false
     }
   },
 
-  emits: ['imageLoadFailed'],
+  emits: ['mangaSaved', 'mangaRemoved'],
 
   setup (props, context) {
     const manga = useMangaItem(props.url)
@@ -406,10 +425,8 @@ export default defineComponent({
     const { openLinkingDialog } = useProgressLinking(manga.title, manga.linkedSites, manga.newLinkedSites)
     const { openAltSourceDialog } = useAltSources(manga.altSources, manga.title, manga.newSources)
     const { showUpdateMangaDialog } = useMangaList()
-
-    const onImageLoadFailed = () => {
-      context.emit('imageLoadFailed')
-    }
+    const { refreshManga } = useRefreshing(ref(0))
+    const refreshing = ref(false)
 
     const itemSize = computed(() => {
       return mobileView.value ? 'sm' : 'md'
@@ -437,11 +454,23 @@ export default defineComponent({
       manga.newUrl.value = url
     }
 
+    const onRefreshRequested = () => {
+      refreshing.value = true
+      refreshManga(props.url)
+        .finally(() => { refreshing.value = false })
+        .catch(console.error)
+    }
+
+    if (props.initialEditing) {
+      manga.toggleEditing()
+    }
+
     return {
       status: Status,
       statusIcon: StatusIcon,
       editing: manga.editing,
       saving: manga.saving,
+      refreshing,
 
       newUrl: manga.newUrl,
       newReadNum: manga.newReadNum,
@@ -467,19 +496,25 @@ export default defineComponent({
       mobileView,
       itemSize,
       navigate,
-      onImageLoadFailed,
       getSiteNameByUrl,
 
       hasLinkedSites,
       openLinkingDialog,
       openAltSourceDialog,
       openSearchDialog,
+      onRefreshRequested,
 
       isUnread,
-      deleteManga: manga.deleteManga,
+      deleteManga: () => {
+        context.emit('mangaRemoved')
+        manga.deleteManga().catch(console.error)
+      },
       readManga: manga.readManga,
       toggleEditing: manga.toggleEditing,
-      saveManga: manga.saveManga
+      saveManga: () => {
+        context.emit('mangaSaved')
+        manga.saveManga().catch(console.error)
+      }
     }
   }
 })
