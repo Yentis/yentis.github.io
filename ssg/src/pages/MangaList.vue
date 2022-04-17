@@ -133,7 +133,7 @@ export default defineComponent({
           return title || notes || site
         })
       }).sort((a, b) => {
-        return mangaSort(a, b, sortedBy.value)
+        return mangaSort(a, b, sortedBy.value, true)
       })
     })
 
