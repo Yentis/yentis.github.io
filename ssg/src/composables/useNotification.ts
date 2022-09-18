@@ -28,18 +28,19 @@ export function useAppNotification () {
 
     if (notification.value.type !== 'negative') {
       $q.notify(notification.value.getOptions())
+      return
     }
 
     const errorLength = errors.value.length
     addError(notification.value)
     console.error(notification.value.message)
+    if (errorDialogShowing) return
 
     if (errorLength === 0) {
       dismissErrorNotification = $q.notify(notification.value.getOptions()) as () => void
       return
     }
 
-    if (errorDialogShowing) return
     if (dismissErrorNotification) dismissErrorNotification()
     let dismiss: (() => void) | undefined
 
