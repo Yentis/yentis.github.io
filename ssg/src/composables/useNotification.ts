@@ -37,7 +37,13 @@ export function useAppNotification () {
     if (errorDialogShowing) return
 
     if (errorLength === 0) {
-      dismissErrorNotification = $q.notify(notification.value.getOptions()) as () => void
+      dismissErrorNotification = $q.notify({
+        ...notification.value.getOptions(),
+        onDismiss: () => {
+          if (errors.value.length > 1) return
+          clearErrors()
+        }
+      }) as () => void
       return
     }
 
