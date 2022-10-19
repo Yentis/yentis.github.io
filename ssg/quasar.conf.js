@@ -210,7 +210,8 @@ module.exports = configure(function (ctx) {
         '/mangareader',
         '/mangareader/redirect',
         '/mangaviewer',
-        '/mudae'
+        '/mudae',
+        '/p5sfusion'
       ]
     }
   }

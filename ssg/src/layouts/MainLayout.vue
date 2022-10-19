@@ -77,6 +77,11 @@ const pagesData = [
     title: 'Mudae Visualizer',
     icon: 'calculate',
     link: 'https://yentis.github.io/mudae'
+  },
+  {
+    title: 'Persona 5 Strikers Fusion',
+    icon: 'calculate',
+    link: 'https://yentis.github.io/p5sfusion'
   }
 ]
 

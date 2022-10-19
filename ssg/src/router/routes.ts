@@ -8,6 +8,7 @@ const routes: RouteRecordRaw[] = [
       { path: '', name: 'Index', component: () => import('pages/Index.vue') },
       { path: 'emotes', name: 'Emote List', component: () => import('pages/Emotes.vue') },
       { path: 'mudae', name: 'Mudae Visualizer', component: () => import('pages/Mudae.vue') },
+      { path: 'p5sfusion', name: 'Persona 5 Strikers Fusion', component: () => import('pages/P5SFusion.vue') },
       { path: 'mangalist', name: 'Manga List', component: () => import('pages/MangaList.vue') },
       { path: 'mangareader/:redirect(.*)?', name: 'Manga Reader', component: () => import('pages/MangaReader.vue') },
       { path: 'mangaviewer', name: 'Manga Viewer', component: () => import('pages/MangaViewer.vue') }
