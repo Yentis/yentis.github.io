@@ -195,6 +195,8 @@ export default defineComponent({
           mangaList.value = parsedMangalist
         }).catch((error) => {
           notification.value = new NotifyOptions(error, 'Failed to retrieve manga list')
+        }).finally(() => {
+          loading.value = false
         })
     }
 
