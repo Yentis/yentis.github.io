@@ -71,6 +71,13 @@
       >
         <manga-item-simple :manga-json="JSON.stringify(manga)" />
       </q-intersection>
+
+      <q-inner-loading :showing="loading">
+        <q-spinner-gears
+          size="50px"
+          color="primary"
+        />
+      </q-inner-loading>
     </div>
   </q-page>
 </template>
@@ -104,6 +111,7 @@ export default defineComponent({
     const searchValue = ref('')
     const filters: Ref<Status[]> = ref([])
     const sortedBy = ref(SimpleSortType.TITLE)
+    const loading = ref(true)
     const { notification } = useNotification()
 
     const filteredMangaList = computed(() => {
@@ -169,6 +177,7 @@ export default defineComponent({
 
           const parsedMangalist = JSON.parse(data.content) as Manga[]
           mangaList.value = parsedMangalist
+          loading.value = false
         }).catch((error) => {
           console.error(error)
           fetchFromGitlab(id)
@@ -207,6 +216,7 @@ export default defineComponent({
       searchValue,
       filters,
       sortedBy,
+      loading,
       filteredMangaList,
       statusList,
       updateSortedBy,
