@@ -8,16 +8,22 @@ import { requestHandler } from 'src/services/requestService'
 import { ContentType } from 'src/enums/contentTypeEnum'
 import { parseHtmlFromString, parseNum, titleContainsQuery } from '../../utils/siteUtils'
 import qs from 'qs'
+import HttpResponse from 'src/interfaces/httpResponse'
 
 interface MadaraSearch {
   series: {
     all: {
+      ID: number,
       'post_title': string,
       'post_image': string,
       'post_latest': string,
       'post_link': string
     }[]
   }[]
+}
+
+interface MadaraBookmarks {
+  data: string,
 }
 
 class MadaraData extends BaseData {
@@ -64,10 +70,14 @@ export class Madara extends BaseSite {
   }
 
   protected getImage (data: BaseData): string {
-    return data.image?.getAttribute('content') || ''
+    return data.image?.getAttribute('content') ?? data.image?.getAttribute('src') ?? ''
   }
 
   protected async readUrlImpl (url: string): Promise<Error | Manga> {
+    if (url.includes('/?p=') && this.siteType === SiteType.LuminousScans) {
+      return this.getMangaById(url)
+    }
+
     const request: HttpRequest = { method: 'GET', url }
     const response = await requestHandler.sendRequest(request)
 
@@ -86,23 +96,34 @@ export class Madara extends BaseSite {
     const imageElements = doc.querySelectorAll('meta[property="og:image"]')
     let image: Element | undefined
     if (imageElements.length === 0) {
-      image = doc.querySelectorAll('meta[name="twitter:image"]')[0]
+      image = doc.querySelectorAll('meta[name="twitter:image"]')[0] ?? doc.querySelectorAll('.wp-post-image')[0]
     } else image = imageElements[0]
     data.image = image
 
     return this.buildManga(data)
   }
 
-  protected async searchImpl (query: string): Promise<Error | Manga[]> {
-    const data = `action=ts_ac_do_search&ts_ac_query=${encodeURIComponent(query)}`
-    const request: HttpRequest = {
-      method: 'POST',
-      url: `${this.getUrl()}/wp-admin/admin-ajax.php`,
-      headers: { 'Content-Type': `${ContentType.URLENCODED}; charset=UTF-8` },
-      data
-    }
-    const response = await requestHandler.sendRequest(request, true)
+  private async getMangaById (inputUrl: string): Promise<Error | Manga> {
+    const id = inputUrl.split('?p=')[1]
+    if (!id) return new Error('ID not found')
 
+    const response = await this.sendAdminRequest('bookmark_get&ids[]=5424')
+    const bookmarkData = JSON.parse(response.data) as MadaraBookmarks
+
+    const doc = await parseHtmlFromString(bookmarkData.data)
+
+    const url = doc.querySelectorAll('a')[0]?.getAttribute('href')
+    if (!url) return new Error('URL not found')
+
+    const manga = await this.readUrlImpl(url)
+    if (manga instanceof Error) return manga
+
+    manga.url = inputUrl
+    return manga
+  }
+
+  protected async searchImpl (query: string): Promise<Error | Manga[]> {
+    const response = await this.sendAdminRequest(`ts_ac_do_search&ts_ac_query=${encodeURIComponent(query)}`)
     if (response.status >= 400) {
       return await this.searchFallback(query)
     }
@@ -121,13 +142,24 @@ export class Madara extends BaseSite {
         manga.title = entryItem.post_title
         manga.image = entryItem.post_image
         manga.chapter = entryItem.post_latest
-        manga.url = entryItem.post_link
+        manga.url = `${this.getUrl()}/?p=${entryItem.ID}`
 
         mangaList.push(manga)
       }
     }
 
     return mangaList
+  }
+
+  private async sendAdminRequest (action: string): Promise<HttpResponse> {
+    const request: HttpRequest = {
+      method: 'POST',
+      url: `${this.getUrl()}/wp-admin/admin-ajax.php`,
+      headers: { 'Content-Type': `${ContentType.URLENCODED}; charset=UTF-8` },
+      data: `action=${action}`
+    }
+
+    return await requestHandler.sendRequest(request, true)
   }
 
   private async searchFallback (query: string): Promise<Error | Manga[]> {
@@ -167,13 +199,13 @@ export class Madara extends BaseSite {
   getTestUrl () : string {
     switch (this.siteType) {
       case SiteType.AsuraScans:
-        return `${this.getUrl()}/manga/mookhyang-the-origin/`
+        return `${this.getUrl()}/?p=36483`
       case SiteType.FlameScans:
         return `${this.getUrl()}/series/the-way-of-the-househusband/`
       case SiteType.CosmicScans:
         return `${this.getUrl()}/manga/i-have-max-level-luck/`
       case SiteType.LuminousScans:
-        return `${this.getUrl()}/series/1677679234-my-office-noonas-story/`
+        return `${this.getUrl()}/series/1680246102-my-office-noonas-story/`
     }
 
     return this.getUrl()

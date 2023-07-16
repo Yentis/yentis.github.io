@@ -15,7 +15,6 @@ import { testMangakakalot } from './test/mangakakalot'
 import { testMangaKomi } from './test/mangakomi'
 import { testManganato } from './test/manganato'
 import { testMangaTx } from './test/mangatx'
-import { testManhwaClub } from './test/manhwaclub'
 import { testReaperScans } from './test/reaperscans'
 import { testResetScans } from './test/resetscans'
 import { testSleepingKnightScans } from './test/sleepingknightscans'
@@ -91,9 +90,6 @@ export default async function testAll (
   promises.push(testMangaTx().catch((error) => {
     errors.push({ site: SiteType.MangaTx, error: error })
   }))
-  promises.push(testManhwaClub().catch((error) => {
-    errors.push({ site: SiteType.ManhwaClub, error: error })
-  }))
   promises.push(testReaperScans().catch((error) => {
     errors.push({ site: SiteType.ReaperScans, error: error })
   }))
@@ -151,27 +147,27 @@ export async function searchValid (
 ): Promise<void> {
   const matchingManga = results.filter((manga) => {
     if (manga.site !== desired.site) {
-      console.log(`Site did not match: ${manga.site} | ${desired.site}`)
+      console.error(`Site did not match: ${manga.site} | ${desired.site}`)
       return false
     }
 
     if (manga.title.toLowerCase() !== query.toLowerCase()) {
-      console.log(`Title did not match: ${manga.title.toLowerCase()} | ${query.toLowerCase()}`)
+      console.error(`Title did not match: ${manga.title.toLowerCase()} | ${query.toLowerCase()}`)
       return false
     }
 
     if (!manga.image.includes(desired.image)) {
-      console.log(`Image did not match: ${manga.image} | ${desired.image}`)
+      console.error(`Image did not match: ${manga.image} | ${desired.image}`)
       return false
     }
 
     if (desired.chapter !== 'Unknown' && manga.chapter !== desired.chapter) {
-      console.log(`Chapter did not match: ${manga.chapter} | ${desired.chapter}`)
+      console.error(`Chapter did not match: ${manga.chapter} | ${desired.chapter}`)
       return false
     }
 
     if (manga.url !== desired.url) {
-      console.log(`URL did not match: ${manga.url} | ${desired.url}`)
+      console.error(`URL did not match: ${manga.url} | ${desired.url}`)
       return false
     }
 

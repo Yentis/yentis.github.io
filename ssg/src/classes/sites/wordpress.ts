@@ -162,8 +162,13 @@ export class WordPress extends BaseSite {
 
     doc.querySelectorAll('.c-tabs-item__content').forEach((elem) => {
       const imageElem = elem.querySelectorAll('a')[0]
-      const manga = new Manga(imageElem?.getAttribute('href') || '', this.siteType)
 
+      const url = imageElem?.getAttribute('href') ?? ''
+      const regex = /\/manga\/(\d*-).*\//gm
+      const prefixNumbers = regex.exec(url)?.[1] ?? ''
+      const cleanUrl = url.replace(prefixNumbers, '')
+
+      const manga = new Manga(cleanUrl, this.siteType)
       manga.image = this.getImageSrc(imageElem?.querySelectorAll('img')[0])
       manga.title = elem.querySelectorAll('.post-title')[0]?.textContent?.trim() || ''
       manga.chapter = elem.querySelectorAll('.font-meta.chapter')[0]?.textContent?.trim() || 'Unknown'
@@ -303,7 +308,7 @@ export class WordPress extends BaseSite {
       case SiteType.MangaTx:
         return `${this.getUrl()}/manga/grandest-wedding/`
       case SiteType.LeviatanScans:
-        return `${this.getUrl()}/manga/i-am-the-sorcerer-king/`
+        return `${this.getUrl()}/manga/trash-of-the-counts-family/`
       case SiteType.SleepingKnightScans:
         return `${this.getUrl()}/manga/chronicles-of-the-martial-gods-return/`
       case SiteType.ResetScans:
