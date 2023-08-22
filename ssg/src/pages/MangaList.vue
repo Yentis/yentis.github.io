@@ -58,7 +58,8 @@
     <a
       href="https://github.com/Yentis/manga-reader"
       class="text-primary text-bold"
-    >Click here to make your own</a>
+      >Click here to make your own</a
+    >
 
     <div
       class="q-mt-sm q-px-sm full-width"
@@ -88,7 +89,6 @@ import { Ref } from '@vue/runtime-core/dist/runtime-core'
 import { useRoute } from 'vue-router'
 import { Manga } from '../classes/manga'
 import { SimpleSortType } from '../enums/sortingEnum'
-import { Base64 } from 'js-base64'
 import { mangaSort } from '../services/sortService'
 import MangaItemSimple from '../components/manga-item-simple/MangaItemSimple.vue'
 import { Status } from '../enums/statusEnum'
@@ -96,17 +96,17 @@ import { SiteName } from '../enums/siteEnum'
 import useNotification from '../composables/useNotification'
 import { NotifyOptions } from '../classes/notifyOptions'
 import HttpRequest from '../interfaces/httpRequest'
-import HttpResponse from '../interfaces/httpResponse'
 import { requestHandler } from '../services/requestService'
+import { Data64URIReader, TextWriter, ZipReader } from '@zip.js/zip.js'
 
 export default defineComponent({
   name: 'PageManga',
 
   components: {
-    MangaItemSimple
+    MangaItemSimple,
   },
 
-  setup () {
+  setup() {
     const mangaList: Ref<Manga[]> = ref([])
     const searchValue = ref('')
     const filters: Ref<Status[]> = ref([])
@@ -115,41 +115,43 @@ export default defineComponent({
     const { notification } = useNotification()
 
     const filteredMangaList = computed(() => {
-      return mangaList.value.filter((manga) => {
-        if (!filters.value.includes(manga.status)) return false
+      return mangaList.value
+        .filter((manga) => {
+          if (!filters.value.includes(manga.status)) return false
 
-        const searchWords = searchValue.value.split(' ')
-        let title = true
-        let notes = true
-        let site = true
+          const searchWords = searchValue.value.split(' ')
+          let title = true
+          let notes = true
+          let site = true
 
-        return searchWords.every((word) => {
-          const lowerCaseWord = word.toLowerCase()
+          return searchWords.every((word) => {
+            const lowerCaseWord = word.toLowerCase()
 
-          if (!manga.title.toLowerCase().includes(lowerCaseWord)) {
-            title = false
-          }
+            if (!manga.title.toLowerCase().includes(lowerCaseWord)) {
+              title = false
+            }
 
-          if (!manga.notes?.toLowerCase().includes(lowerCaseWord)) {
-            notes = false
-          }
+            if (!manga.notes?.toLowerCase().includes(lowerCaseWord)) {
+              notes = false
+            }
 
-          if (!SiteName[manga.site]?.toLowerCase().includes(lowerCaseWord)) {
-            site = false
-          }
+            if (!SiteName[manga.site]?.toLowerCase().includes(lowerCaseWord)) {
+              site = false
+            }
 
-          return title || notes || site
+            return title || notes || site
+          })
         })
-      }).sort((a, b) => {
-        return mangaSort(a, b, sortedBy.value, true)
-      })
+        .sort((a, b) => {
+          return mangaSort(a, b, sortedBy.value, true)
+        })
     })
 
     const statusList = computed(() => {
-      return Object.values(Status).map(value => {
+      return Object.values(Status).map((value) => {
         return {
           label: value,
-          value: value
+          value: value,
         }
       })
     })
@@ -165,39 +167,37 @@ export default defineComponent({
 
     const $route = useRoute()
 
-    const fetchFromRentry = (id: string) => {
-      const request: HttpRequest = { method: 'GET', url: `https://api.allorigins.win/raw?url=${encodeURIComponent(`https://rentry.co/api/raw/${id}`)}` }
-      requestHandler.sendRequest(request)
-        .then((response: HttpResponse) => {
-          const data = JSON.parse(response.data) as { status: string, content: string }
-          if (data.status !== '200') {
-            fetchFromGitlab(id)
-            return
-          }
+    const fetchFromRentry = async (id: string) => {
+      const request: HttpRequest = {
+        method: 'GET',
+        url: `https://api.allorigins.win/raw?url=${encodeURIComponent(`https://rentry.co/api/raw/${id}`)}`,
+      }
+      const response = await requestHandler.sendRequest(request)
 
-          const parsedMangalist = JSON.parse(data.content) as Manga[]
-          mangaList.value = parsedMangalist
-          loading.value = false
-        }).catch((error) => {
-          console.error(error)
-          fetchFromGitlab(id)
-        })
+      const data = JSON.parse(response.data) as { status: string; content: string }
+      if (data.status !== '200') throw new Error(`Status: ${data.status}, ${data.content}`)
+
+      let parsedMangaList: Manga[] = []
+      try {
+        parsedMangaList = JSON.parse(data.content) as Manga[]
+      } catch (error) {
+        parsedMangaList = JSON.parse(await readZip(data.content)) as Manga[]
+      }
+
+      mangaList.value = parsedMangaList
     }
 
-    const fetchFromGitlab = (id: string) => {
-      const request: HttpRequest = { method: 'GET', url: `https://gitlab.com/api/v4/snippets/${id}/raw` }
-      requestHandler.sendRequest(request)
-        .then((response: HttpResponse) => {
-          let data = Base64.decode(response.data)
-          data = data.substring(data.indexOf('['), data.lastIndexOf(']') + 1).trim()
+    const readZip = async (content: string) => {
+      const zipFileReader = new Data64URIReader(content)
+      const listWriter = new TextWriter()
+      const zipReader = new ZipReader(zipFileReader)
 
-          const parsedMangalist = JSON.parse(data) as Manga[]
-          mangaList.value = parsedMangalist
-        }).catch((error) => {
-          notification.value = new NotifyOptions(error, 'Failed to retrieve manga list')
-        }).finally(() => {
-          loading.value = false
-        })
+      const firstEntry = (await zipReader.getEntries()).shift()
+      const listText = await firstEntry?.getData?.(listWriter)
+      await zipReader.close()
+
+      if (listText === undefined) throw new Error('ZIP file was empty')
+      return listText
     }
 
     onMounted(() => {
@@ -211,6 +211,13 @@ export default defineComponent({
       if (id === undefined) return
 
       fetchFromRentry(id)
+        .catch((error) => {
+          console.error(error)
+          notification.value = new NotifyOptions(error, 'Failed to retrieve manga list')
+        })
+        .finally(() => {
+          loading.value = false
+        })
     })
 
     return {
@@ -223,25 +230,25 @@ export default defineComponent({
       statusList,
       updateSortedBy,
       updateFilters,
-      sortType: SimpleSortType
+      sortType: SimpleSortType,
     }
-  }
+  },
 })
 </script>
 
 <style lang="scss">
-  .flex-column-between {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-  }
+.flex-column-between {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
 
-  a {
-    text-decoration: none;
-    color: $primary;
-  }
+a {
+  text-decoration: none;
+  color: $primary;
+}
 
-  .manga-item {
-    min-height: 11rem;
-  }
+.manga-item {
+  min-height: 11rem;
+}
 </style>

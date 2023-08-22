@@ -8,6 +8,7 @@
           icon="add"
           @click="onAddManga"
         />
+
         <q-btn
           color="primary"
           icon="refresh"
@@ -23,6 +24,7 @@
           :disable="importing"
           @click="onExportList"
         />
+
         <q-btn
           color="primary"
           icon="cloud_download"
@@ -51,6 +53,7 @@
             v-if="searchValue === ''"
             name="search"
           />
+
           <q-icon
             v-else
             name="clear"
@@ -116,34 +119,25 @@ export default defineComponent({
   props: {
     refreshProgress: {
       type: Number,
-      required: true
-    }
+      required: true,
+    },
   },
 
   emits: ['update:refreshProgress'],
 
-  setup (props, context) {
+  setup(props, context) {
     const { importList, exportList } = useCloudSync()
 
-    const {
-      addManga,
-      storeManga,
-      showAddMangaDialog,
-      showEditMangaDialog,
-      fetchManga
-    } = useMangaList()
+    const { addManga, storeManga, showAddMangaDialog, showEditMangaDialog, fetchManga } = useMangaList()
 
     const refreshProgress = computed({
       get: () => props.refreshProgress,
-      set: (val) => { context.emit('update:refreshProgress', val) }
+      set: (val) => {
+        context.emit('update:refreshProgress', val)
+      },
     })
 
-    const {
-      refreshing,
-      refreshTimer,
-      startRefreshTimer,
-      refreshAllManga
-    } = useRefreshing(refreshProgress)
+    const { refreshing, refreshTimer, startRefreshTimer, refreshAllManga } = useRefreshing(refreshProgress)
 
     const doFullRefresh = () => {
       if (refreshTimer.value) clearTimeout(refreshTimer.value)
@@ -170,12 +164,7 @@ export default defineComponent({
     }
 
     const newFilters: Ref<Status[]> = ref([])
-    const {
-      settings,
-      showSettingsDialog,
-      setSortedBy,
-      setFilters
-    } = useSettings()
+    const { settings, showSettingsDialog, setSortedBy, setFilters } = useSettings()
 
     onMounted(() => {
       startRefreshTimer(settings.value.refreshOptions)
@@ -190,29 +179,32 @@ export default defineComponent({
     const onImportList = () => {
       importing.value = true
 
-      importList().finally(() => {
-        importing.value = false
-      }).catch(console.error)
+      importList()
+        .finally(() => {
+          importing.value = false
+        })
+        .catch(console.error)
     }
 
     const exporting = ref(false)
     const onExportList = () => {
       exporting.value = true
 
-      exportList().finally(() => {
-        exporting.value = false
-      }).catch(console.error)
+      exportList()
+        .finally(() => {
+          exporting.value = false
+        })
+        .catch(console.error)
     }
 
     const { mobileView } = useMobileView()
     const { searchValue } = useSearchValue()
-    const statusList = Object.values(Status)
-      .map(value => {
-        return {
-          label: value,
-          value: value
-        }
-      })
+    const statusList = Object.values(Status).map((value) => {
+      return {
+        label: value,
+        value: value,
+      }
+    })
 
     return {
       sortTypes: SortType,
@@ -234,14 +226,13 @@ export default defineComponent({
       setFilters,
 
       onAddManga,
-      doFullRefresh
+      doFullRefresh,
     }
-  }
+  },
 })
 </script>
 
 <style lang="scss" scoped>
-
 .header {
   display: flex;
   justify-content: space-between;
@@ -250,5 +241,4 @@ export default defineComponent({
 .flex-column-between button {
   width: 100%;
 }
-
 </style>

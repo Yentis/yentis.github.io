@@ -1,6 +1,6 @@
 {
   "name": "yentis.github.io",
-  "version": "2.23.3",
+  "version": "2.23.4",
   "description": "Yentis' static site",
   "productName": "yentis.github.io",
   "author": "Yentis#5218",
@@ -16,8 +16,10 @@
   },
   "dependencies": {
     "@cliqz/adblocker-electron": "^1.22.2",
+    "@quasar/app-webpack": "^3.9.5",
     "@quasar/cli": "^1.2.1",
     "@quasar/extras": "^1.0.0",
+    "@zip.js/zip.js": "^2.7.24",
     "core-js": "^3.6.5",
     "dropbox": "^10.28.0",
     "isomorphic-fetch": "^2.2.1",
@@ -27,6 +29,8 @@
     "p-queue": "^6.6.2",
     "quasar": "2",
     "relevancy": "^0.2.0",
+    "vue": "^3.0.0",
+    "vue-router": "^4.0.0",
     "vuex": "4"
   },
   "devDependencies": {
@@ -53,7 +57,7 @@
     "eslint-plugin-vue": "^7.0.0",
     "eslint-webpack-plugin": "^2.4.0",
     "jsdom-global": "^3.0.2",
-    "quasar-app-extension-ssg": "^3.0.5",
+    "quasar-app-extension-ssg": "^5.0.0",
     "ts-node": "^8.10.2"
   },
   "browserslist": [
