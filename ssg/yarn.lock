@@ -7871,10 +7871,10 @@ qs@^6.11.0:
   dependencies:
     side-channel "^1.0.4"
 
-quasar-app-extension-ssg@^5.0.0:
-  version "5.0.0"
-  resolved "https://registry.yarnpkg.com/quasar-app-extension-ssg/-/quasar-app-extension-ssg-5.0.0.tgz#13707246931af723434c21eae297812e0e61ae8d"
-  integrity sha512-QJCYaNQFYnqwR2X4A4qykXoOTH28n095ZiHy60eOciWfXboltJjG8RtUABGq9awhKe2K72//r3BM70avKi4J+w==
+quasar-app-extension-ssg@^5.0.1:
+  version "5.0.1"
+  resolved "https://registry.yarnpkg.com/quasar-app-extension-ssg/-/quasar-app-extension-ssg-5.0.1.tgz#1a6731ed2f34c50bfde264790a8f2bb89adfa2fb"
+  integrity sha512-m0ABnzvCC1muoJUHtusytFu7AEGnXFgo9q4wfqeQzuzMVNCJhSuTR7Z5FoYA2qEJEFuB+z0UxUYHzF2y0dVPRQ==
   dependencies:
     "@freddy38510/vue-loader" "^17.2.0"
     "@freddy38510/vue-style-loader" "^4.2.0"
