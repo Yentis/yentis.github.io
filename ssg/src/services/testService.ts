@@ -18,9 +18,7 @@ import { testReaperScans } from './test/reaperscans'
 import { testResetScans } from './test/resetscans'
 import { testWebtoons } from './test/webtoons'
 import { testZeroScans } from './test/zeroscans'
-import { testBiliBiliComics } from './test/bilibilicomics'
 import { testKitsu } from './test/kitsu'
-import { testCosmicScans } from './test/cosmicscans'
 import { testCubari } from './test/cubari'
 import { testLuminousScans } from './test/luminousscans'
 import { testTapas } from './test/tapas'
@@ -35,11 +33,6 @@ export default async function testAll(
   const errors: { site: SiteType | LinkingSiteType; error: unknown }[] = []
 
   promises.push(
-    testCosmicScans().catch((error) => {
-      errors.push({ site: SiteType.CosmicScans, error: error })
-    })
-  )
-  promises.push(
     testAsuraScans().catch((error) => {
       errors.push({ site: SiteType.AsuraScans, error: error })
     })
@@ -47,11 +40,6 @@ export default async function testAll(
   promises.push(
     testBatoto().catch((error) => {
       errors.push({ site: SiteType.Batoto, error: error })
-    })
-  )
-  promises.push(
-    testBiliBiliComics().catch((error) => {
-      errors.push({ site: SiteType.BiliBiliComics, error: error })
     })
   )
   promises.push(

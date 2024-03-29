@@ -197,15 +197,7 @@ module.exports = configure(function (ctx) {
     },
 
     ssg: {
-      routes: [
-        '/emotes',
-        '/mangalist',
-        '/mangareader',
-        '/mangareader/redirect',
-        '/mangaviewer',
-        '/mudae',
-        '/p5sfusion',
-      ],
+      routes: ['/emotes', '/mangalist', '/mangareader', '/mangareader/redirect', '/mudae', '/p5sfusion'],
     },
   }
 })

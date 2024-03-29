@@ -11,16 +11,15 @@ const routes: RouteRecordRaw[] = [
       { path: 'p5sfusion', name: 'Persona 5 Strikers Fusion', component: () => import('pages/P5SFusion.vue') },
       { path: 'mangalist', name: 'Manga List', component: () => import('pages/MangaList.vue') },
       { path: 'mangareader/:redirect(.*)?', name: 'Manga Reader', component: () => import('pages/MangaReader.vue') },
-      { path: 'mangaviewer', name: 'Manga Viewer', component: () => import('pages/MangaViewer.vue') }
-    ]
+    ],
   },
 
   // Always leave this as last one,
   // but you can also remove it
   {
     path: '/:catchAll(.*)*',
-    component: () => import('pages/Error404.vue')
-  }
+    component: () => import('pages/Error404.vue'),
+  },
 ]
 
 export default routes
