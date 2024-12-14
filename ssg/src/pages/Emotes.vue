@@ -82,7 +82,7 @@ export default defineComponent({
             name
           )
         }).reverse()
-      }).catch((error) => {
+      }).catch((error: Error) => {
         notification.value = new NotifyOptions(error, 'Failed to retrieve emotes')
       })
     })

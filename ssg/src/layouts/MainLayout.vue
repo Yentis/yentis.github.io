@@ -53,7 +53,7 @@
 </template>
 
 <script lang="ts">
-import Navigation from '../components/Navigation.vue'
+import Navigation from 'components/NavigationComponent.vue'
 import { defineComponent, ref } from 'vue'
 import useSettings from '../composables/useSettings'
 

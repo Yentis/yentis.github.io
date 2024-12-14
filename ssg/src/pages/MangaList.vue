@@ -58,8 +58,7 @@
     <a
       href="https://github.com/Yentis/manga-reader"
       class="text-primary text-bold"
-      >Click here to make your own</a
-    >
+    >Click here to make your own</a>
 
     <div
       class="q-mt-sm q-px-sm full-width"
@@ -177,10 +176,10 @@ export default defineComponent({
       const data = JSON.parse(response.data) as { status: string; content: string }
       if (data.status !== '200') throw new Error(`Status: ${data.status}, ${data.content}`)
 
-      let parsedMangaList: Manga[] = []
+      let parsedMangaList: Manga[]
       try {
         parsedMangaList = JSON.parse(data.content) as Manga[]
-      } catch (error) {
+      } catch (_) {
         parsedMangaList = JSON.parse(await readZip(data.content)) as Manga[]
       }
 
@@ -211,7 +210,7 @@ export default defineComponent({
       if (id === undefined) return
 
       fetchFromRentry(id)
-        .catch((error) => {
+        .catch((error: Error) => {
           console.error(error)
           notification.value = new NotifyOptions(error, 'Failed to retrieve manga list')
         })

@@ -17,10 +17,12 @@ class WordPressData extends BaseData {
 
 export class WordPress extends BaseSite {
   siteType: SiteType
+  userAgent: string
 
   constructor(siteType: SiteType) {
     super()
     this.siteType = siteType
+    this.userAgent = siteType === SiteType.LikeManga ? 'Lorem Ipsum' : navigator.userAgent
 
     if (siteType === SiteType.HiperDEX) {
       this.requestQueue = new PQueue({ interval: 1000, intervalCap: 1 })
@@ -74,10 +76,12 @@ export class WordPress extends BaseSite {
       format = 'DD/MM/YYYY'
     } else if (chapterDateText?.includes(',')) {
       format = 'MMMM DD, YYYY'
-    } else if (chapterDateText?.includes('-')) {
-      format = 'DD-MM-YYYY'
+    } else if (chapterDateText?.length === 6 && chapterDateText?.includes('-')) {
+      format = 'DD-MMM'
     } else if (chapterDateText?.length === 6) {
       format = 'MMM DD'
+    } else if (chapterDateText?.includes('-')) {
+      format = 'DD-MM-YYYY'
     } else {
       format = 'Do MMMM YYYY'
     }
@@ -115,7 +119,7 @@ export class WordPress extends BaseSite {
 
   protected async readUrlImpl(url: string): Promise<Error | Manga> {
     const request: HttpRequest = { method: 'GET', url }
-    this.trySetUserAgent(request)
+    this.trySetUserAgent(request, this.userAgent)
 
     const response = await requestHandler.sendRequest(request)
     const doc = await parseHtmlFromString(response.data)
@@ -160,20 +164,13 @@ export class WordPress extends BaseSite {
       queryParam += word
     })
 
-    const queryString =
-      this.siteType === SiteType.LikeManga
-        ? qs.stringify({ act: 'ajax', code: 'search_manga', keyword: query })
-        : qs.stringify({ s: queryParam, post_type: 'wp-manga' })
+    const queryString = qs.stringify({ s: queryParam, post_type: 'wp-manga' })
 
     const request: HttpRequest = { method: 'GET', url: `${this.getUrl()}/?${queryString}` }
-    this.trySetUserAgent(request)
+    this.trySetUserAgent(request, this.userAgent)
 
     const response = await requestHandler.sendRequest(request)
     const doc = await parseHtmlFromString(response.data)
-
-    if (this.siteType === SiteType.LikeManga) {
-      return this.searchLikeManga(doc, query)
-    }
 
     const mangaList: Manga[] = []
 
@@ -189,34 +186,6 @@ export class WordPress extends BaseSite {
       manga.image = this.getImageSrc(imageElem?.querySelectorAll('img')[0])
       manga.title = elem.querySelectorAll('.post-title')[0]?.textContent?.trim() || ''
       manga.chapter = elem.querySelectorAll('.font-meta.chapter')[0]?.textContent?.trim() || 'Unknown'
-
-      if (titleContainsQuery(query, manga.title)) {
-        mangaList.push(manga)
-      }
-    })
-
-    return mangaList
-  }
-
-  private searchLikeManga(doc: Document, query: string): Manga[] {
-    const mangaList: Manga[] = []
-
-    doc.querySelectorAll('li').forEach((elem) => {
-      const imageElem = elem.querySelectorAll('a')[0]
-
-      let url = imageElem?.getAttribute('href') ?? ''
-      url = `${this.getUrl()}${url}`
-
-      const regex = /\/manga\/(\d*-).*\//gm
-      const prefixNumbers = regex.exec(url)?.[1] ?? ''
-      const cleanUrl = url.replace(prefixNumbers, '')
-
-      const manga = new Manga(cleanUrl, this.siteType)
-      manga.image = this.getImageSrc(imageElem?.querySelectorAll('img')[0])
-      manga.image = `${this.getUrl()}/${manga.image}`
-
-      manga.title = elem.querySelectorAll('h3')[0]?.textContent?.trim() || ''
-      manga.chapter = elem.querySelectorAll('h4 i b')[0]?.textContent?.trim() || 'Unknown'
 
       if (titleContainsQuery(query, manga.title)) {
         mangaList.push(manga)
@@ -246,7 +215,7 @@ export class WordPress extends BaseSite {
         data: JSON.stringify(requestData),
         headers: { 'Content-Type': ContentType.URLENCODED },
       }
-      this.trySetUserAgent(request)
+      this.trySetUserAgent(request, this.userAgent)
 
       const response = await requestHandler.sendRequest(request)
       if (response.data === '0') throw Error('Invalid chapter data')
@@ -339,13 +308,11 @@ export class WordPress extends BaseSite {
   getTestUrl(): string {
     switch (this.siteType) {
       case SiteType.LikeManga:
-        return `${this.getUrl()}/the-elegant-sea-of-savagery-1615/`
+        return `${this.getUrl()}/manga/the-elegant-sea-of-savagery/`
       case SiteType.MangaKomi:
         return `${this.getUrl()}/manga/good-night/`
       case SiteType.HiperDEX:
         return `${this.getUrl()}/manga/10-years-in-the-friend-zone/`
-      case SiteType.LSComic:
-        return `${this.getUrl()}/manga/trash-of-the-counts-family/`
       case SiteType.ResetScans:
         return `${this.getUrl()}/manga/the-unwanted-undead-adventurer/`
     }

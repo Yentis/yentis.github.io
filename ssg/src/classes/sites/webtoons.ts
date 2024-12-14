@@ -7,7 +7,14 @@ import { requestHandler } from 'src/services/requestService'
 import qs from 'qs'
 import { parseHtmlFromString, titleContainsQuery } from 'src/utils/siteUtils'
 import { HEADER_USER_AGENT } from '../requests/baseRequest'
-import { getRssChapter, getRssChapterDate, getRssChapterUrl, getRssData, getRssImage, getRssTitle } from 'src/utils/rssUtils'
+import {
+  getRssChapter,
+  getRssChapterDate,
+  getRssChapterUrl,
+  getRssData,
+  getRssImage,
+  getRssTitle,
+} from 'src/utils/rssUtils'
 
 interface WebtoonsSearch {
   result: {
@@ -37,6 +44,7 @@ export class Webtoons extends BaseSite {
     const queryString = chapterUrl.substring(chapterUrl.indexOf('?'))
     const query = qs.parse(queryString)
 
+    // eslint-disable-next-line @typescript-eslint/no-base-to-string
     const episodeText = query.episode_no?.toString()
     if (!episodeText) return 0
 
@@ -82,7 +90,7 @@ export class Webtoons extends BaseSite {
     }
 
     const desktopUrl = baseUrl.replace('m.webtoons.com', 'www.webtoons.com')
-    const rssUrl = desktopUrl.replace('list?title_no', 'rss?title_no')
+    const rssUrl = desktopUrl.replace('list?title_no', 'rss?title_no').replace('/canvas/', '/challenge/')
 
     const headers: Record<string, string> = {}
     headers[HEADER_USER_AGENT] = ''

@@ -31,6 +31,7 @@
           <q-toggle
             v-model="newSettings.refreshOptions.enabled"
             label="Auto refresh"
+            @click="onClickAutoRefresh"
           />
         </q-card-actions>
         <q-input
@@ -102,7 +103,7 @@
 </template>
 
 <script lang="ts">
-import { useDialogPluginComponent, copyToClipboard } from 'quasar'
+import { copyToClipboard, useDialogPluginComponent } from 'quasar'
 import { defineComponent, onMounted, ref } from 'vue'
 import { Settings } from '../classes/settings'
 import { NotifyOptions } from '../classes/notifyOptions'
@@ -114,6 +115,7 @@ import useSharing from '../composables/useSharing'
 import { getPlatform } from '../services/platformService'
 import { Platform } from '../enums/platformEnum'
 import { getShareId } from '../services/rentryService'
+import { LocalNotifications } from '@capacitor/local-notifications'
 
 export default defineComponent({
   components: { TestComponent },
@@ -157,7 +159,7 @@ export default defineComponent({
           notifyOptions.type = 'positive'
           notification.value = notifyOptions
         })
-        .catch(error => {
+        .catch((error: Error) => {
           notification.value = new NotifyOptions(error, 'Failed to copy to clipboard')
         })
     }
@@ -165,6 +167,16 @@ export default defineComponent({
     const onToggleDarkMode = () => {
       toggleDarkMode()
       newSettings.value.darkMode = settings.value.darkMode
+    }
+
+    const onClickAutoRefresh = async () => {
+      const isEnabled = newSettings.value.refreshOptions.enabled
+      if (!isEnabled || getPlatform() !== Platform.Capacitor) return
+
+      const status = await LocalNotifications.checkPermissions()
+      if (status.display === 'granted') return
+
+      await LocalNotifications.requestPermissions()
     }
 
     return {
@@ -185,6 +197,7 @@ export default defineComponent({
       onShareList,
       onCopyToClipboard,
       onToggleDarkMode,
+      onClickAutoRefresh,
       isStatic: getPlatform() === Platform.Static
     }
   }

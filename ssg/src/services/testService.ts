@@ -8,7 +8,6 @@ import { testBatoto } from './test/batoto'
 import { testLikeManga } from './test/likemanga'
 import { testFlameComics } from './test/flamecomics'
 import { testHiperDEX } from './test/hiperdex'
-import { testLSComic } from './test/lscomic'
 import { testMangaDex } from './test/mangadex'
 import { testMangago } from './test/mangago'
 import { testMangakakalot } from './test/mangakakalot'
@@ -20,7 +19,6 @@ import { testWebtoons } from './test/webtoons'
 import { testZeroScans } from './test/zeroscans'
 import { testKitsu } from './test/kitsu'
 import { testCubari } from './test/cubari'
-import { testRadiantScans } from './test/radiantscans'
 import { testTapas } from './test/tapas'
 import { testComikey } from './test/comikey'
 import { testTappytoon } from './test/tappytoon'
@@ -70,16 +68,6 @@ export default async function testAll(
   promises.push(
     testKitsu($q).catch((error) => {
       errors.push({ site: LinkingSiteType.Kitsu, error: error })
-    })
-  )
-  promises.push(
-    testLSComic().catch((error) => {
-      errors.push({ site: SiteType.LSComic, error: error })
-    })
-  )
-  promises.push(
-    testRadiantScans().catch((error) => {
-      errors.push({ site: SiteType.RadiantScans, error: error })
     })
   )
   promises.push(

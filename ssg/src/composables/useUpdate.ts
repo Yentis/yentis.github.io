@@ -20,7 +20,7 @@ export default function useUpdate () {
     notifyOptions.actions = [{
       label: 'Download',
       handler: () => {
-        if (platform === Platform.Cordova) {
+        if (platform === Platform.Capacitor) {
           const apkAsset = getApkAsset(githubRelease)
           if (!apkAsset) return
           window.location.href = apkAsset.browser_download_url
@@ -40,7 +40,7 @@ export default function useUpdate () {
     checkUpdates().then(result => {
       if (!result) return
       showUpdateAvailable(result)
-    }).catch(error => {
+    }).catch((error: Error) => {
       notification.value = new NotifyOptions(error, 'Failed to check for updates')
     })
   }

@@ -49,7 +49,6 @@ import { testAsuraScans } from '../services/test/asurascans'
 import { testBatoto } from '../services/test/batoto'
 import { testLikeManga } from '../services/test/likemanga'
 import { testHiperDEX } from '../services/test/hiperdex'
-import { testLSComic } from '../services/test/lscomic'
 import { testMangaDex } from '../services/test/mangadex'
 import { testMangago } from '../services/test/mangago'
 import { testMangakakalot } from '../services/test/mangakakalot'
@@ -64,7 +63,6 @@ import { LinkingSiteType } from '../enums/linkingSiteEnum'
 import { testResetScans } from '../services/test/resetscans'
 import { testKitsu } from '../services/test/kitsu'
 import { testCubari } from '../services/test/cubari'
-import { testRadiantScans } from 'src/services/test/radiantscans'
 import { testTapas } from 'src/services/test/tapas'
 import { testComikey } from 'src/services/test/comikey'
 import { testTappytoon } from 'src/services/test/tappytoon'
@@ -147,12 +145,6 @@ export default defineComponent({
           break
         case LinkingSiteType.Kitsu:
           await doTest(testKitsu($q))
-          break
-        case SiteType.LSComic:
-          await doTest(testLSComic)
-          break
-        case SiteType.RadiantScans:
-          await doTest(testRadiantScans)
           break
         case SiteType.MangaDex:
           await doTest(testMangaDex)

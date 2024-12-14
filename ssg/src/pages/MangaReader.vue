@@ -35,7 +35,12 @@ import useSettings from '../composables/useSettings'
 import useSearchValue from '../composables/useSearchValue'
 import useRefreshing from '../composables/useRefreshing'
 import { getSiteNameByUrl } from '../utils/siteUtils'
-import { useAppInitialized, useCordovaInitialized, useElectronInitialized, useStaticInitialized } from '../composables/useInitialized'
+import {
+  useAppInitialized,
+  useCapacitorInitialized,
+  useElectronInitialized,
+  useStaticInitialized,
+} from '../composables/useInitialized'
 import { getPlatform } from '../services/platformService'
 import { Platform } from '../enums/platformEnum'
 import { useStore } from '../store'
@@ -98,8 +103,8 @@ export default defineComponent({
     })
 
     switch (getPlatform()) {
-      case Platform.Cordova:
-        useCordovaInitialized()
+      case Platform.Capacitor:
+        useCapacitorInitialized()
         break
       case Platform.Electron:
         useElectronInitialized()

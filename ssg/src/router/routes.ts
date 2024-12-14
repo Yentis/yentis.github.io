@@ -1,3 +1,4 @@
+// eslint-disable-next-line import/named
 import { RouteRecordRaw } from 'vue-router/dist/vue-router'
 
 const routes: RouteRecordRaw[] = [
@@ -18,7 +19,7 @@ const routes: RouteRecordRaw[] = [
   // but you can also remove it
   {
     path: '/:catchAll(.*)*',
-    component: () => import('pages/Error404.vue'),
+    component: () => import('pages/Error404Page.vue'),
   },
 ]
 
