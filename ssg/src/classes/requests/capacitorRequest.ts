@@ -35,6 +35,7 @@ export default class CapacitorRequest extends BaseRequest {
       method: request.method,
       data: request.data,
       headers: request.headers,
+      responseType: headers.responseType as 'arraybuffer' | undefined,
     })
 
     const data = typeof capacitorResponse.data === 'string'
