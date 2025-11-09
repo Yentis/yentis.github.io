@@ -1,4 +1,4 @@
-import { SiteType } from '../../enums/siteEnum'
+import { SiteType } from 'src/enums/siteEnum'
 import { BaseData, BaseSite } from './baseSite'
 import PQueue from 'p-queue'
 import { requestHandler } from 'src/services/requestService'
@@ -68,28 +68,35 @@ export class WordPress extends BaseSite {
     return matchNum(chapter)
   }
 
-  getChapterDate(data: BaseData): string {
+  protected override getChapterDate(data: BaseData): string {
     const chapterDateText = data.chapterDate?.textContent?.trim()
+    let chapterDate: moment.Moment
 
-    let format
-    if (chapterDateText?.includes('/')) {
-      format = 'DD/MM/YYYY'
-    } else if (chapterDateText?.includes(',')) {
-      format = 'MMMM DD, YYYY'
-    } else if (chapterDateText?.length === 6 && chapterDateText?.includes('-')) {
-      format = 'DD-MMM'
-    } else if (chapterDateText?.length === 6) {
-      format = 'MMM DD'
-    } else if (chapterDateText?.includes('-')) {
-      format = 'DD-MM-YYYY'
+    if (this.siteType === SiteType.HiperDEX) {
+      chapterDate = moment(chapterDateText, 'MM/DD/YYYY')
+    } else if (this.siteType === SiteType.LikeManga) {
+      chapterDate = moment(chapterDateText, 'DD MMMM, YYYY')
     } else {
-      format = 'Do MMMM YYYY'
-    }
+      let format
+      if (chapterDateText?.includes('/')) {
+        format = 'DD/MM/YYYY'
+      } else if (chapterDateText?.includes(',')) {
+        format = 'MMMM DD, YYYY'
+      } else if (chapterDateText?.length === 6 && chapterDateText?.includes('-')) {
+        format = 'DD-MMM'
+      } else if (chapterDateText?.length === 6) {
+        format = 'MMM DD'
+      } else if (chapterDateText?.includes('-')) {
+        format = 'DD-MM-YYYY'
+      } else {
+        format = 'Do MMMM YYYY'
+      }
 
-    let chapterDate = moment(chapterDateText, format)
-    if (chapterDate.isAfter(moment.now()) && (format === 'MMM DD' || format === 'DD-MMM')) {
-      const year = new Date().getFullYear()
-      chapterDate = chapterDate.year(year - 1)
+      chapterDate = moment(chapterDateText, format)
+      if (chapterDate.isAfter(moment.now()) && (format === 'MMM DD' || format === 'DD-MMM')) {
+        const year = new Date().getFullYear()
+        chapterDate = chapterDate.year(year - 1)
+      }
     }
 
     if (!chapterDateText?.endsWith('ago') && chapterDate.isValid()) {
@@ -174,7 +181,8 @@ export class WordPress extends BaseSite {
 
     const mangaList: Manga[] = []
 
-    doc.querySelectorAll('.c-tabs-item__content').forEach((elem) => {
+    const elements = this.siteType === SiteType.HiperDEX ? doc.querySelectorAll('.c-page__content') : doc.querySelectorAll('.c-tabs-item__content')
+    elements.forEach((elem) => {
       const imageElem = elem.querySelectorAll('a')[0]
 
       const url = imageElem?.getAttribute('href') ?? ''

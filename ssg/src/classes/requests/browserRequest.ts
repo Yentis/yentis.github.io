@@ -41,7 +41,7 @@ export async function hasExtension(): Promise<boolean> {
         return
       }
 
-      resolve(response === '1.5')
+      resolve(response === '1.5.1')
     })
   })
 }

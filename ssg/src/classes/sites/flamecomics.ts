@@ -15,7 +15,7 @@ interface Series {
 
 interface Chapter {
   chapter: string
-  unix_timestamp: number
+  release_date: number
   token: string
 }
 
@@ -74,10 +74,7 @@ export class FlameComics extends BaseSite {
   }
 
   protected override getChapter(data: FlameComicsData): string {
-    const chapter = data.latestChapter.chapter
-    
-    if (chapter.endsWith('.0')) return chapter.replace('.0', '')
-    else return chapter
+    return `Chapter ${this.getChapterNum(data)}`
   }
 
   protected override getChapterUrl(data: FlameComicsData): string {
@@ -93,10 +90,10 @@ export class FlameComics extends BaseSite {
   }
 
   protected override getChapterDate(data: FlameComicsData): string {
-    const timestamp = data.latestChapter.unix_timestamp
+    const timestamp = data.latestChapter.release_date
     if (!timestamp) return ''
 
-    const date = moment(timestamp * 1000)
+    const date = moment(timestamp.toString(), 'X')
     if (date.isValid()) return date.fromNow()
     else return ''
   }

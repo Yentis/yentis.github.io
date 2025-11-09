@@ -3,6 +3,7 @@ import { BaseSite } from 'src/classes/sites/baseSite'
 import { SiteType } from 'src/enums/siteEnum'
 import { getMangaInfo, getSite, searchManga } from '../siteService'
 import { mangaEqual, searchValid } from '../testService'
+import moment from 'moment'
 
 const SITE_TYPE = SiteType.ResetScans
 const QUERY = 'control master'
@@ -18,14 +19,14 @@ export async function testResetScans(): Promise<void> {
 async function readUrl(site: BaseSite): Promise<void> {
   const manga = await getMangaInfo(site.getTestUrl(), SITE_TYPE)
   const desired = new Manga(`${site.getUrl()}/manga/the-unwanted-undead-adventurer/`, SITE_TYPE)
-  const chapter = 63
+  const chapter = 66
 
   desired.chapter = `Chapter ${chapter}`
   desired.image = `${site.getUrl()}/wp-content/uploads/2024/10/The-Unwanted-Undead-Adventurer-350x476.webp`
   desired.title = 'The Unwanted Undead Adventurer'
   desired.chapterUrl = `${site.getUrl()}/manga/the-unwanted-undead-adventurer/chapter-${chapter}/`
   desired.chapterNum = chapter
-  desired.chapterDate = '7 months ago'
+  desired.chapterDate = moment('10-Oct', 'DD-MMM').fromNow()
 
   mangaEqual(manga, desired)
 }

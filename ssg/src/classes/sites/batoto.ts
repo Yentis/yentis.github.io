@@ -12,7 +12,7 @@ class BatotoData extends BaseData {
 export class Batoto extends BaseSite {
   siteType = SiteType.Batoto
 
-  getChapterNum (data: BatotoData): number {
+  protected override getChapterNum (data: BatotoData): number {
     const chapterNum = parseNum(data.chapterNum?.textContent?.trim().split(' ')[1])
     if (chapterNum !== 0) return chapterNum
 
@@ -30,7 +30,7 @@ export class Batoto extends BaseSite {
     return 0
   }
 
-  getImage (data: BaseData): string {
+  protected override getImage (data: BaseData): string {
     return data.image?.getAttribute('content') || ''
   }
 
@@ -66,8 +66,7 @@ export class Batoto extends BaseSite {
       manga.title = titleElem?.textContent?.trim() || ''
 
       const image = elem.querySelectorAll('img')[0]
-      const imageUrl = image?.getAttribute('data-cfsrc') || image?.getAttribute('src') || ''
-      manga.image = imageUrl
+      manga.image = image?.getAttribute('data-cfsrc') || image?.getAttribute('src') || ''
 
       manga.chapter = elem.querySelectorAll('.item-volch a')[0]?.textContent?.trim() || 'Unknown'
       manga.url = url ? `${this.getUrl()}${url}` : ''

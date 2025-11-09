@@ -3,10 +3,11 @@ import { BaseSite } from 'src/classes/sites/baseSite'
 import { SiteType } from 'src/enums/siteEnum'
 import { getMangaInfo, getSite, searchManga } from '../siteService'
 import { mangaEqual, searchValid } from '../testService'
+import moment from 'moment'
 
 const SITE_TYPE = SiteType.LikeManga
 const QUERY = 'the elegant sea of savagery'
-const CHAPTER = 78
+const CHAPTER = 84
 
 export async function testLikeManga(): Promise<void> {
   const site = getSite(SITE_TYPE)
@@ -26,7 +27,7 @@ async function readUrl(site: BaseSite): Promise<void> {
   desired.title = 'The Elegant Sea of Savagery'
   desired.chapterUrl = `https://likemanga.in/manga/the-elegant-sea-of-savagery/chapter-${CHAPTER}/`
   desired.chapterNum = CHAPTER
-  desired.chapterDate = '2 months ago'
+  desired.chapterDate = moment('30 June, 2025', 'DD MMMM, YYYY').fromNow()
 
   mangaEqual(manga, desired)
 }

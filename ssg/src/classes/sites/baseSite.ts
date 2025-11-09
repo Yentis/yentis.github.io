@@ -94,7 +94,7 @@ export abstract class BaseSite {
   }
 
   protected getImage(data: BaseData): string {
-    const url = data.image?.getAttribute('src') || ''
+    const url = data.image?.getAttribute('src') ?? ''
     if (url.startsWith('/')) return `${this.getUrl()}${url}`
 
     return url

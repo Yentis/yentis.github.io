@@ -31,6 +31,7 @@ interface MangaResult {
   id: string,
   attributes: {
     title: Record<string, string>
+    altTitles: (Record<string, string>)[]
   },
   relationships: {
     type: string,
@@ -144,15 +145,19 @@ export class MangaDex extends BaseSite {
   }
 
   getTitle (data: MangaDexData): string {
-    return this.getTitleFromAttributes(data.mangaResult.attributes)
+    // Use the first title we find
+    return this.getTitlesFromAttributes(data.mangaResult.attributes)[0] ?? ''
   }
 
-  private getTitleFromAttributes (attributes: MangaResult['attributes']) {
-    const titleObj = attributes?.title
-    if (!titleObj) return ''
+  private getTitlesFromAttributes (attributes: MangaResult['attributes']): string[] {
+    const titleObj = attributes?.title ?? []
+    const altTitles = attributes.altTitles.map((entry) => {
+      return Object.values(entry);
+    }).flat().filter((title): title is string => {
+      return (title ?? '').trim() !== '';
+    })
 
-    // Use the first title we find
-    return Object.values(titleObj).find(() => true) || ''
+    return [...Object.values(titleObj), ...altTitles]
   }
 
   protected async readUrlImpl (url: string): Promise<Error | Manga> {
@@ -214,8 +219,8 @@ export class MangaDex extends BaseSite {
     const promises: Promise<Error | Manga>[] = []
 
     let candidateUrls = mangaData.data.filter((result) => {
-      const title = this.getTitleFromAttributes(result.attributes)
-      return titleContainsQuery(query, title)
+      const titles = this.getTitlesFromAttributes(result.attributes)
+      return titles.some((title) => titleContainsQuery(query, title))
     }).map((result) => {
       return `${this.getUrl()}/title/${result.id}`
     })

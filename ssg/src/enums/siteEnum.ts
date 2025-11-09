@@ -16,8 +16,7 @@ export enum SiteType {
   Tapas = 'tapas.io',
   Comikey = 'comikey.com',
   Tappytoon = 'tappytoon.com',
-  ScyllaScans = 'scyllacomics.xyz',
-  ComicK = 'comick.io',
+  MangaPark = 'mangapark.net',
 }
 
 export enum SiteName {
@@ -37,8 +36,7 @@ export enum SiteName {
   'tapas.io' = 'Tapas',
   'comikey.com' = 'Comikey',
   'tappytoon.com' = 'Tappytoon',
-  'scyllacomics.xyz' = 'Scylla Scans',
-  'comick.io' = 'ComicK',
+  'mangapark.net' = 'MangaPark',
 }
 
 export enum SiteState {

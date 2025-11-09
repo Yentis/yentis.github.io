@@ -63,8 +63,7 @@ import { testCubari } from '../services/test/cubari'
 import { testTapas } from 'src/services/test/tapas'
 import { testComikey } from 'src/services/test/comikey'
 import { testTappytoon } from 'src/services/test/tappytoon'
-import { testScyllaScans } from 'src/services/test/scyllascans'
-import { testComicK } from 'src/services/test/comick'
+import { testMangaPark } from 'src/services/test/mangapark'
 
 export default defineComponent({
   name: 'MangaTest',
@@ -126,9 +125,6 @@ export default defineComponent({
         case SiteType.Batoto:
           await doTest(testBatoto)
           break
-        case SiteType.ComicK:
-          await doTest(testComicK)
-          break
         case SiteType.Comikey:
           await doTest(testComikey)
           break
@@ -156,6 +152,9 @@ export default defineComponent({
         case SiteType.Mangakakalot:
           await doTest(testMangakakalot)
           break
+        case SiteType.MangaPark:
+          await doTest(testMangaPark)
+          break
         case SiteType.ResetScans:
           await doTest(testResetScans)
           break
@@ -164,9 +163,6 @@ export default defineComponent({
           break
         case SiteType.Tappytoon:
           await doTest(testTappytoon)
-          break
-        case SiteType.ScyllaScans:
-          await doTest(testScyllaScans)
           break
         case SiteType.Webtoons:
           await doTest(testWebtoons)

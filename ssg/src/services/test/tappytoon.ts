@@ -3,6 +3,7 @@ import { BaseSite } from 'src/classes/sites/baseSite'
 import { SiteType } from 'src/enums/siteEnum'
 import { getMangaInfo, getSite, searchManga } from '../siteService'
 import { mangaEqual, searchValid } from '../testService'
+import moment from 'moment'
 
 const SITE_TYPE = SiteType.Tappytoon
 const QUERY = "the reason why raeliana ended up at the duke's mansion"
@@ -25,7 +26,7 @@ async function readUrl(site: BaseSite): Promise<void> {
   desired.title = 'Return Survival'
   desired.chapterUrl = 'https://www.tappytoon.com/en/chapters/157346352'
   desired.chapterNum = chapter
-  desired.chapterDate = 'a year ago'
+  desired.chapterDate = moment('2023-12-12T05:00:00').fromNow()
 
   mangaEqual(manga, desired)
 }

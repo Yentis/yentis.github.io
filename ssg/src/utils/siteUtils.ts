@@ -26,7 +26,6 @@ export const siteAliases = [
   { url: 'reset-scans.xyz', site: SiteType.ResetScans },
   { url: 'resetscan.com', site: SiteType.ResetScans },
   { url: 'zeroscans.com', site: SiteType.ZeroScans },
-  { url: 'scyllascans.org', site: SiteType.ScyllaScans },
   { url: 'mangakakalot.com', site: SiteType.Mangakakalot },
 ]
 
@@ -63,12 +62,12 @@ export function titleContainsQuery(query: string, title?: string): boolean {
 
 export function parseNum(elem?: string | null): number {
   if (typeof elem !== 'string') return 0
-  const parsedInt = parseFloat(elem)
+  const parsedFloat = parseFloat(elem)
 
-  if (isNaN(parsedInt)) {
+  if (isNaN(parsedFloat)) {
     return 0
   } else {
-    return parsedInt
+    return parsedFloat
   }
 }
 
@@ -130,8 +129,7 @@ export function getSiteByUrl(url: string): SiteType | undefined {
   const site = Object.values(SiteType).find((site) => url.includes(site))
   if (site !== undefined) return site
 
-  const siteAlias = siteAliases.find((alias) => url.includes(alias.url))?.site
-  return siteAlias
+  return siteAliases.find((alias) => url.includes(alias.url))?.site
 }
 
 export function getSiteNameByUrl(url: string): SiteName | undefined {

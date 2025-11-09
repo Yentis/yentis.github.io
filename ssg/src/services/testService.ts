@@ -19,8 +19,15 @@ import { testCubari } from './test/cubari'
 import { testTapas } from './test/tapas'
 import { testComikey } from './test/comikey'
 import { testTappytoon } from './test/tappytoon'
-import { testScyllaScans } from './test/scyllascans'
-import { testComicK } from 'src/services/test/comick'
+import { testMangaPark } from 'src/services/test/mangapark'
+
+export interface EqualityOptions {
+  checkDate?: boolean,
+  chapterEqual?: (desired: string, actual: string) => boolean,
+  chapterUrlEqual?: (desired: string, actual: string) => boolean,
+  chapterDateEqual?: (desired: string, actual: string) => boolean,
+  imageEqual?: (desired: string, actual: string) => boolean,
+}
 
 export default async function testAll(
   $q: QVueGlobals
@@ -36,11 +43,6 @@ export default async function testAll(
   promises.push(
     testBatoto().catch((error) => {
       errors.push({ site: SiteType.Batoto, error: error })
-    })
-  )
-  promises.push(
-    testComicK().catch((error) => {
-      errors.push({ site: SiteType.ComicK, error: error })
     })
   )
   promises.push(
@@ -89,13 +91,13 @@ export default async function testAll(
     })
   )
   promises.push(
-    testResetScans().catch((error) => {
-      errors.push({ site: SiteType.ResetScans, error: error })
+    testMangaPark().catch((error) => {
+      errors.push({ site: SiteType.MangaPark, error: error })
     })
   )
   promises.push(
-    testScyllaScans().catch((error) => {
-      errors.push({ site: SiteType.ScyllaScans, error: error })
+    testResetScans().catch((error) => {
+      errors.push({ site: SiteType.ResetScans, error: error })
     })
   )
   promises.push(
@@ -123,20 +125,29 @@ export default async function testAll(
   return errors
 }
 
-export function mangaEqual(actual: Manga | Error, desired: Manga, checkDate = true): void {
+export function mangaEqual(
+  actual: Manga | Error,
+  desired: Manga,
+  options?: EqualityOptions,
+): void {
   if (actual instanceof Error) throw actual
+  const checkDate = options?.checkDate ?? true;
+  const chapterEqual = options?.chapterEqual ?? ((a, b) => a === b)
+  const chapterUrlEqual = options?.chapterUrlEqual ?? ((a, b) => a === b)
+  const chapterDateEqual = options?.chapterDateEqual ?? ((a, b) => a === b)
+  const imageEqual = options?.imageEqual ?? ((a, b) => a === b)
 
   if (actual.url !== desired.url) {
     throw Error(`Failed ${desired.url}\nExpected url: ${desired.url}\nActual: ${actual.url}`)
   } else if (actual.site !== desired.site) {
     throw Error(`Failed ${desired.url}\nExpected site: ${desired.site}\nActual: ${actual.site}`)
-  } else if (actual.chapter !== desired.chapter) {
+  } else if (!chapterEqual(desired.chapter, actual.chapter)) {
     throw Error(`Failed ${desired.url}\nExpected chapter: ${desired.chapter}\nActual: ${actual.chapter}`)
-  } else if (!actual.image.includes(desired.image)) {
+  } else if (!imageEqual(desired.image, actual.image)) {
     throw Error(`Failed ${desired.url}\nExpected image: ${desired.image}\nActual: ${actual.image}`)
   } else if (actual.title !== desired.title) {
     throw Error(`Failed ${desired.url}\nExpected title: ${desired.title}\nActual: ${actual.title}`)
-  } else if (actual.chapterUrl !== desired.chapterUrl) {
+  } else if (!chapterUrlEqual(desired.chapterUrl, actual.chapterUrl)) {
     throw Error(`Failed ${desired.url}\nExpected chapter url: ${desired.chapterUrl}\nActual: ${actual.chapterUrl}`)
   } else if (actual.read !== desired.read) {
     throw Error(
@@ -148,7 +159,7 @@ export function mangaEqual(actual: Manga | Error, desired: Manga, checkDate = tr
         actual.readUrl || 'undefined'
       }`
     )
-  } else if (desired.chapterDate && actual.chapterDate !== desired.chapterDate) {
+  } else if (!chapterDateEqual(desired.chapterDate, actual.chapterDate)) {
     throw Error(
       `Failed ${desired.chapterDate}\nExpected chapter date: ${desired.chapterDate || 'undefined'}\nActual: ${
         actual.chapterDate || 'undefined'

@@ -48,6 +48,8 @@ export class Mangakakalot extends BaseSite {
 
   protected async readUrlImpl (url: string): Promise<Error | Manga> {
     const request: HttpRequest = { method: 'GET', url }
+    this.trySetUserAgent(request)
+
     const response = await requestHandler.sendRequest(request)
     const doc = await parseHtmlFromString(response.data)
 
@@ -103,16 +105,16 @@ export class Mangakakalot extends BaseSite {
   private changeAlias(alias: string) {
     let str = alias;
     str = str.toLowerCase();
-    str = str.replace(/Ã |Ã¡|áº¡|áº£|Ã£|Ã¢|áº§|áº¥|áº­|áº©|áº«|Äƒ|áº±|áº¯|áº·|áº³|áºµ/g, "a");
-    str = str.replace(/Ã¨|Ã©|áº¹|áº»|áº½|Ãª|á»|áº¿|á»‡|á»ƒ|á»…/g, "e");
-    str = str.replace(/Ã¬|Ã­|á»‹|á»‰|Ä©/g, "i");
-    str = str.replace(/Ã²|Ã³|á»|á»|Ãµ|Ã´|á»“|á»‘|á»™|á»•|á»—|Æ¡|á»|á»›|á»£|á»Ÿ|á»¡/g, "o");
-    str = str.replace(/Ã¹|Ãº|á»¥|á»§|Å©|Æ°|á»«|á»©|á»±|á»­|á»¯/g, "u");
-    str = str.replace(/á»³|Ã½|á»µ|á»·|á»¹/g, "y");
-    str = str.replace(/Ä‘/g, "d");
-    str = str.replace(/!|@|%|\^|\*|\(|\)|\+|\=|\<|\>|\?|\/|,|\.|\:|\;|\'| |\"|\&|\#|\[|\]|~|-|$|_/g, "_");
-    str = str.replace(/_+_/g, "_");
-    str = str.replace(/^\_+|\_+$/g, "");
+    str = str.replace(/Ã |Ã¡|áº¡|áº£|Ã£|Ã¢|áº§|áº¥|áº­|áº©|áº«|Äƒ|áº±|áº¯|áº·|áº³|áºµ/g, 'a');
+    str = str.replace(/Ã¨|Ã©|áº¹|áº»|áº½|Ãª|á»|áº¿|á»‡|á»ƒ|á»…/g, 'e');
+    str = str.replace(/Ã¬|Ã­|á»‹|á»‰|Ä©/g, 'i');
+    str = str.replace(/Ã²|Ã³|á»|á»|Ãµ|Ã´|á»“|á»‘|á»™|á»•|á»—|Æ¡|á»|á»›|á»£|á»Ÿ|á»¡/g, 'o');
+    str = str.replace(/Ã¹|Ãº|á»¥|á»§|Å©|Æ°|á»«|á»©|á»±|á»­|á»¯/g, 'u');
+    str = str.replace(/á»³|Ã½|á»µ|á»·|á»¹/g, 'y');
+    str = str.replace(/Ä‘/g, 'd');
+    str = str.replace(/!|@|%|\^|\*|\(|\)|\+|\=|\<|\>|\?|\/|,|\.|\:|\;|\'| |\"|\&|\#|\[|\]|~|-|$|_/g, '_');
+    str = str.replace(/_+_/g, '_');
+    str = str.replace(/^\_+|\_+$/g, '');
     return str;
   }
 

@@ -18,9 +18,8 @@ import { Tapas } from 'src/classes/sites/tapas'
 import { ZeroScans } from 'src/classes/sites/zeroscans'
 import { Comikey } from 'src/classes/sites/comikey'
 import { TappyToon } from 'src/classes/sites/tappytoon'
-import { ScyllaScans } from 'src/classes/sites/scyllascans'
 import { AsuraScans } from 'src/classes/sites/asurascans'
-import { ComicK } from 'src/classes/sites/comick'
+import { MangaPark } from 'src/classes/sites/mangapark'
 
 const globalRequestQueue = new PQueue({
   interval: 1000,
@@ -44,8 +43,7 @@ const siteMap = new Map<string, BaseSite>([
   [SiteType.Tapas, new Tapas()],
   [SiteType.Comikey, new Comikey()],
   [SiteType.Tappytoon, new TappyToon()],
-  [SiteType.ScyllaScans, new ScyllaScans()],
-  [SiteType.ComicK, new ComicK()],
+  [SiteType.MangaPark, new MangaPark()],
 ])
 const linkingSiteMap = new Map<string, BaseSite>([
   [LinkingSiteType.MangaDex, mangaDex],

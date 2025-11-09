@@ -36,12 +36,13 @@ async function readUrl(site: BaseSite): Promise<void> {
 async function search(site: BaseSite): Promise<void> {
   const results = await searchManga(QUERY, SITE_TYPE)
   const desired = new Manga(site.getTestUrl(), SITE_TYPE)
+
   desired.image =
     'https://uploads.mangadex.org/covers/73a132c7-0872-4c42-8a8d-1d7c931992c2/ca5c9bd2-b708-432b-9a69-5f074c0ff215.jpg'
-  desired.chapter = "Volume 1 - Chapter 15 - The Sea of Strange Births"
+  desired.chapter = 'Volume 1 - Chapter 15 - The Sea of Strange Births'
   desired.url = 'https://mangadex.org/title/73a132c7-0872-4c42-8a8d-1d7c931992c2'
 
-  return searchValid(results, desired, QUERY)
+  return searchValid(results, desired, 'grotesque mandala')
 }
 
 async function convertLegacyIds(): Promise<void> {
