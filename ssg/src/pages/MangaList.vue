@@ -83,7 +83,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed, onMounted } from 'vue'
+import { computed, defineComponent, onMounted, ref } from 'vue'
 import { Ref } from '@vue/runtime-core/dist/runtime-core'
 import { useRoute } from 'vue-router'
 import { Manga } from '../classes/manga'
@@ -167,6 +167,18 @@ export default defineComponent({
     const $route = useRoute()
 
     const fetchFromRentry = async (id: string) => {
+      if (id === '2059191') {
+        const request: HttpRequest = {
+          method: 'GET',
+          url: 'https://dl.dropboxusercontent.com/scl/fi/pv1fivvxn7at5isfrbqjr/manga-reader.json?rlkey=twphw5oqalbhbsc443y3jjukz&st=jptimtmi&dl=1',
+        }
+
+        const response = await requestHandler.sendRequest(request)
+        mangaList.value = JSON.parse(response.data) as Manga[]
+
+        return
+      }
+
       const request: HttpRequest = {
         method: 'GET',
         url: `https://api.allorigins.win/raw?url=${encodeURIComponent(`https://rentry.co/api/raw/${id}`)}`,
