@@ -1,5 +1,5 @@
-import HttpRequest from 'src/interfaces/httpRequest'
-import HttpResponse from 'src/interfaces/httpResponse'
+import type { HttpRequest } from 'src/interfaces/httpRequest'
+import type HttpResponse from 'src/interfaces/httpResponse'
 import BaseRequest from './baseRequest'
 import { ContentType } from 'src/enums/contentTypeEnum'
 
@@ -9,7 +9,7 @@ interface Runtime {
   sendMessage: (
     extensionId: string,
     message: HttpRequest | string,
-    responseCallback: (response?: HttpResponse | Error | string) => void
+    responseCallback: (response?: HttpResponse | Error | string) => void,
   ) => void
   lastError?: { message: string }
 }
@@ -48,15 +48,13 @@ export async function hasExtension(): Promise<boolean> {
 
 export default class BrowserRequest extends BaseRequest {
   async sendRequest(request: HttpRequest, ignoreErrorStatus?: boolean): Promise<HttpResponse> {
-    request.headers = request.headers || {}
+    request.headers = request.headers ?? {}
 
     if (request.headers['Content-Type'] === ContentType.URLENCODED && typeof request.data === 'string') {
       request.data = this.convertToUrlEncoded(request.data)
     }
 
-    if (!request.headers.cookie) {
-      request.headers.cookie = ''
-    }
+    request.headers.cookie ??= ''
 
     const runtime = getRuntime()
     if (!runtime) return this.doFallbackRequest(request, ignoreErrorStatus)
@@ -93,7 +91,7 @@ export default class BrowserRequest extends BaseRequest {
       })
     })
 
-    return result || this.doFallbackRequest(request, ignoreErrorStatus)
+    return result ?? this.doFallbackRequest(request, ignoreErrorStatus)
   }
 
   private async doFallbackRequest(request: HttpRequest, ignoreErrorStatus?: boolean): Promise<HttpResponse> {
@@ -110,7 +108,7 @@ export default class BrowserRequest extends BaseRequest {
     const headers: Record<string, string | string[]> = {}
     response.headers.forEach((value, key) => {
       const existingHeader = headers[key]
-      if (existingHeader) {
+      if (existingHeader !== undefined) {
         if (Array.isArray(existingHeader)) {
           existingHeader.push(value)
           return

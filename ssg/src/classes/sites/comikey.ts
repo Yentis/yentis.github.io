@@ -1,29 +1,30 @@
 import qs from 'qs'
 import { Manga } from 'src/classes/manga'
 import { SiteType } from 'src/enums/siteEnum'
-import HttpRequest from 'src/interfaces/httpRequest'
+import type { HttpRequest } from 'src/interfaces/httpRequest'
 import { requestHandler } from 'src/services/requestService'
 import { getRssChapter, getRssChapterDate, getRssChapterUrl, getRssData, getRssTitle } from 'src/utils/rssUtils'
 import { parseHtmlFromString, titleContainsQuery } from 'src/utils/siteUtils'
-import { BaseData, BaseSite } from './baseSite'
+import type { BaseData } from './baseSite'
+import { BaseSite } from './baseSite'
 
 export class Comikey extends BaseSite {
   siteType = SiteType.Comikey
 
-  protected getChapter (data: BaseData): string {
+  protected override getChapter(data: BaseData): string {
     return getRssChapter(data)
   }
 
-  protected getChapterUrl (data: BaseData): string {
+  protected override getChapterUrl(data: BaseData): string {
     return getRssChapterUrl(data)
   }
 
-  protected getChapterNum (data: BaseData): number {
+  protected override getChapterNum(data: BaseData): number {
     const chapterLink = data.chapter?.querySelectorAll('link')[0]
     const chapterUrl = chapterLink?.textContent
     if (!chapterUrl) return 0
 
-    const chapterRegex = (/episode-([^\\/]*)/.exec(chapterUrl)) ?? (/chapter-([^\\/]*)/.exec(chapterUrl))
+    const chapterRegex = /episode-([^\\/]*)/.exec(chapterUrl) ?? /chapter-([^\\/]*)/.exec(chapterUrl)
     const chapterText = chapterRegex?.[1]
     if (!chapterText) return 0
 
@@ -33,15 +34,15 @@ export class Comikey extends BaseSite {
     return chapterNum
   }
 
-  protected getChapterDate (data: BaseData): string {
+  protected override getChapterDate(data: BaseData): string {
     return getRssChapterDate(data)
   }
 
-  protected getTitle (data: BaseData): string {
+  protected override getTitle(data: BaseData): string {
     return getRssTitle(data)
   }
 
-  protected async readUrlImpl (url: string): Promise<Error | Manga> {
+  protected async readUrlImpl(url: string): Promise<Error | Manga> {
     const request: HttpRequest = { method: 'GET', url }
     const response = await requestHandler.sendRequest(request)
 
@@ -58,20 +59,20 @@ export class Comikey extends BaseSite {
     return this.buildManga(data)
   }
 
-  protected async searchImpl (query: string): Promise<Error | Manga[]> {
+  protected async searchImpl(query: string): Promise<Error | Manga[]> {
     const queryString = qs.stringify({
       cover: true,
-      q: query
+      q: query,
     })
 
     const request: HttpRequest = {
       method: 'GET',
-      url: `${this.getUrl()}/comics/suggestions.json?${queryString}`
+      url: `${this.getUrl()}/comics/suggestions.json?${queryString}`,
     }
 
     const response = await requestHandler.sendRequest(request)
     const responseData = JSON.parse(response.data) as unknown[]
-    if (!responseData) return []
+    if (responseData === undefined || responseData === null) return []
 
     const titles = (responseData[1] ?? []) as string[]
     const urls = (responseData[3] ?? []) as string[]
@@ -86,10 +87,10 @@ export class Comikey extends BaseSite {
     })
 
     const mangaList = await Promise.all(promises)
-    return mangaList.filter(manga => manga instanceof Manga) as Manga[]
+    return mangaList.filter((manga) => manga instanceof Manga)
   }
 
-  getTestUrl (): string {
+  getTestUrl(): string {
     return `${this.getUrl()}/comics/to-be-winner-webtoon/23/`
   }
 }

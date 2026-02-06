@@ -1,10 +1,9 @@
+import type { QVueGlobals } from 'quasar'
 import { LocalStorage } from 'quasar'
-import { QVueGlobals } from 'quasar/dist/types'
 import constants from 'src/classes/constants'
 import { Manga } from 'src/classes/manga'
-import { Kitsu } from 'src/classes/sites/kitsu'
+import type { Kitsu } from 'src/classes/sites/kitsu'
 import { LinkingSiteType } from 'src/enums/linkingSiteEnum'
-import { useStore } from 'src/store'
 import { getSite, searchManga } from '../siteService'
 import { searchValid } from '../testService'
 
@@ -13,7 +12,7 @@ const TARGET_MANGA_ID = '40927'
 const QUERY = 'yancha gal no anjou-san'
 const SITE_TYPE = LinkingSiteType.Kitsu
 
-export async function testKitsu ($q: QVueGlobals): Promise<void> {
+export async function testKitsu($q: QVueGlobals): Promise<void> {
   const site = getSite(LinkingSiteType.Kitsu) as Kitsu | undefined
   if (site === undefined) throw Error('Site not found')
 
@@ -24,7 +23,7 @@ export async function testKitsu ($q: QVueGlobals): Promise<void> {
   await testSearch()
 }
 
-async function testLogin (site: Kitsu) {
+async function testLogin(site: Kitsu): Promise<void> {
   site.token = ''
   LocalStorage.remove(constants.KITSU_TOKEN)
 
@@ -38,7 +37,7 @@ async function testLogin (site: Kitsu) {
 
   const loginResponse = await site.doLogin({
     username,
-    password
+    password,
   })
   if (loginResponse instanceof Error) throw loginResponse
   if (loginResponse.access_token === '') throw Error('No access token received')
@@ -51,7 +50,7 @@ async function testLogin (site: Kitsu) {
   LocalStorage.remove(constants.KITSU_TOKEN)
 }
 
-async function testUserId (site: Kitsu) {
+async function testUserId(site: Kitsu): Promise<void> {
   const userId = await site.getUserId()
   if (userId instanceof Error) throw userId
 
@@ -61,19 +60,19 @@ async function testUserId (site: Kitsu) {
   if (userId !== targetUserId) throw Error(`User ID should be ${targetUserId} but was ${userId}`)
 }
 
-async function testGetMangaId (site: Kitsu, $q: QVueGlobals) {
-  const store = useStore()
-
-  let libraryId = await site.getMangaId($q, store, 'https://kitsu.io/manga/yancha-gal-no-anjou-san')
+async function testGetMangaId(site: Kitsu, $q: QVueGlobals): Promise<void> {
+  let libraryId = await site.getMangaId($q, 'https://kitsu.io/manga/yancha-gal-no-anjou-san')
   if (libraryId instanceof Error) throw libraryId
-  if (libraryId !== TARGET_LIBRARY_ID) throw Error(`Library ID was not ${TARGET_LIBRARY_ID} for regular manga URL: ${libraryId}`)
+  if (libraryId !== TARGET_LIBRARY_ID)
+    throw Error(`Library ID was not ${TARGET_LIBRARY_ID} for regular manga URL: ${libraryId}`)
 
-  libraryId = await site.getMangaId($q, store, `https://kitsu.io/api/edge/library-entries/${TARGET_LIBRARY_ID}`)
+  libraryId = await site.getMangaId($q, `https://kitsu.io/api/edge/library-entries/${TARGET_LIBRARY_ID}`)
   if (libraryId instanceof Error) throw libraryId
-  if (libraryId !== TARGET_LIBRARY_ID) throw Error(`Library ID was not ${TARGET_LIBRARY_ID} for library entry URL: ${libraryId}`)
+  if (libraryId !== TARGET_LIBRARY_ID)
+    throw Error(`Library ID was not ${TARGET_LIBRARY_ID} for library entry URL: ${libraryId}`)
 }
 
-async function testSyncReadChapter (site: Kitsu) {
+async function testSyncReadChapter(site: Kitsu): Promise<void> {
   const userId = await site.getUserId()
   if (userId instanceof Error) throw userId
 
@@ -93,7 +92,7 @@ async function testSyncReadChapter (site: Kitsu) {
   }
 }
 
-async function testSearch () {
+async function testSearch(): Promise<void> {
   const results = await searchManga(QUERY, SITE_TYPE)
   const desired = new Manga('https://kitsu.io/manga/yancha-gal-no-anjou-san', SITE_TYPE)
   desired.image = 'https://media.kitsu.app/manga/poster_images/40927/small.jpg'

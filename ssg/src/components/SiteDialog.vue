@@ -17,9 +17,7 @@
           :loading="refreshing"
           @click="refreshSites"
         />
-        <q-toolbar-title class="q-pl-xs">
-          Supported sites
-        </q-toolbar-title>
+        <q-toolbar-title class="q-pl-xs"> Supported sites </q-toolbar-title>
       </q-toolbar>
       <q-card-section class="q-pa-none">
         <q-list
@@ -33,9 +31,15 @@
             :class="{
               'bg-negative': !item.site.statusOK() && item.site.state === siteState.OFFLINE,
               'bg-warning': !item.site.statusOK() && item.site.state !== siteState.OFFLINE,
-              'text-black': !item.site.statusOK()
+              'text-black': !item.site.statusOK(),
             }"
-            @click="item.site.loggedIn ? item.site.statusOK() ? navigate(item.site.getUrl()) : navigate(item.site.getUrl(), true) : navigate(item.site.getLoginUrl(), true)"
+            @click="
+              item.site.loggedIn
+                ? item.site.statusOK()
+                  ? navigate(item.site.getUrl())
+                  : navigate(item.site.getUrl(), true)
+                : navigate(item.site.getLoginUrl(), true)
+            "
           >
             <q-item-section v-if="!item.refreshing">
               <q-item-label :class="{ 'full-width': mobileView }">
@@ -44,7 +48,7 @@
               <q-item-label
                 :class="{
                   'text-black': !item.site.statusOK() && $q.dark.isActive,
-                  'text-warning': item.site.statusOK()
+                  'text-warning': item.site.statusOK(),
                 }"
                 caption
               >
@@ -79,34 +83,34 @@ import { defineComponent } from 'vue'
 import { SiteState } from '../enums/siteEnum'
 import useSiteList from '../composables/useSiteList'
 import useSiteListVisible from '../composables/useSiteListVisible'
-import useUrlNavigation from '../composables/useUrlNavigation'
-import { useSearchResults } from '../composables/useSearchResults'
 import { getSiteNameByUrl } from '../utils/siteUtils'
+import { stateManager } from 'src/store/store-reader'
+import { useObservable } from '@vueuse/rxjs'
+import { UrlNavigation } from 'src/classes/urlNavigation'
 
 export default defineComponent({
   props: {
     title: {
       type: String,
-      default: ''
+      default: '',
     },
     content: {
       type: String,
-      default: ''
+      default: '',
     },
     imageUrl: {
       type: String,
-      default: ''
-    }
+      default: '',
+    },
   },
 
   emits: [...useDialogPluginComponent.emits],
 
-  setup () {
+  setup() {
     const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } = useDialogPluginComponent()
     const { siteList, refreshing, refreshSites } = useSiteList()
-    const { mobileView, visible } = useSiteListVisible()
-    const { navigate } = useUrlNavigation()
-    const { searchResults } = useSearchResults()
+    const { visible } = useSiteListVisible()
+    const { mobileView$, searchResults$, urlNavigation$ } = stateManager
 
     return {
       dialogRef,
@@ -115,23 +119,21 @@ export default defineComponent({
       onCancelClick: onDialogCancel,
       siteState: SiteState,
       siteList,
-      mobileView,
+      mobileView: useObservable(mobileView$),
       visible,
       refreshing,
       refreshSites,
-      searchResults,
-      navigate,
-      getSiteNameByUrl
+      searchResults: useObservable(searchResults$, { initialValue: [] }),
+      navigate: (url: string, openInApp?: boolean): void => urlNavigation$.next(new UrlNavigation(url, openInApp)),
+      getSiteNameByUrl,
     }
-  }
+  },
 })
 </script>
 
 <style lang="scss" scoped>
-
 .mobile-site-dialog {
   height: 25vh;
   min-height: 25vh;
 }
-
 </style>

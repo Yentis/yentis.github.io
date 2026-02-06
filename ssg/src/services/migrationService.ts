@@ -1,11 +1,11 @@
 import { LocalStorage } from 'quasar'
 import constants from 'src/classes/constants'
-import { RefreshOptions } from 'src/classes/refreshOptions'
+import type { RefreshOptions } from 'src/classes/refreshOptions'
 import { Settings } from 'src/classes/settings'
 import { MangaDex } from 'src/classes/sites/mangadex'
 import { SiteType } from 'src/enums/siteEnum'
 import { Status } from 'src/enums/statusEnum'
-import { version } from '../../package.json'
+import jsonPackage from '../../package.json'
 import { requestHandler } from './requestService'
 
 const OPEN_BROWSER_KEY = 'open_browser'
@@ -21,14 +21,14 @@ interface MigrationManga {
   url: string
 }
 
-export function getMigrationVersion () {
+export function getMigrationVersion(): string {
   const migrationVersion = LocalStorage.getItem(constants.MIGRATION_VERSION)
   if (typeof migrationVersion !== 'string') return ''
   return migrationVersion
 }
 
-export async function tryMigrateMangaList () {
-  if (getMigrationVersion() === version) return
+export async function tryMigrateMangaList(): Promise<void> {
+  if (getMigrationVersion() === jsonPackage.version) return
   const mangaList: MigrationManga[] | null = LocalStorage.getItem(constants.MANGA_LIST_KEY)
 
   if (mangaList !== null) {
@@ -37,13 +37,13 @@ export async function tryMigrateMangaList () {
   }
 }
 
-export function tryMigrateSettings () {
-  if (getMigrationVersion() === version) return
-  const settings: Settings = LocalStorage.getItem(constants.SETTINGS) || new Settings()
-  const openInBrowser: boolean | null = LocalStorage.getItem(OPEN_BROWSER_KEY)
+export function tryMigrateSettings(): void {
+  if (getMigrationVersion() === jsonPackage.version) return
+  const settings: Settings = LocalStorage.getItem(constants.SETTINGS) ?? new Settings()
+  const openInBrowser = LocalStorage.getItem(OPEN_BROWSER_KEY)
   const refreshOptions: RefreshOptions | null = LocalStorage.getItem(REFRESH_OPTIONS_KEY)
 
-  if (openInBrowser !== null) {
+  if (typeof openInBrowser === 'boolean') {
     settings.openInBrowser = openInBrowser
     LocalStorage.remove(OPEN_BROWSER_KEY)
   }
@@ -56,10 +56,10 @@ export function tryMigrateSettings () {
   LocalStorage.set(constants.SETTINGS, settings)
 }
 
-export function tryMigrateDropbox () {
-  if (getMigrationVersion() === version) return
+export function tryMigrateDropbox(): void {
+  if (getMigrationVersion() === jsonPackage.version) return
   const dropboxAuth = LocalStorage.getItem(constants.DROPBOX_AUTH)
-  if (dropboxAuth) return
+  if (typeof dropboxAuth === 'string') return
 
   const dropboxToken = LocalStorage.getItem(DROPBOX_TOKEN)
   if (typeof dropboxToken !== 'string') return
@@ -68,14 +68,14 @@ export function tryMigrateDropbox () {
   LocalStorage.remove(DROPBOX_TOKEN)
 }
 
-export async function migrateInput (input: string): Promise<string> {
+export async function migrateInput(input: string): Promise<string> {
   const mangaList = JSON.parse(input) as MigrationManga[]
   const migratedMangaList = await doMigration(mangaList)
   return JSON.stringify(migratedMangaList)
 }
 
-async function doMigration (mangaList: MigrationManga[]) {
-  const legacyMangaDexManga: { index: number, id: number }[] = []
+async function doMigration(mangaList: MigrationManga[]): Promise<MigrationManga[]> {
+  const legacyMangaDexManga: { index: number; id: number }[] = []
 
   mangaList.forEach((item, index) => {
     if (item.linkedSites === undefined) {
@@ -106,7 +106,10 @@ async function doMigration (mangaList: MigrationManga[]) {
   if (legacyMangaDexManga.length === 0) return mangaList
 
   try {
-    const newMangaDexIdMap = await MangaDex.convertLegacyIds(legacyMangaDexManga.map((item) => item.id), requestHandler)
+    const newMangaDexIdMap = await MangaDex.convertLegacyIds(
+      legacyMangaDexManga.map((item) => item.id),
+      requestHandler,
+    )
     legacyMangaDexManga.forEach((item) => {
       const newId = newMangaDexIdMap[item.id]
       if (newId === undefined) return

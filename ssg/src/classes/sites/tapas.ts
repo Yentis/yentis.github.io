@@ -2,7 +2,7 @@ import moment from 'moment'
 import qs from 'qs'
 import { Manga } from 'src/classes/manga'
 import { SiteType } from 'src/enums/siteEnum'
-import HttpRequest from 'src/interfaces/httpRequest'
+import type { HttpRequest } from 'src/interfaces/httpRequest'
 import { requestHandler } from 'src/services/requestService'
 import { parseHtmlFromString, parseNum, titleContainsQuery } from 'src/utils/siteUtils'
 import { getCookies } from '../requests/baseRequest'
@@ -23,12 +23,12 @@ interface SearchData {
 export class Tapas extends BaseSite {
   siteType = SiteType.Tapas
 
-  protected getChapterNum (data: BaseData): number {
+  protected override getChapterNum(data: BaseData): number {
     const chapterNum = data.chapterNum?.getAttribute('data-scene-number')
     return parseNum(chapterNum)
   }
 
-  protected getChapterDate (data: BaseData): string {
+  protected override getChapterDate(data: BaseData): string {
     const chapterDate = moment(data.chapterDate?.textContent, 'MMM DD, YYYY')
     if (chapterDate.isValid()) {
       return chapterDate.fromNow()
@@ -37,7 +37,7 @@ export class Tapas extends BaseSite {
     }
   }
 
-  protected async readUrlImpl (url: string): Promise<Error | Manga> {
+  protected async readUrlImpl(url: string): Promise<Error | Manga> {
     const request: HttpRequest = { method: 'GET', url }
     const response = await requestHandler.sendRequest(request)
 
@@ -47,13 +47,13 @@ export class Tapas extends BaseSite {
     if (id === undefined) return Error('Failed to get ID')
 
     const cookies = getCookies(response)
-    const sessionId = cookies.JSESSIONID || ''
+    const sessionId = cookies.JSESSIONID ?? ''
     const chaptersRequest: HttpRequest = {
       method: 'GET',
       url: `${this.getUrl()}/series/${id}/episodes?sort=NEWEST&large=true`,
       headers: {
-        cookie: `JSESSIONID=${sessionId}`
-      }
+        cookie: `JSESSIONID=${sessionId}`,
+      },
     }
 
     const chaptersResponse = await requestHandler.sendRequest(chaptersRequest)
@@ -79,7 +79,7 @@ export class Tapas extends BaseSite {
     return this.buildManga(data)
   }
 
-  protected async searchImpl (query: string): Promise<Error | Manga[]> {
+  protected async searchImpl(query: string): Promise<Error | Manga[]> {
     const queryString = qs.stringify({ query })
     const request: HttpRequest = { method: 'GET', url: `${this.getUrl()}/search/summary?${queryString}` }
     const response = await requestHandler.sendRequest(request)
@@ -104,10 +104,10 @@ export class Tapas extends BaseSite {
     })
 
     const mangaList = await Promise.all(promises)
-    return mangaList.filter(manga => manga instanceof Manga) as Manga[]
+    return mangaList.filter((manga) => manga instanceof Manga)
   }
 
-  getTestUrl (): string {
+  getTestUrl(): string {
     return `${this.getUrl()}/series/villains-are-destined-to-die/info`
   }
 }

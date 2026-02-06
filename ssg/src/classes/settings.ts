@@ -9,12 +9,22 @@ export class Settings {
   sortedBy: SortType
   filters: Status[]
 
-  constructor (
+  static clone(settings: Settings): Settings {
+    return new Settings(
+      settings.openInBrowser,
+      settings.darkMode,
+      new RefreshOptions(settings.refreshOptions.enabled, settings.refreshOptions.period),
+      settings.sortedBy,
+      settings.filters,
+    )
+  }
+
+  constructor(
     openInBrowser = false,
     darkMode = false,
     refreshOptions = new RefreshOptions(),
     sortedBy = SortType.TITLE,
-    filters = Object.values(Status)
+    filters = Object.values(Status),
   ) {
     this.openInBrowser = openInBrowser
     this.darkMode = darkMode
@@ -23,24 +33,13 @@ export class Settings {
     this.filters = filters
   }
 
-  equals (settings: Settings) {
-    return this.openInBrowser === settings.openInBrowser &&
-           this.darkMode === settings.darkMode &&
-           this.refreshOptions.equals(settings.refreshOptions) &&
-           this.sortedBy === settings.sortedBy &&
-           this.filters === settings.filters
-  }
-
-  static clone (settings: Settings) {
-    return new Settings(
-      settings.openInBrowser,
-      settings.darkMode,
-      new RefreshOptions(
-        settings.refreshOptions.enabled,
-        settings.refreshOptions.period
-      ),
-      settings.sortedBy,
-      settings.filters
+  equals(settings: Settings): boolean {
+    return (
+      this.openInBrowser === settings.openInBrowser &&
+      this.darkMode === settings.darkMode &&
+      this.refreshOptions.equals(settings.refreshOptions) &&
+      this.sortedBy === settings.sortedBy &&
+      this.filters === settings.filters
     )
   }
 }

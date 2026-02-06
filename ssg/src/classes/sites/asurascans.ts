@@ -3,10 +3,10 @@ import { SiteType } from 'src/enums/siteEnum'
 import PQueue from 'p-queue'
 import moment from 'moment'
 import { Manga } from 'src/classes/manga'
-import HttpRequest from 'src/interfaces/httpRequest'
+import type { HttpRequest } from 'src/interfaces/httpRequest'
 import { requestHandler } from 'src/services/requestService'
 import { ContentType } from 'src/enums/contentTypeEnum'
-import { parseHtmlFromString, parseNum, titleContainsQuery } from '../../utils/siteUtils'
+import { parseHtmlFromString, parseNum, titleContainsQuery } from 'src/utils/siteUtils'
 import qs from 'qs'
 
 class AsuraData extends BaseData {
@@ -23,7 +23,7 @@ export class AsuraScans extends BaseSite {
     this.requestQueue = new PQueue({ interval: 2000, intervalCap: 1 })
   }
 
-  protected getChapterNum(data: AsuraData): number {
+  protected override getChapterNum(data: AsuraData): number {
     const chapterNum = parseNum(data.chapterNum?.textContent?.trim().split(' ')[1])
     if (chapterNum !== 0) return chapterNum
 
@@ -41,7 +41,7 @@ export class AsuraScans extends BaseSite {
     return 0
   }
 
-  protected getChapterDate(data: BaseData): string {
+  protected override getChapterDate(data: BaseData): string {
     const chapterDate = moment(data.chapterDate?.textContent, 'MMMM DD YYYY')
     if (chapterDate.isValid()) {
       return chapterDate.fromNow()
@@ -50,11 +50,11 @@ export class AsuraScans extends BaseSite {
     }
   }
 
-  protected getChapterUrl(data: BaseData): string {
+  protected override getChapterUrl(data: BaseData): string {
     return `${this.getUrl()}/series/${super.getChapterUrl(data)}`
   }
 
-  protected getImage(data: BaseData): string {
+  protected override getImage(data: BaseData): string {
     return data.image?.getAttribute('content') ?? data.image?.getAttribute('src') ?? ''
   }
 
@@ -102,13 +102,12 @@ export class AsuraScans extends BaseSite {
 
       const manga = new Manga('', this.siteType)
       const titleElem = elem.querySelectorAll('.font-bold')[1]
-      manga.title = titleElem?.textContent?.trim() || ''
+      manga.title = titleElem?.textContent?.trim() ?? ''
 
       const image = elem.querySelectorAll('img')[0]
-      const imageUrl = image?.getAttribute('src') || ''
-      manga.image = imageUrl
+      manga.image = image?.getAttribute('src') ?? ''
 
-      manga.chapter = titleElem?.nextElementSibling?.textContent?.trim() || 'Unknown'
+      manga.chapter = titleElem?.nextElementSibling?.textContent?.trim() ?? 'Unknown'
       manga.url = url ?? ''
 
       const modifiedTitle = manga.title

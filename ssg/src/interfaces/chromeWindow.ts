@@ -3,9 +3,7 @@ interface IdleDeadline {
   timeRemaining(): number;
 }
 
-interface IdleRequestCallback {
-  (deadline: IdleDeadline): void;
-}
+type IdleRequestCallback = (deadline: IdleDeadline) => void;
 
 interface IdleRequestOptions {
     timeout?: number;

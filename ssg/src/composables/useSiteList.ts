@@ -1,35 +1,41 @@
-import { BaseSite } from '../classes/sites/baseSite'
-import { ref, onMounted } from 'vue'
-import { Ref } from '@vue/runtime-core/dist/runtime-core'
+import type { BaseSite } from '../classes/sites/baseSite'
+import type { Ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { getSiteMap } from '../services/siteService'
-import useInitialized from './useInitialized'
+import { stateManager } from 'src/store/store-reader'
 
 interface DisplayedSite {
   site: BaseSite
   refreshing: boolean
 }
 
-function siteSort (a: DisplayedSite, b: DisplayedSite): number {
+function siteSort(a: DisplayedSite, b: DisplayedSite): number {
   return a.site.compare(b.site)
 }
 
-export default function useSiteList () {
+export default function useSiteList(): {
+  siteList: Ref<DisplayedSite[]>
+  refreshing: Ref<boolean, boolean>
+  refreshSites: () => void
+} {
+  const { siteListFetched$ } = stateManager
+  const refreshing = ref(false)
   const siteList: Ref<DisplayedSite[]> = ref([])
-  const getSiteList = () => {
-    siteList.value = Array.from(getSiteMap().values()).map(site => {
-      return {
-        site,
-        refreshing: false
-      }
-    }).sort(siteSort)
+
+  const getSiteList = (): void => {
+    siteList.value = Array.from(getSiteMap().values())
+      .map((site) => {
+        return {
+          site,
+          refreshing: false,
+        }
+      })
+      .sort(siteSort)
   }
 
   onMounted(getSiteList)
 
-  const refreshing = ref(false)
-  const { siteState: siteStateInitialized } = useInitialized()
-
-  const refreshSites = () => {
+  const refreshSites = (): void => {
     refreshing.value = true
     siteList.value.forEach((site) => {
       site.refreshing = true
@@ -39,7 +45,7 @@ export default function useSiteList () {
 
     getSiteMap().forEach((site) => {
       const promise = site.checkState().then(() => {
-        const siteItem = siteList.value.find(item => item.site.siteType === site.siteType)
+        const siteItem = siteList.value.find((item) => item.site.siteType === site.siteType)
         if (!siteItem) return
 
         siteItem.site = site
@@ -57,9 +63,9 @@ export default function useSiteList () {
   }
 
   onMounted(() => {
-    if (siteStateInitialized.value) return
+    if (siteListFetched$.value) return
     refreshSites()
-    siteStateInitialized.value = true
+    siteListFetched$.next(true)
   })
 
   return { siteList, refreshing, refreshSites }

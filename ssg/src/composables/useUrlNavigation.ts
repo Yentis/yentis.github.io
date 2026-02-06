@@ -1,37 +1,19 @@
 /// <reference types="cordova-plugin-inappbrowser" />
 
-import { useStore } from '../store/index'
-import { computed, watch } from 'vue'
-import { UrlNavigation } from '../classes/urlNavigation'
 import { openURL } from 'quasar'
-import useSettings from './useSettings'
 import { useAuth, useCapacitorAuth } from './useAuthCallback'
-import ElectronWindow from 'src/interfaces/electronWindow'
+import type ElectronWindow from 'src/interfaces/electronWindow'
 import { checkSites } from 'src/services/siteService'
 import { getPlatform } from 'src/services/platformService'
 import { Platform } from 'src/enums/platformEnum'
+import { stateManager } from 'src/store/store-reader'
+import { useSubscription } from '@vueuse/rxjs'
 
-export default function useUrlNavigation () {
-  const $store = useStore()
-  const urlNavigation = computed({
-    get: () => $store.state.reader.urlNavigation,
-    set: (val) => $store.commit('reader/pushUrlNavigation', val)
-  })
-
-  const navigate = (url: string, openInApp = false) => {
-    urlNavigation.value = new UrlNavigation(url, openInApp)
-  }
-
-  return { urlNavigation, navigate }
-}
-
-export function useAppUrlNavigation () {
-  const { urlNavigation } = useUrlNavigation()
-  const { settings } = useSettings()
+export function useAppUrlNavigation(): void {
   const { onDropboxRedirect } = useAuth()
   const platform = getPlatform()
 
-  const openInApp = (url: string, forced: boolean) => {
+  const openInApp = (url: string, forced: boolean): void => {
     if (platform !== Platform.Capacitor) {
       window.location.href = url
       return
@@ -54,22 +36,26 @@ export function useAppUrlNavigation () {
     })
   }
 
-  watch(urlNavigation, (target) => {
-    if (!target) return
-    if (platform === Platform.Static) {
-      openURL(target.url)
-      return
-    }
+  const { urlNavigation$, settings$ } = stateManager
 
-    const openInBrowser = settings.value.openInBrowser
+  useSubscription(
+    urlNavigation$.subscribe((urlNavigation) => {
+      if (!urlNavigation) return
+      if (platform === Platform.Static) {
+        openURL(urlNavigation.url)
+        return
+      }
 
-    if (target.openInApp || !openInBrowser) {
-      openInApp(target.url, target.openInApp)
-    } else if (platform === Platform.Capacitor) {
-      window.location.href = target.url
-    } else if (platform === Platform.Electron) {
-      const electronWindow = window as unknown as ElectronWindow
-      electronWindow.mangaReader.openURL(target.url)
-    }
-  })
+      const openInBrowser = settings$.value.openInBrowser
+
+      if (urlNavigation.openInApp || !openInBrowser) {
+        openInApp(urlNavigation.url, urlNavigation.openInApp)
+      } else if (platform === Platform.Capacitor) {
+        window.location.href = urlNavigation.url
+      } else if (platform === Platform.Electron) {
+        const electronWindow = window as unknown as ElectronWindow
+        electronWindow.mangaReader.openURL(urlNavigation.url)
+      }
+    }),
+  )
 }

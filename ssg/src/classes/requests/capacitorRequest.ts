@@ -1,6 +1,6 @@
 import { ContentType } from 'src/enums/contentTypeEnum'
-import HttpRequest from 'src/interfaces/httpRequest'
-import HttpResponse from 'src/interfaces/httpResponse'
+import type { HttpRequest } from 'src/interfaces/httpRequest'
+import type HttpResponse from 'src/interfaces/httpResponse'
 import BaseRequest from './baseRequest'
 import { CapacitorCookies, CapacitorHttp } from '@capacitor/core'
 
@@ -8,7 +8,7 @@ const COOKIE_NAMES = ['cf_clearance', '__ddg1', '__ddg2', '__ddgid', '__ddgmark'
 
 export default class CapacitorRequest extends BaseRequest {
   async sendRequest(request: HttpRequest, ignoreErrorStatus?: boolean): Promise<HttpResponse> {
-    const headers = request.headers || {}
+    const headers = request.headers ?? {}
 
     if (headers['Content-Type'] === ContentType.URLENCODED) {
       request.data = this.convertToUrlEncoded(request.data)
@@ -38,9 +38,8 @@ export default class CapacitorRequest extends BaseRequest {
       responseType: headers.responseType as 'arraybuffer' | undefined,
     })
 
-    const data = typeof capacitorResponse.data === 'string'
-      ? capacitorResponse.data
-      : JSON.stringify(capacitorResponse.data)
+    const data =
+      typeof capacitorResponse.data === 'string' ? capacitorResponse.data : JSON.stringify(capacitorResponse.data)
 
     const response: HttpResponse = {
       headers: capacitorResponse.headers,

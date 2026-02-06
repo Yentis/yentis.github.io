@@ -17,7 +17,7 @@
 
       <div class="q-mx-md q-mt-md text-body2">
         This will sync your read chapter with the selected site.
-        <br>
+        <br />
         Note: the manga MUST be in your library on the selected site.
       </div>
 
@@ -62,7 +62,7 @@
         :search-placeholder="searchPlaceholder"
         :manual-placeholder="manualPlaceholder"
         :initial-search="initialSearch"
-        :site-type="selected.length > 0 ? selected[0].value : linkingSiteType.MangaDex"
+        :site-type="selected[0]?.value ?? linkingSiteType.MangaDex"
       />
 
       <q-card-actions>
@@ -85,8 +85,8 @@
 
 <script lang="ts">
 import { useDialogPluginComponent } from 'quasar'
-import { defineComponent, ref, onMounted } from 'vue'
-import { Ref } from '@vue/runtime-core/dist/runtime-core'
+import type { Ref } from 'vue'
+import { defineComponent, onMounted, ref } from 'vue'
 import { SiteName } from '../enums/siteEnum'
 import { LinkingSiteType } from '../enums/linkingSiteEnum'
 import MangaSearch from './SearchComponent.vue'
@@ -94,60 +94,60 @@ import { useClearingSearchResults } from '../composables/useSearchResults'
 import { getSiteNameByUrl } from '../utils/siteUtils'
 
 interface Rows {
-  name: SiteName,
-  value: string,
-  id: number | string,
+  name: SiteName
+  value: string
+  id: number | string
   deleted: boolean
 }
 
 export default defineComponent({
   components: {
-    MangaSearch
+    MangaSearch,
   },
 
   props: {
     linkedSites: {
       type: Object,
-      required: true
+      required: true,
     },
     initialSearch: {
       type: String,
-      default: ''
+      default: '',
     },
     searchPlaceholder: {
       type: String,
-      default: ''
+      default: '',
     },
     manualPlaceholder: {
       type: String,
-      default: ''
+      default: '',
     },
     confirmButton: {
       type: String,
-      default: ''
-    }
+      default: '',
+    },
   },
 
   emits: [...useDialogPluginComponent.emits],
 
-  setup (props) {
+  setup(props) {
     const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } = useDialogPluginComponent()
     const { clearSearchResults } = useClearingSearchResults()
 
     const rows: Ref<Rows[]> = ref([])
-    const getRows = () => {
+    const getRows = (): void => {
       const rowList: typeof rows.value = []
       Object.values(LinkingSiteType).forEach((site) => {
         const siteName = getSiteNameByUrl(site)
         if (siteName === undefined) return
         const linkedSites: Record<string, number> = props.linkedSites
-        const id = (linkedSites ? linkedSites[site] : '') || ''
+        const id = linkedSites?.[site] ?? ''
 
         rowList.push({
           name: siteName,
           value: site,
           id,
-          deleted: false
+          deleted: false,
         })
       })
       rows.value = rowList
@@ -155,24 +155,28 @@ export default defineComponent({
     onMounted(getRows)
 
     const url = ref('')
-    const selected = ref([{
-      name: SiteName[LinkingSiteType.MangaDex],
-      value: LinkingSiteType.MangaDex
-    }])
+    const selected = ref([
+      {
+        name: SiteName[LinkingSiteType.MangaDex],
+        value: LinkingSiteType.MangaDex,
+      },
+    ])
 
-    const getLinkedSites = () => {
+    const getLinkedSites = (): Record<string, number> => {
       const linkedSites: Record<string, number> = {}
-      rows.value.filter(site => site.id && !site.deleted).forEach(site => {
-        if (typeof site.id === 'number') {
-          linkedSites[site.value] = site.id
-        }
-      })
+      rows.value
+        .filter((site) => site.id.toString() !== '' && !site.deleted)
+        .forEach((site) => {
+          if (typeof site.id === 'number') {
+            linkedSites[site.value] = site.id
+          }
+        })
 
       return linkedSites
     }
 
-    const setLinkDeleted = (siteType: string, enabled: boolean) => {
-      const row = rows.value.find(site => site.value === siteType)
+    const setLinkDeleted = (siteType: string, enabled: boolean): void => {
+      const row = rows.value.find((site) => site.value === siteType)
       if (!row) return
 
       row.deleted = enabled
@@ -180,15 +184,15 @@ export default defineComponent({
 
     return {
       dialogRef,
-      onDialogHide: () => {
+      onDialogHide: (): void => {
         clearSearchResults()
         onDialogHide()
       },
-      onOKClick: () => {
+      onOKClick: (): void => {
         onDialogOK({
           url: url.value,
           siteType: selected.value[0]?.value,
-          linkedSites: getLinkedSites()
+          linkedSites: getLinkedSites(),
         })
       },
       onCancelClick: onDialogCancel,
@@ -196,16 +200,14 @@ export default defineComponent({
       rows,
       url,
       selected,
-      setLinkDeleted
+      setLinkDeleted,
     }
-  }
+  },
 })
 </script>
 
 <style lang="scss" scoped>
-
 .content {
   white-space: pre-wrap;
 }
-
 </style>

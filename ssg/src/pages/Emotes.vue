@@ -43,20 +43,20 @@
 </template>
 
 <script lang="ts">
+import type { Ref } from 'vue';
 import { defineComponent, ref, computed, onMounted } from 'vue'
-import { Ref } from '@vue/runtime-core/dist/runtime-core'
 import { Image } from '../classes/emotes/image'
-import useNotification from '../composables/useNotification'
 import { NotifyOptions } from '../classes/notifyOptions'
-import HttpRequest from '../interfaces/httpRequest'
-import HttpResponse from '../interfaces/httpResponse'
+import type { HttpRequest } from '../interfaces/httpRequest'
+import type HttpResponse from '../interfaces/httpResponse'
 import { requestHandler } from '../services/requestService'
+import { stateManager } from 'src/store/store-reader'
 
 export default defineComponent({
   name: 'PageEmotes',
 
   setup () {
-    const { notification } = useNotification()
+    const { notification$ } = stateManager
     const imageList: Ref<Image[]> = ref([])
     const searchValue = ref('')
 
@@ -83,7 +83,7 @@ export default defineComponent({
           )
         }).reverse()
       }).catch((error: Error) => {
-        notification.value = new NotifyOptions(error, 'Failed to retrieve emotes')
+        notification$.next(new NotifyOptions(error, 'Failed to retrieve emotes'))
       })
     })
 

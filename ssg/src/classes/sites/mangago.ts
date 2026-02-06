@@ -2,7 +2,7 @@ import moment from 'moment'
 import qs from 'qs'
 import { Platform } from 'src/enums/platformEnum'
 import { SiteType } from 'src/enums/siteEnum'
-import HttpRequest from 'src/interfaces/httpRequest'
+import type { HttpRequest } from 'src/interfaces/httpRequest'
 import { getPlatform } from 'src/services/platformService'
 import { requestHandler } from 'src/services/requestService'
 import { parseHtmlFromString, parseNum, titleContainsQuery } from 'src/utils/siteUtils'
@@ -12,19 +12,19 @@ import { BaseData, BaseSite } from './baseSite'
 export class Mangago extends BaseSite {
   siteType = SiteType.Mangago
 
-  getChapter (data: BaseData): string {
-    return data.chapter?.textContent?.trim() || 'Unknown'
+  protected override getChapter(data: BaseData): string {
+    return data.chapter?.textContent?.trim() ?? 'Unknown'
   }
 
-  getChapterUrl (data: BaseData): string {
-    return data.chapter?.getAttribute('href') || ''
+  protected override getChapterUrl(data: BaseData): string {
+    return data.chapter?.getAttribute('href') ?? ''
   }
 
-  getChapterNum (data: BaseData): number {
+  protected override getChapterNum(data: BaseData): number {
     return parseNum(data.chapterNum?.textContent?.split('Ch.')[1])
   }
 
-  getChapterDate (data: BaseData): string {
+  protected override getChapterDate(data: BaseData): string {
     const chapterDateText = data.chapterDate?.textContent?.trim()
     if (!chapterDateText) return ''
 
@@ -36,7 +36,7 @@ export class Mangago extends BaseSite {
     }
   }
 
-  protected async readUrlImpl (url: string): Promise<Error | Manga> {
+  protected async readUrlImpl(url: string): Promise<Error | Manga> {
     const request: HttpRequest = { method: 'GET', url }
     const response = await requestHandler.sendRequest(request)
 
@@ -71,9 +71,9 @@ export class Mangago extends BaseSite {
     return this.buildManga(data)
   }
 
-  protected async searchImpl (query: string): Promise<Error | Manga[]> {
+  protected async searchImpl(query: string): Promise<Error | Manga[]> {
     const queryString = qs.stringify({
-      name: query
+      name: query,
     })
 
     const request: HttpRequest = { method: 'GET', url: `${this.getUrl()}/r/l_search/?${queryString}` }
@@ -87,17 +87,17 @@ export class Mangago extends BaseSite {
     doc.querySelectorAll('#search_list li').forEach((element) => {
       const manga = new Manga('', this.siteType)
       const titleElem = element.querySelectorAll('.tit a')
-      manga.title = titleElem[0]?.textContent?.trim() || ''
+      manga.title = titleElem[0]?.textContent?.trim() ?? ''
 
       if (!titleContainsQuery(query, manga.title)) return
-      manga.chapter = element.querySelectorAll('.chico')[0]?.textContent?.trim() || 'Unknown'
-      manga.url = titleElem[0]?.getAttribute('href') || ''
+      manga.chapter = element.querySelectorAll('.chico')[0]?.textContent?.trim() ?? 'Unknown'
+      manga.url = titleElem[0]?.getAttribute('href') ?? ''
 
       // Some chapters aren't listed on the search results page
       if (manga.chapter === 'Unknown') {
         missingChapterUrls.push(manga.url)
       } else {
-        manga.image = element.querySelectorAll('.left img')[0]?.getAttribute('src') || ''
+        manga.image = element.querySelectorAll('.left img')[0]?.getAttribute('src') ?? ''
 
         mangaList.push(manga)
       }
@@ -108,18 +108,18 @@ export class Mangago extends BaseSite {
     })
 
     const missingMangaList = await Promise.all(promises)
-    return mangaList.concat(missingMangaList.filter(manga => manga instanceof Manga) as Manga[])
+    return mangaList.concat(missingMangaList.filter((manga) => manga instanceof Manga))
   }
 
-  getUrl (): string {
+  override getUrl(): string {
     return `https://www.${this.siteType}`
   }
 
-  getLoginUrl (): string {
+  override getLoginUrl(): string {
     return `${this.getUrl()}/home/accounts/login/`
   }
 
-  getTestUrl (): string {
+  getTestUrl(): string {
     return `${this.getUrl()}/read-manga/curtain/`
   }
 }

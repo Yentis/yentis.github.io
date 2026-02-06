@@ -1,7 +1,7 @@
 import { BaseData, BaseSite } from './baseSite'
 import { SiteType } from 'src/enums/siteEnum'
 import { Manga } from 'src/classes/manga'
-import HttpRequest from 'src/interfaces/httpRequest'
+import type { HttpRequest } from 'src/interfaces/httpRequest'
 import { requestHandler } from 'src/services/requestService'
 import * as SiteUtils from 'src/utils/siteUtils'
 import { parseHtmlFromString, titleContainsQuery } from 'src/utils/siteUtils'
@@ -70,7 +70,7 @@ export class FlameComics extends BaseSite {
 
   protected override getImage(data: FlameComicsData): string {
     const { series_id: id, cover } = data.series
-    return `${this.getUrl()}/_next/image?url=https%3A%2F%2Fcdn.flamecomics.xyz%2Fseries%2F${id}%2F${cover}&w=1920&q=100`
+    return `${this.getUrl()}/_next/image?url=https%3A%2F%2Fcdn.flamecomics.xyz%2Fuploads%2Fimages%2Fseries%2F${id}%2F${cover}&w=1920&q=100`
   }
 
   protected override getChapter(data: FlameComicsData): string {
@@ -125,7 +125,7 @@ export class FlameComics extends BaseSite {
     }
 
     const mangaList = await Promise.all(promises)
-    return mangaList.filter(manga => manga instanceof Manga) as Manga[]
+    return mangaList.filter((manga) => manga instanceof Manga)
   }
 
   getTestUrl(): string {

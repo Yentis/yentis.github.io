@@ -4,10 +4,9 @@ import { Webtoons } from '../classes/sites/webtoons'
 import { Mangakakalot } from '../classes/sites/mangakakalot'
 import { MangaDex } from '../classes/sites/mangadex'
 import { WordPress } from '../classes/sites/wordpress'
-import { BaseSite } from '../classes/sites/baseSite'
+import type { BaseSite } from '../classes/sites/baseSite'
 import { FlameComics } from '../classes/sites/flamecomics'
 import { Mangago } from '../classes/sites/mangago'
-import { Batoto } from '../classes/sites/batoto'
 import { Kitsu } from '../classes/sites/kitsu'
 import { LinkingSiteType } from '../enums/linkingSiteEnum'
 import PQueue from 'p-queue'
@@ -15,11 +14,10 @@ import constants from 'src/classes/constants'
 import { getSiteByUrl } from 'src/utils/siteUtils'
 import { Cubari } from 'src/classes/sites/cubari'
 import { Tapas } from 'src/classes/sites/tapas'
-import { ZeroScans } from 'src/classes/sites/zeroscans'
 import { Comikey } from 'src/classes/sites/comikey'
 import { TappyToon } from 'src/classes/sites/tappytoon'
 import { AsuraScans } from 'src/classes/sites/asurascans'
-import { MangaPark } from 'src/classes/sites/mangapark'
+import { Kagane } from 'src/classes/sites/kagane'
 
 const globalRequestQueue = new PQueue({
   interval: 1000,
@@ -35,24 +33,20 @@ const siteMap = new Map<string, BaseSite>([
   [SiteType.HiperDEX, new WordPress(SiteType.HiperDEX)],
   [SiteType.AsuraScans, new AsuraScans()],
   [SiteType.Mangago, new Mangago()],
-  [SiteType.ZeroScans, new ZeroScans()],
-  [SiteType.Batoto, new Batoto()],
   [SiteType.FlameComics, new FlameComics()],
   [SiteType.ResetScans, new WordPress(SiteType.ResetScans)],
   [SiteType.Cubari, new Cubari()],
   [SiteType.Tapas, new Tapas()],
   [SiteType.Comikey, new Comikey()],
   [SiteType.Tappytoon, new TappyToon()],
-  [SiteType.MangaPark, new MangaPark()],
+  [SiteType.Kagane, new Kagane()],
 ])
 const linkingSiteMap = new Map<string, BaseSite>([
   [LinkingSiteType.MangaDex, mangaDex],
   [LinkingSiteType.Kitsu, new Kitsu()],
 ])
 function createRace(promise: Promise<Error | Manga[]>): Promise<Error | Manga[]> {
-  const timeoutPromise: Promise<Error | Manga[]> = new Promise((resolve) =>
-    setTimeout(() => resolve(Error('Timed out')), 10000)
-  )
+  const timeoutPromise = new Promise<Error | Manga[]>((resolve) => setTimeout(() => resolve(Error('Timed out')), 10000))
   return Promise.race([promise, timeoutPromise])
 }
 
@@ -66,7 +60,7 @@ export function checkSites(): void {
 export async function getMangaInfoByUrl(
   url: string,
   altSources: Record<string, string> = {},
-  redirectCount = 0
+  redirectCount = 0,
 ): Promise<Error | Manga> {
   const site = getSiteByUrl(url)
   if (site === undefined) {
@@ -80,14 +74,14 @@ export async function getMangaInfo(
   url: string,
   siteType: SiteType | LinkingSiteType,
   altSources: Record<string, string> = {},
-  redirectCount = 0
+  redirectCount = 0,
 ): Promise<Error | Manga> {
   let error: Error | undefined
 
   let site = siteMap.get(siteType)
   if (!site) {
     const urlSiteType = getSiteByUrl(url)
-    if (urlSiteType) site = siteMap.get(urlSiteType)
+    if (urlSiteType !== undefined) site = siteMap.get(urlSiteType)
   }
 
   if (site) {
@@ -96,41 +90,43 @@ export async function getMangaInfo(
 
     try {
       result = await globalRequestQueue.add(() => finalSite.readUrl(url))
-    } catch (error) {
-      result = error as Error
+    } catch (e) {
+      result = e as Error
     }
 
     if (result instanceof Manga) return result
     if (result.message.startsWith(constants.REDIRECT_PREFIX) && redirectCount < 5) {
       return getMangaInfoByUrl(result.message.replace(constants.REDIRECT_PREFIX, ''), altSources, redirectCount + 1)
     }
+
     error = result
   }
 
-  for (const [urlSource, url] of Object.entries(altSources)) {
-    const site = siteMap.get(urlSource)
-    if (!site) continue
+  for (const [urlSource, curUrl] of Object.entries(altSources)) {
+    const curSite = siteMap.get(urlSource)
+    if (!curSite) continue
     let result: Manga | Error
 
     try {
-      result = await globalRequestQueue.add(() => site.readUrl(url))
-    } catch (error) {
-      result = error as Error
+      result = await globalRequestQueue.add(() => curSite.readUrl(curUrl))
+    } catch (e) {
+      result = e as Error
     }
+
     if (!(result instanceof Error)) return result
   }
 
-  return error || Error('Invalid site type')
+  return error ?? Error('Invalid site type')
 }
 
 export function searchManga(
   query: string,
-  siteType: SiteType | LinkingSiteType | undefined = undefined
+  siteType: SiteType | LinkingSiteType | undefined = undefined,
 ): Promise<Manga[]> {
   return globalRequestQueue.add(async () => {
-    if (siteType) {
-      const site = siteMap.get(siteType) || linkingSiteMap.get(siteType)
-      const result = await createRace(site?.search(query) || Promise.reject(Error('Invalid site type')))
+    if (siteType !== undefined) {
+      const site = siteMap.get(siteType) ?? linkingSiteMap.get(siteType)
+      const result = await createRace(site?.search(query) ?? Promise.reject(Error('Invalid site type')))
       if (result instanceof Error) {
         throw result
       } else {
@@ -160,10 +156,10 @@ export function searchManga(
   })
 }
 
-export function getSiteMap() {
+export function getSiteMap(): Map<string, BaseSite> {
   return siteMap
 }
 
 export function getSite(siteType: SiteType | LinkingSiteType): BaseSite | undefined {
-  return siteMap.get(siteType) || linkingSiteMap.get(siteType)
+  return siteMap.get(siteType) ?? linkingSiteMap.get(siteType)
 }

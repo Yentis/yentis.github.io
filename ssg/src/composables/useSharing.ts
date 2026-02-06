@@ -1,38 +1,41 @@
 import { createList, getNotifyOptions, updateList } from '../services/rentryService'
-import useNotification from './useNotification'
-import useUrlNavigation from './useUrlNavigation'
 import { useQuasar } from 'quasar'
 import ConfirmationDialog from '../components/ConfirmationDialog.vue'
-import { useStore } from 'src/store'
+import type { NotifyOptions } from 'src/classes/notifyOptions'
+import { stateManager } from 'src/store/store-reader'
 
-export default function useSharing() {
+export default function useSharing(): {
+  startShareSyncInterval: () => void
+  showShareDialog: () => Promise<string>
+} {
   const $q = useQuasar()
-  const $store = useStore()
-  const { urlNavigation } = useUrlNavigation()
-  const { notification } = useNotification()
+  const { urlNavigation$, notification$, getMangaList } = stateManager
 
-  const getRentryNotifyOptions = (error: unknown) => {
-    return getNotifyOptions(error, urlNavigation)
+  const getRentryNotifyOptions = (error: unknown): NotifyOptions => {
+    return getNotifyOptions(error, urlNavigation$)
   }
 
-  const updateShareList = () => {
-    updateList(JSON.stringify(Array.from($store.state.reader.mangaMap.values()))).catch((error) => {
-      notification.value = getRentryNotifyOptions(error)
+  const updateShareList = (): void => {
+    updateList(JSON.stringify(getMangaList())).catch((error) => {
+      notification$.next(getRentryNotifyOptions(error))
       console.error(error)
     })
   }
 
   let shareSyncInterval: ReturnType<typeof setInterval> | undefined
-  const startShareSyncInterval = () => {
+  const startShareSyncInterval = (): void => {
     if (shareSyncInterval !== undefined) {
       clearInterval(shareSyncInterval)
       shareSyncInterval = undefined
     }
 
     updateShareList()
-    shareSyncInterval = setInterval(() => {
-      updateShareList()
-    }, 5 * 60 * 1000)
+    shareSyncInterval = setInterval(
+      () => {
+        updateShareList()
+      },
+      5 * 60 * 1000,
+    )
   }
 
   const showShareDialog = (): Promise<string> => {
@@ -46,12 +49,12 @@ export default function useSharing() {
         },
       })
         .onOk(() => {
-          createList(JSON.stringify(Array.from($store.state.reader.mangaMap)))
+          createList(JSON.stringify(getMangaList()))
             .then((shareId) => {
               resolve(shareId)
             })
             .catch((error) => {
-              notification.value = getRentryNotifyOptions(error)
+              notification$.next(getRentryNotifyOptions(error))
               console.error(error)
               resolve('')
             })

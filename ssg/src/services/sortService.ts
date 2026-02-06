@@ -1,19 +1,19 @@
-import { Manga } from 'src/classes/manga'
+import type { Manga } from 'src/classes/manga'
 import { SimpleSortType, SortType } from 'src/enums/sortingEnum'
 import { Status } from 'src/enums/statusEnum'
 
-export function mangaSort (
+export function mangaSort(
   a: Manga | undefined,
   b: Manga,
   sortedBy: SortType | SimpleSortType,
-  ignoreProgress = false
+  ignoreProgress = false,
 ): number {
   if (!a) return 1
 
-  if ((a.status !== Status.READING) && (b.status === Status.READING)) {
+  if (a.status !== Status.READING && b.status === Status.READING) {
     return 1
   }
-  if ((b.status !== Status.READING) && (a.status === Status.READING)) {
+  if (b.status !== Status.READING && a.status === Status.READING) {
     return -1
   }
 
@@ -40,8 +40,8 @@ export function mangaSort (
 
   if (!ignoreProgress) {
     if (a.status === Status.READING && b.status === Status.READING) {
-      const isARead = isMangaRead(a.chapter, a.read)
-      const isBRead = isMangaRead(b.chapter, b.read)
+      const isARead = isMangaRead(a)
+      const isBRead = isMangaRead(b)
 
       if (!isARead && isBRead) {
         return -1
@@ -66,24 +66,29 @@ export function mangaSort (
     case SortType.RATING:
     case SimpleSortType.RATING:
       return sortRating(a, b)
-    default:
+    case SortType.TITLE:
+    case SimpleSortType.TITLE:
       return sortTitle(a, b)
   }
 }
 
-export function isMangaRead (chapter: string, read?: string): boolean {
-  return chapter === read
+export function isMangaRead(manga: Manga): boolean {
+  return manga.chapter === manga.read
 }
 
-function sortSite (a: Manga, b: Manga) {
-  return a.site.toLowerCase() > b.site.toLowerCase() ? 1 : b.site.toLowerCase() > a.site.toLowerCase() ? -1 : sortTitle(a, b)
+function sortSite(a: Manga, b: Manga): number {
+  return a.site.toLowerCase() > b.site.toLowerCase()
+    ? 1
+    : b.site.toLowerCase() > a.site.toLowerCase()
+      ? -1
+      : sortTitle(a, b)
 }
 
-function sortCurrent (a: Manga, b: Manga) {
+function sortCurrent(a: Manga, b: Manga): number {
   return a.chapterNum > b.chapterNum ? 1 : b.chapterNum > a.chapterNum ? -1 : sortTitle(a, b)
 }
 
-function sortDate (a: Manga, b: Manga) {
+function sortDate(a: Manga, b: Manga): number {
   const aDate = a.chapterDate
   const bDate = b.chapterDate
 
@@ -141,11 +146,15 @@ function sortDate (a: Manga, b: Manga) {
   return amountA > amountB ? bDirection : amountB > amountA ? aDirection : sortTitle(a, b)
 }
 
-function sortRead (a: Manga, b: Manga) {
+function sortRead(a: Manga, b: Manga): number {
   if (a.readNum !== undefined && b.readNum !== undefined) {
     return a.readNum > b.readNum ? 1 : b.readNum > a.readNum ? -1 : sortTitle(a, b)
   } else if (a.read !== undefined && b.read !== undefined) {
-    return a.read.toLowerCase() > b.read.toLowerCase() ? 1 : b.read.toLowerCase() > a.read.toLowerCase() ? -1 : sortTitle(a, b)
+    return a.read.toLowerCase() > b.read.toLowerCase()
+      ? 1
+      : b.read.toLowerCase() > a.read.toLowerCase()
+        ? -1
+        : sortTitle(a, b)
   } else if (a.read !== undefined) {
     return -1
   } else if (b.read !== undefined) {
@@ -155,13 +164,13 @@ function sortRead (a: Manga, b: Manga) {
   }
 }
 
-function sortRating (a: Manga, b: Manga) {
-  const aRating = a.rating || 0
-  const bRating = b.rating || 0
+function sortRating(a: Manga, b: Manga): number {
+  const aRating = a.rating ?? 0
+  const bRating = b.rating ?? 0
 
   return aRating > bRating ? -1 : bRating > aRating ? 1 : sortTitle(a, b)
 }
 
-function sortTitle (a: Manga, b: Manga) {
+function sortTitle(a: Manga, b: Manga): number {
   return a.title.toLowerCase() > b.title.toLowerCase() ? 1 : b.title.toLowerCase() > a.title.toLowerCase() ? -1 : 0
 }

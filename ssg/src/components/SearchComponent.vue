@@ -12,7 +12,7 @@
         <q-icon
           name="cancel"
           class="cursor-pointer"
-          @click.stop="search = ''; searchResults = []"
+          @click.stop="cancel"
         />
       </template>
 
@@ -44,7 +44,7 @@
             v-for="manga in searchResults"
             :key="manga.url"
             clickable
-            @click="$emit('update:url', manga.url); mangaTitle = manga.title"
+            @click="selectUrl(manga)"
           >
             <q-item-section avatar>
               <q-img
@@ -72,20 +72,25 @@
       v-if="searchResults.length === 0"
       :model-value="url"
       :placeholder="manualPlaceholder"
-      @update:model-value="(value) => { $emit('update:url', value) }"
+      @update:model-value="
+        (value) => {
+          $emit('update:url', value)
+        }
+      "
     />
   </q-card-section>
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, watchEffect } from 'vue'
+import { defineComponent, ref } from 'vue'
 import useMangaList from '../composables/useMangaList'
-import { useSearchResults } from '../composables/useSearchResults'
-import useMobileView from '../composables/useMobileView'
 import { getSiteNameByUrl } from '../utils/siteUtils'
-import { SiteType } from 'src/enums/siteEnum'
-import { LinkingSiteType } from 'src/enums/linkingSiteEnum'
+import type { SiteType } from 'src/enums/siteEnum'
+import type { LinkingSiteType } from 'src/enums/linkingSiteEnum'
 import { getSite } from 'src/services/siteService'
+import { stateManager } from 'src/store/store-reader'
+import { useObservable, useSubscription } from '@vueuse/rxjs'
+import type { Manga } from 'src/classes/manga'
 
 export default defineComponent({
   name: 'MangaSearch',
@@ -93,42 +98,42 @@ export default defineComponent({
   props: {
     url: {
       type: String,
-      default: ''
+      default: '',
     },
     searchPlaceholder: {
       type: String,
-      default: ''
+      default: '',
     },
     manualPlaceholder: {
       type: String,
-      default: ''
+      default: '',
     },
     initialSearch: {
       type: String,
-      default: ''
+      default: '',
     },
     siteType: {
       type: String,
-      default: ''
+      default: '',
     },
     excludedUrls: {
       type: Array,
-      default: () => []
-    }
+      default: () => [],
+    },
   },
 
   emits: ['update:url'],
 
-  setup (props) {
+  setup(props, ctx) {
     const search = ref(props.initialSearch)
     const mangaTitle = ref('')
     const searchDropdownShown = ref(true)
     const { findManga } = useMangaList()
-    const { searchResults } = useSearchResults()
-    const { mobileView } = useMobileView()
-    const excludedUrls = props.excludedUrls.filter((url) => typeof url === 'string') as string[]
+    const { searchResults$, mobileView$ } = stateManager
 
-    const onSearch = async (siteTypeName = '') => {
+    const excludedUrls = props.excludedUrls.filter((url) => typeof url === 'string')
+
+    const onSearch = async (siteTypeName = ''): Promise<void> => {
       const foundManga = await findManga(siteTypeName, search.value, excludedUrls)
       if (foundManga) searchDropdownShown.value = true
     }
@@ -141,33 +146,48 @@ export default defineComponent({
       return (await site?.readImage(url)) ?? url
     }
 
-    watchEffect(() => {
-      searchResults.value.forEach((result) => {
-        readImage(result.site, result.image).then((image) => {
-          images.value[result.image] = image
-        }).catch((error) => {
-          console.error(error)
-          images.value[result.image] = result.image
+    const selectUrl = (manga: Manga): void => {
+      ctx.emit('update:url', manga.url)
+      mangaTitle.value = manga.title
+    }
+
+    const cancel = (): void => {
+      search.value = ''
+      searchResults$.next([])
+    }
+
+    useSubscription(
+      searchResults$.subscribe((searchResults) => {
+        searchResults.forEach((result) => {
+          readImage(result.site, result.image)
+            .then((image) => {
+              images.value[result.image] = image
+            })
+            .catch((error) => {
+              console.error(error)
+              images.value[result.image] = result.image
+            })
         })
-      })
-    })
+      }),
+    )
 
     return {
       search,
       mangaTitle,
       searchDropdownShown,
-      searchResults,
+      searchResults: useObservable(searchResults$, { initialValue: [] }),
       images,
-      mobileView,
+      mobileView: useObservable(mobileView$),
       onSearch,
-      getSiteNameByUrl
+      getSiteNameByUrl,
+      selectUrl,
+      cancel,
     }
-  }
+  },
 })
 </script>
 
 <style lang="scss" scoped>
-
 .manga-image-search {
   min-width: 48px;
   width: 48px;
@@ -177,5 +197,4 @@ export default defineComponent({
   color: black;
   pointer-events: none;
 }
-
 </style>

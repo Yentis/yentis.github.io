@@ -25,7 +25,7 @@
           <q-toggle
             v-if="!isStatic"
             label="Dark mode"
-            :model-value="settings.darkMode"
+            :model-value="settings?.darkMode"
             @update:model-value="onToggleDarkMode"
           />
           <q-toggle
@@ -42,8 +42,8 @@
           suffix="minutes"
           label="Refresh interval"
           :rules="[
-            val => val && val > 0 || 'Must be at least one minute',
-            val => val && val <= 1440 || 'Must be at most one day'
+            (val) => (val && val > 0) || 'Must be at least one minute',
+            (val) => (val && val <= 1440) || 'Must be at most one day',
           ]"
         />
 
@@ -107,8 +107,6 @@ import { copyToClipboard, useDialogPluginComponent } from 'quasar'
 import { defineComponent, onMounted, ref } from 'vue'
 import { Settings } from '../classes/settings'
 import { NotifyOptions } from '../classes/notifyOptions'
-import useUrlNavigation from '../composables/useUrlNavigation'
-import useNotification from '../composables/useNotification'
 import useSettings from '../composables/useSettings'
 import TestComponent from '../components/TestComponent.vue'
 import useSharing from '../composables/useSharing'
@@ -116,60 +114,62 @@ import { getPlatform } from '../services/platformService'
 import { Platform } from '../enums/platformEnum'
 import { getShareId } from '../services/rentryService'
 import { LocalNotifications } from '@capacitor/local-notifications'
+import { stateManager } from 'src/store/store-reader'
+import { useObservable } from '@vueuse/rxjs'
+import { UrlNavigation } from 'src/classes/urlNavigation'
 
 export default defineComponent({
   components: { TestComponent },
 
   emits: [...useDialogPluginComponent.emits],
 
-  setup () {
+  setup() {
     const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } = useDialogPluginComponent()
-    const { navigate } = useUrlNavigation()
-    const { notification } = useNotification()
-    const { settings, toggleDarkMode } = useSettings()
+    const { toggleDarkMode } = useSettings()
     const { showShareDialog } = useSharing()
+    const { settings$, notification$, urlNavigation$ } = stateManager
 
     const loading = ref(false)
 
     const newSettings = ref(new Settings())
-    const getNewSettings = () => {
-      newSettings.value = Settings.clone(settings.value)
+    const getNewSettings = (): void => {
+      newSettings.value = Settings.clone(settings$.value)
     }
 
     onMounted(getNewSettings)
 
     const shareId = ref('')
-    const updateShareId = () => {
+    const updateShareId = (): void => {
       shareId.value = getShareId()
     }
 
     onMounted(updateShareId)
 
-    const onShareList = async () => {
+    const onShareList = async (): Promise<void> => {
       loading.value = true
       shareId.value = await showShareDialog()
       loading.value = false
     }
 
     const sitePrefix = 'https://yentis.github.io/mangalist?id='
-    const onCopyToClipboard = () => {
+    const onCopyToClipboard = (): void => {
       copyToClipboard(`${sitePrefix}${shareId.value}`)
         .then(() => {
           const notifyOptions = new NotifyOptions('Copied to clipboard!')
           notifyOptions.type = 'positive'
-          notification.value = notifyOptions
+          notification$.next(notifyOptions)
         })
         .catch((error: Error) => {
-          notification.value = new NotifyOptions(error, 'Failed to copy to clipboard')
+          notification$.next(new NotifyOptions(error, 'Failed to copy to clipboard'))
         })
     }
 
-    const onToggleDarkMode = () => {
+    const onToggleDarkMode = (): void => {
       toggleDarkMode()
-      newSettings.value.darkMode = settings.value.darkMode
+      newSettings.value.darkMode = settings$.value.darkMode
     }
 
-    const onClickAutoRefresh = async () => {
+    const onClickAutoRefresh = async (): Promise<void> => {
       const isEnabled = newSettings.value.refreshOptions.enabled
       if (!isEnabled || getPlatform() !== Platform.Capacitor) return
 
@@ -182,24 +182,24 @@ export default defineComponent({
     return {
       dialogRef,
       onDialogHide,
-      onOKClick: () => {
-        settings.value = newSettings.value
+      onOKClick: (): void => {
+        settings$.next(newSettings.value)
         onDialogOK()
       },
       onCancelClick: onDialogCancel,
       sitePrefix,
       dev: process.env.DEV?.toString() === 'true',
       loading,
-      settings,
+      settings: useObservable(settings$),
       newSettings,
       shareId,
-      navigate,
+      navigate: (url: string): void => urlNavigation$.next(new UrlNavigation(url)),
       onShareList,
       onCopyToClipboard,
       onToggleDarkMode,
       onClickAutoRefresh,
-      isStatic: getPlatform() === Platform.Static
+      isStatic: getPlatform() === Platform.Static,
     }
-  }
+  },
 })
 </script>

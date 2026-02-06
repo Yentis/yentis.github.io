@@ -102,7 +102,7 @@
 
 <script lang="ts">
 import { defineComponent, computed } from 'vue'
-import { Manga } from 'src/classes/manga'
+import type { Manga } from 'src/classes/manga'
 import { SiteName } from 'src/enums/siteEnum'
 import { Status, StatusIcon } from 'src/enums/statusEnum'
 

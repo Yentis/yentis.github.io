@@ -1,82 +1,74 @@
 import { useQuasar } from 'quasar'
-import { useStore } from '../store'
-import { computed, watch } from 'vue'
-import useErrors from './useErrors'
 import { NotifyOptions } from 'src/classes/notifyOptions'
 import ErrorDialog from '../components/ErrorDialog.vue'
+import { stateManager } from 'src/store/store-reader'
+import { useSubscription } from '@vueuse/rxjs'
 
-export default function useNotification () {
-  const $store = useStore()
-  const notification = computed({
-    get: () => $store.state.reader.notification,
-    set: (val) => $store.commit('reader/pushNotification', val)
-  })
-
-  return { notification }
-}
-
-export function useAppNotification () {
+export function useAppNotification(): void {
   const $q = useQuasar()
-  const { notification } = useNotification()
-  const { errors, addError, clearErrors } = useErrors()
+  const { notification$, errors$, addError } = stateManager
 
   let dismissErrorNotification: (() => void) | undefined
   let errorDialogShowing = false
 
-  watch(notification, () => {
-    if (!notification.value) return
+  useSubscription(
+    notification$.subscribe((notification) => {
+      if (!notification) return
 
-    if (notification.value.type !== 'negative') {
-      $q.notify(notification.value.getOptions())
-      return
-    }
+      if (notification.type !== 'negative') {
+        $q.notify(notification.getOptions())
+        return
+      }
 
-    const errorLength = errors.value.length
-    addError(notification.value)
-    console.error(notification.value.message)
-    if (errorDialogShowing) return
+      addError(notification)
+      console.error(notification.message)
+      if (errorDialogShowing) return
 
-    if (errorLength === 0) {
-      dismissErrorNotification = $q.notify({
-        ...notification.value.getOptions(),
-        onDismiss: () => {
-          if (errors.value.length > 1) return
-          clearErrors()
-        }
-      }) as () => void
-      return
-    }
+      if (errors$.value.length <= 0) {
+        dismissErrorNotification = $q.notify({
+          ...notification.getOptions(),
+          onDismiss: () => {
+            if (errors$.value.length > 1) return
+            errors$.next([])
+          },
+        }) as () => void
+        return
+      }
 
-    if (dismissErrorNotification) dismissErrorNotification()
-    let dismiss: (() => void) | undefined
+      if (dismissErrorNotification) dismissErrorNotification()
+      let dismiss: (() => void) | undefined
 
-    const notifyOptions = new NotifyOptions('Issues detected')
-    notifyOptions.position = 'bottom-right'
-    notifyOptions.timeout = 0
-    notifyOptions.actions = [{
-      label: 'View',
-      handler: () => {
-        errorDialogShowing = true
+      const notifyOptions = new NotifyOptions('Issues detected')
+      notifyOptions.position = 'bottom-right'
+      notifyOptions.timeout = 0
+      notifyOptions.actions = [
+        {
+          label: 'View',
+          handler: (): void => {
+            errorDialogShowing = true
 
-        $q.dialog({
-          component: ErrorDialog
-        }).onDismiss(() => {
-          clearErrors()
-          errorDialogShowing = false
-        })
-      },
-      color: 'white'
-    }, {
-      label: 'Close',
-      handler: () => {
-        if (!dismiss) return
-        dismiss()
-        dismiss = undefined
-        clearErrors()
-      },
-      color: 'white'
-    }]
+            $q.dialog({
+              component: ErrorDialog,
+            }).onDismiss(() => {
+              errors$.next([])
+              errorDialogShowing = false
+            })
+          },
+          color: 'white',
+        },
+        {
+          label: 'Close',
+          handler: (): void => {
+            if (!dismiss) return
+            dismiss()
+            dismiss = undefined
+            errors$.next([])
+          },
+          color: 'white',
+        },
+      ]
 
-    dismiss = $q.notify(notifyOptions.getOptions()) as () => void
-  })
+      dismiss = $q.notify(notifyOptions.getOptions())
+    }),
+  )
 }

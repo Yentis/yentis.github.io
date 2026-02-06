@@ -1,12 +1,12 @@
 import { LocalStorage } from 'quasar'
 import constants from 'src/classes/constants'
 import { requestHandler } from './requestService'
-import { Ref } from '@vue/runtime-core/dist/runtime-core'
 import { UrlNavigation } from '../classes/urlNavigation'
 import { NotifyOptions } from 'src/classes/notifyOptions'
 import { ContentType } from 'src/enums/contentTypeEnum'
 import { getCookies } from 'src/classes/requests/baseRequest'
 import { Data64URIWriter, TextReader, ZipWriter } from '@zip.js/zip.js'
+import type { BehaviorSubject } from 'rxjs'
 
 const URL = 'https://rentry.co'
 
@@ -24,7 +24,7 @@ export function getShareId(): string {
   return shareId
 }
 
-export function setShareId(id?: string) {
+export function setShareId(id?: string): void {
   if (id === undefined) return
   LocalStorage.set(constants.SHARE_ID, id)
 }
@@ -36,7 +36,7 @@ export function getEditCode(): string {
   return shareEditCode
 }
 
-export function setEditCode(code?: string) {
+export function setEditCode(code?: string): void {
   if (code === undefined) return
   LocalStorage.set(constants.SHARE_EDIT_CODE, code)
 }
@@ -140,7 +140,10 @@ export async function updateList(list: string): Promise<void> {
   if (responseData.errors) throw new Error(`Status: ${responseData.status ?? 'unknown'}, ${responseData.errors}`)
 }
 
-export function getNotifyOptions(error: unknown, urlNavigation: Ref<UrlNavigation | undefined>) {
+export function getNotifyOptions(
+  error: unknown,
+  urlNavigation: BehaviorSubject<UrlNavigation | undefined>,
+): NotifyOptions {
   let description = JSON.stringify(error)
   if (error instanceof Error) {
     description = error.message
@@ -150,8 +153,8 @@ export function getNotifyOptions(error: unknown, urlNavigation: Ref<UrlNavigatio
   notifyOptions.actions = [
     {
       label: 'Visit',
-      handler: () => {
-        urlNavigation.value = new UrlNavigation(URL, false)
+      handler: (): void => {
+        urlNavigation.next(new UrlNavigation(URL, false))
       },
       color: 'white',
     },

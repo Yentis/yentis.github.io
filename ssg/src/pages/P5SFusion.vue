@@ -109,7 +109,7 @@ export default defineComponent({
     const foundPath = ref('')
     let lowestLength = 10
 
-    const onCalculate = () => {
+    const onCalculate = (): void => {
       if (!start.value || !target.value) {
         foundPath.value = 'Start & Target Persona must be filled'
         return
@@ -136,15 +136,15 @@ export default defineComponent({
       if (foundPath.value === '') foundPath.value = 'No fusion path found'
     }
 
-    const checkTarget = (target: string, sources: Array<string>, path: string, depth = 0): string | null => {
+    const checkTarget = (curTarget: string, sources: Array<string>, path: string, depth = 0): string | null => {
       if (depth >= lowestLength) return null
-      if (sources.includes(target)) return path
+      if (sources.includes(curTarget)) return path
 
       for (const source of sources) {
         const newSources = PERSONAS[source]
         if (newSources === undefined) continue
 
-        const match = checkTarget(target, newSources, path + ' - ' + source, depth + 1)
+        const match = checkTarget(curTarget, newSources, path + ' - ' + source, depth + 1)
         if (match) {
           const length = match.split('-').length
 
@@ -168,17 +168,3 @@ export default defineComponent({
   }
 })
 </script>
-
-<style scoped>
-  .intersection-item {
-    height: 280px;
-    min-width: 155px;
-  }
-
-  .image {
-    height: 200px;
-    width: auto;
-    margin-left: auto;
-    margin-right: auto;
-  }
-</style>

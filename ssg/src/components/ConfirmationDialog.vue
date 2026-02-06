@@ -19,6 +19,7 @@
         <div class="text-body2 content">
           {{ content }}
         </div>
+
         <q-img
           v-if="imageUrl"
           class="q-mt-sm confirmation-image-size"
@@ -26,10 +27,13 @@
           contain
           :src="imageUrl"
         />
+
         <a
           v-if="link"
           :href="link"
-        >{{ linkText || link }}</a>
+        >
+          {{ linkText || link }}
+        </a>
       </q-card-section>
 
       <q-card-actions>
@@ -51,50 +55,56 @@
 </template>
 
 <script lang="ts">
+import type { QDialog } from 'quasar'
 import { useDialogPluginComponent } from 'quasar'
+import type { Ref } from 'vue'
 
 export default {
   props: {
     title: {
       type: String,
-      default: ''
+      default: '',
     },
     content: {
       type: String,
-      default: ''
+      default: '',
     },
     imageUrl: {
       type: String,
-      default: ''
+      default: '',
     },
     link: {
       type: String,
-      default: ''
+      default: '',
     },
     linkText: {
       type: String,
-      default: ''
+      default: '',
     },
-    hideCancel: Boolean
+    hideCancel: Boolean,
   },
 
   emits: [...useDialogPluginComponent.emits],
 
-  setup () {
+  setup(): {
+    dialogRef: Ref<QDialog | undefined>
+    onDialogHide: () => void
+    onOKClick: (payload?: unknown) => void
+    onCancelClick: () => void
+  } {
     const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } = useDialogPluginComponent()
 
     return {
       dialogRef,
       onDialogHide,
       onOKClick: onDialogOK,
-      onCancelClick: onDialogCancel
+      onCancelClick: onDialogCancel,
     }
-  }
+  },
 }
 </script>
 
 <style lang="scss" scoped>
-
 .confirmation-image-size {
   max-height: 16em;
 }
@@ -102,5 +112,4 @@ export default {
 .content {
   white-space: pre-line;
 }
-
 </style>

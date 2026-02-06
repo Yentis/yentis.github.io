@@ -1,17 +1,15 @@
 <template>
   <q-card
     :class="{
-      'completed-container': mangaStatus === status.COMPLETED,
-      'on-hold-container': mangaStatus === status.ON_HOLD,
-      'plan-to-read-container': mangaStatus === status.PLAN_TO_READ,
-      'dropped-container': mangaStatus === status.DROPPED,
+      'completed-container': manga.status === status.COMPLETED,
+      'on-hold-container': manga.status === status.ON_HOLD,
+      'plan-to-read-container': manga.status === status.PLAN_TO_READ,
+      'dropped-container': manga.status === status.DROPPED,
       'unread-container': isUnread,
-      'read-container': mangaStatus === status.READING && !isUnread
+      'read-container': manga.status === status.READING && !isUnread,
     }"
   >
-    <q-card-section
-      class="q-pa-none"
-    >
+    <q-card-section class="q-pa-none">
       <q-card-section
         class="manga-item q-pa-none"
         horizontal
@@ -20,7 +18,7 @@
           contain
           class="manga-image q-ma-sm"
           fit="scale-down"
-          :src="mangaImage"
+          :src="image"
         >
           <template #error>
             <div
@@ -46,9 +44,7 @@
           </template>
         </q-img>
 
-        <q-card-section
-          class="full-width q-pl-none q-pt-sm q-pb-none q-pr-sm column"
-        >
+        <q-card-section class="full-width q-pl-none q-pt-sm q-pb-none q-pr-sm column">
           <q-card-section
             horizontal
             :class="{ 'text-subtitle2': mobileView, 'text-h6': !mobileView }"
@@ -56,7 +52,8 @@
             <a
               :href="url"
               @click.prevent="navigate(url)"
-            >{{ mangaTitle }}</a>
+              >{{ manga.title }}</a
+            >
 
             <q-space />
 
@@ -71,57 +68,61 @@
 
           <div v-if="!editing">
             <div :class="{ 'text-caption': mobileView, 'text-body2': !mobileView, 'manga-subtitle': true }">
-              Read:&nbsp;&nbsp;&nbsp;&nbsp; <router-link
-                v-if="mangaReadUrl?.startsWith('/')"
-                :to="mangaReadUrl"
+              Read:&nbsp;&nbsp;&nbsp;&nbsp;
+              <router-link
+                v-if="manga.readUrl?.startsWith('/')"
+                :to="manga.readUrl"
               >
-                {{ mangaRead }}
+                {{ manga.read }}
               </router-link>
               <a
-                v-else-if="mangaReadUrl"
-                :href="mangaReadUrl"
-                @click.prevent="navigate(mangaReadUrl || '#')"
-              >{{ mangaRead }}</a>
-              <span v-else>{{ mangaRead }}</span>
+                v-else-if="manga.readUrl"
+                :href="manga.readUrl"
+                @click.prevent="navigate(manga.readUrl || '#')"
+                >{{ manga.read }}</a
+              >
+              <span v-else>{{ manga.read }}</span>
             </div>
 
             <div :class="{ 'text-caption': mobileView, 'text-body2': !mobileView, 'manga-subtitle': true }">
-              Current: <router-link
-                v-if="mangaChapterUrl?.startsWith('/')"
-                :to="mangaChapterUrl"
+              Current:
+              <router-link
+                v-if="manga.chapterUrl?.startsWith('/')"
+                :to="manga.chapterUrl"
               >
-                {{ mangaChapter }}
+                {{ manga.chapter }}
               </router-link>
               <a
-                v-else-if="mangaChapterUrl"
-                :href="mangaChapterUrl"
-                @click.prevent="navigate(mangaChapterUrl)"
-              >{{ mangaChapter }}</a>
-              <span v-else>{{ mangaChapter }}</span>
+                v-else-if="manga.chapterUrl"
+                :href="manga.chapterUrl"
+                @click.prevent="navigate(manga.chapterUrl)"
+                >{{ manga.chapter }}</a
+              >
+              <span v-else>{{ manga.chapter }}</span>
             </div>
 
             <div
-              v-if="mangaNotes"
+              v-if="manga.notes"
               :class="{ 'text-caption': mobileView, 'text-body2': !mobileView, 'manga-subtitle': true }"
             >
-              Notes:&nbsp;&nbsp; <span>{{ mangaNotes }}</span>
+              Notes:&nbsp;&nbsp; <span>{{ manga.notes }}</span>
             </div>
 
             <div
-              v-if="mangaChapterDate"
+              v-if="manga.chapterDate"
               :class="{ 'text-caption': mobileView, 'text-body2': !mobileView }"
             >
-              {{ mangaChapterDate }}
+              {{ manga.chapterDate }}
             </div>
 
             <q-rating
-              v-if="mangaRating"
-              v-model="mangaRating"
+              v-if="manga.rating"
+              v-model="newRating"
               readonly
               size="1em"
               class="q-mt-sm"
               :max="10"
-              :color="mangaRating > 6 ? 'positive' : mangaRating > 3 ? 'warning' : 'negative'"
+              :color="manga.rating > 6 ? 'positive' : manga.rating > 3 ? 'warning' : 'negative'"
             />
           </div>
 
@@ -138,7 +139,7 @@
             />
 
             <div :class="{ 'text-caption': mobileView, 'text-body2': !mobileView, 'manga-subtitle': true }">
-              Current: <span>{{ mangaChapter }}</span>
+              Current: <span>{{ manga.chapter }}</span>
             </div>
 
             <q-input
@@ -148,9 +149,7 @@
               class="q-mb-sm"
             />
 
-            <q-card-actions
-              class="q-px-none"
-            >
+            <q-card-actions class="q-px-none">
               <q-input
                 v-model="newUrl"
                 stack-label
@@ -177,15 +176,13 @@
             horizontal
             class="q-mb-sm"
           >
-            <q-card-section
-              class="q-pa-none"
-            >
+            <q-card-section class="q-pa-none">
               <q-card-section
                 v-if="!editing"
                 horizontal
                 class="status-text"
               >
-                <span>{{ isUnread ? 'New Chapter' : mangaStatus }}</span>
+                <span>{{ isUnread ? 'New Chapter' : manga.status }}</span>
                 <q-icon
                   v-if="isUnread"
                   class="q-ml-xs"
@@ -200,13 +197,13 @@
               >
                 <q-icon
                   class="q-mr-xs q-mb-xs"
-                  :name="statusIcon[mangaStatus]"
+                  :name="statusIcon[manga.status]"
                   size="xs"
                 />
-                <span>{{ getSiteNameByUrl(mangaSite) || 'Unknown site' }}</span>
+                <span>{{ getSiteNameByUrl(manga.site) || 'Unknown site' }}</span>
 
                 <q-icon
-                  v-if="mangaShouldUpdate"
+                  v-if="manga.shouldUpdate"
                   class="q-ml-xs center-self"
                   name="refresh"
                   color="positive"
@@ -217,7 +214,7 @@
                   :color="hasLinkedSites ? 'positive' : 'negative'"
                 />
                 <span
-                  v-for="(id, site) in mangaLinkedSites"
+                  v-for="(id, site) in manga.linkedSites"
                   :key="site"
                   class="q-mx-xs"
                 >
@@ -278,7 +275,7 @@
         vertical
       >
         <q-checkbox
-          v-if="mangaStatus !== status.READING"
+          v-if="manga.status !== status.READING"
           v-model="newShouldUpdate"
           dense
           class="q-mb-xs"
@@ -312,9 +309,7 @@
           </q-list>
         </q-btn-dropdown>
 
-        <q-card-actions
-          class="q-pa-none"
-        >
+        <q-card-actions class="q-pa-none">
           <q-btn-dropdown
             no-caps
             class="editing-box q-mt-xs"
@@ -366,9 +361,7 @@
 
       <q-space />
 
-      <q-card-actions
-        vertical
-      >
+      <q-card-actions vertical>
         <q-btn
           color="unread"
           text-color="button"
@@ -395,17 +388,21 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, ref } from 'vue'
-import { Status, StatusIcon } from '../../enums/statusEnum'
-import useMobileView from '../../composables/useMobileView'
-import useUrlNavigation from '../../composables/useUrlNavigation'
-import { useMangaItem } from '../../composables/useManga'
+import { defineComponent, ref } from 'vue'
+import { Status, StatusIcon } from 'src/enums/statusEnum'
+import { useMangaItem } from 'src/composables/useManga'
 import useProgressLinking from '../../composables/useProgressLinking'
 import useAltSources from '../../composables/useAltSources'
 import useMangaList from '../../composables/useMangaList'
 import useRefreshing from 'src/composables/useRefreshing'
-import { isMangaRead } from '../../services/sortService'
-import { getSiteNameByUrl } from '../../utils/siteUtils'
+import { isMangaRead } from 'src/services/sortService'
+import { getSiteNameByUrl } from 'src/utils/siteUtils'
+import { stateManager } from 'src/store/store-reader'
+import { firstValueFrom, map } from 'rxjs'
+import { useObservable } from '@vueuse/rxjs'
+import { UrlNavigation } from 'src/classes/urlNavigation'
+import { Manga } from 'src/classes/manga'
+import { SiteType } from 'src/enums/siteEnum'
 
 export default defineComponent({
   name: 'MangaItem',
@@ -413,110 +410,123 @@ export default defineComponent({
   props: {
     url: {
       type: String,
-      required: true
+      required: true,
     },
     initialEditing: {
       type: Boolean,
-      default: false
-    }
+      default: false,
+    },
   },
 
   emits: ['mangaSaved', 'mangaRemoved'],
 
-  setup (props, context) {
-    const manga = useMangaItem(props.url)
-    const { mobileView } = useMobileView()
-    const { openLinkingDialog } = useProgressLinking(manga.title, manga.linkedSites, manga.newLinkedSites)
-    const { openAltSourceDialog } = useAltSources(manga.altSources, manga.title, manga.newSources)
+  setup(props, context) {
+    const {
+      observable: manga$,
+      image,
+      editing,
+      saving,
+      newUrl,
+      newReadNum,
+      newStatus,
+      newNotes,
+      newShouldUpdate,
+      newRating,
+      newLinkedSites,
+      newSources,
+      readManga,
+      toggleEditing,
+      saveManga,
+      deleteManga,
+    } = useMangaItem(props.url)
+
+    const { openLinkingDialog } = useProgressLinking(manga$, newLinkedSites)
+    const { openAltSourceDialog } = useAltSources(manga$, newSources)
     const { showUpdateMangaDialog } = useMangaList()
     const { refreshManga } = useRefreshing(ref(0))
+    const { mobileView$, urlNavigation$ } = stateManager
     const refreshing = ref(false)
 
-    const itemSize = computed(() => {
-      return mobileView.value ? 'sm' : 'md'
-    })
+    const itemSize$ = mobileView$.pipe(
+      map((mobileView) => {
+        return mobileView ? 'sm' : 'md'
+      }),
+    )
 
-    const hasLinkedSites = computed(() => {
-      return Object.keys(manga.linkedSites.value).length > 0
-    })
+    const hasLinkedSites$ = manga$.pipe(
+      map((manga) => {
+        return Object.keys(manga.linkedSites).length > 0
+      }),
+    )
 
-    const isUnread = computed(() => {
-      return manga.status.value === Status.READING &&
-      !isMangaRead(manga.chapter.value, manga.read.value)
-    })
+    const isUnread$ = manga$.pipe(
+      map((manga) => {
+        return manga.status === Status.READING && !isMangaRead(manga)
+      }),
+    )
 
-    const { navigate } = useUrlNavigation()
+    const openSearchDialog = async (): Promise<void> => {
+      const manga = await firstValueFrom(manga$)
+      const url = await showUpdateMangaDialog(manga.title)
+      if (url === undefined) return
 
-    const openSearchDialog = async () => {
-      const url = await showUpdateMangaDialog(manga.title.value)
-      if (url === null) return
-
-      manga.newUrl.value = url
+      newUrl.value = url
     }
 
-    const onRefreshRequested = () => {
+    const onRefreshRequested = (): void => {
       refreshing.value = true
       refreshManga(props.url)
-        .finally(() => { refreshing.value = false })
+        .finally(() => {
+          refreshing.value = false
+        })
         .catch(console.error)
     }
 
     if (props.initialEditing) {
-      manga.toggleEditing()
+      toggleEditing().catch(console.error)
     }
 
     return {
       status: Status,
       statusIcon: StatusIcon,
-      editing: manga.editing,
-      saving: manga.saving,
+      editing,
+      saving,
       refreshing,
 
-      newUrl: manga.newUrl,
-      newReadNum: manga.newReadNum,
-      newStatus: manga.newStatus,
-      newNotes: manga.newNotes,
-      newShouldUpdate: manga.newShouldUpdate,
-      newRating: manga.newRating,
+      newUrl,
+      newReadNum,
+      newStatus,
+      newNotes,
+      newShouldUpdate,
+      newRating,
 
-      mangaSite: manga.site,
-      mangaChapter: manga.chapter,
-      mangaChapterUrl: manga.chapterUrl,
-      mangaChapterDate: manga.chapterDate,
-      mangaTitle: manga.title,
-      mangaRead: manga.read,
-      mangaReadUrl: manga.readUrl,
-      mangaLinkedSites: manga.linkedSites,
-      mangaStatus: manga.status,
-      mangaNotes: manga.notes,
-      mangaRating: manga.rating,
-      mangaShouldUpdate: manga.shouldUpdate,
-      mangaImage: manga.image,
+      manga: useObservable(manga$, { initialValue: new Manga(props.url, SiteType.AsuraScans) }),
+      image,
 
-      mobileView,
-      itemSize,
-      navigate,
+      mobileView: useObservable(mobileView$),
+      itemSize: useObservable(itemSize$),
+      navigate: (url: string): void => urlNavigation$.next(new UrlNavigation(url)),
       getSiteNameByUrl,
 
-      hasLinkedSites,
+      hasLinkedSites: useObservable(hasLinkedSites$),
       openLinkingDialog,
       openAltSourceDialog,
       openSearchDialog,
       onRefreshRequested,
 
-      isUnread,
-      deleteManga: () => {
+      isUnread: useObservable(isUnread$),
+      deleteManga: (): void => {
         context.emit('mangaRemoved')
-        manga.deleteManga().catch(console.error)
+        deleteManga().catch(console.error)
       },
-      readManga: manga.readManga,
-      toggleEditing: manga.toggleEditing,
-      saveManga: () => {
+      readManga,
+      toggleEditing,
+      saveManga: (): void => {
         context.emit('mangaSaved')
-        manga.saveManga().catch(console.error)
-      }
+        saveManga().catch(console.error)
+      },
     }
-  }
+  },
 })
 </script>
 

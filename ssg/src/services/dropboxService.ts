@@ -1,13 +1,14 @@
-import { Dropbox, DropboxAuth, DropboxResponse } from 'dropbox'
-import { Manga } from 'src/classes/manga'
+import type { DropboxResponse } from 'dropbox'
+import { Dropbox, DropboxAuth } from 'dropbox'
+import type { Manga } from 'src/classes/manga'
 import { migrateInput } from './migrationService'
 import { LocalStorage } from 'quasar'
 import { getEditCode, getShareId } from './rentryService'
 import constants from 'src/classes/constants'
 import { getPlatform } from './platformService'
 import { Platform } from 'src/enums/platformEnum'
-import { files } from 'dropbox/types/dropbox_types'
-import qs from 'qs'
+import type { files } from 'dropbox/types/dropbox_types'
+import type qs from 'qs'
 
 interface ShareContents {
   id: string
@@ -32,42 +33,50 @@ const UPLOAD_FILE_SIZE_LIMIT = 150 * 1024 * 1024
 const CLIENT_ID = 'uoywjq0b8q2208f'
 
 const dropboxAuth = new DropboxAuth({
-  clientId: CLIENT_ID
+  clientId: CLIENT_ID,
 })
 
 let dropboxSession: Dropbox | undefined
 
-export async function getAuthUrl (): Promise<string> {
+export async function getAuthUrl(): Promise<string> {
   const redirectUrl = getRedirectUrl()
-  const authUrl = await dropboxAuth.getAuthenticationUrl(redirectUrl, undefined, 'code', 'offline', undefined, undefined, true)
+  const authUrl = await dropboxAuth.getAuthenticationUrl(
+    redirectUrl,
+    undefined,
+    'code',
+    'offline',
+    undefined,
+    undefined,
+    true,
+  )
 
-  const auth = getAuth() || {}
+  const auth = getAuth() ?? {}
   LocalStorage.set(constants.DROPBOX_AUTH, {
     ...auth,
-    code_verifier: dropboxAuth.getCodeVerifier()
+    code_verifier: dropboxAuth.getCodeVerifier(),
   })
 
   return authUrl.toString()
 }
 
-export function getAuth (): qs.ParsedQs | undefined {
-  const dropboxAuth = LocalStorage.getItem(constants.DROPBOX_AUTH)
-  if (typeof dropboxAuth !== 'object') return undefined
+export function getAuth(): qs.ParsedQs | undefined {
+  const dropboxAuthStorage = LocalStorage.getItem(constants.DROPBOX_AUTH)
+  if (typeof dropboxAuthStorage !== 'object') return undefined
 
-  return dropboxAuth as qs.ParsedQs
+  return dropboxAuthStorage as qs.ParsedQs
 }
 
-export function setAuth (queryString: Record<string, unknown> | undefined) {
+export function setAuth(queryString: Record<string, unknown> | undefined): void {
   if (!queryString) return
 
-  const auth = getAuth() || {}
+  const auth = getAuth() ?? {}
   LocalStorage.set(constants.DROPBOX_AUTH, {
     code_verifier: auth.code_verifier,
-    ...queryString
+    ...queryString,
   })
 }
 
-async function initAuth (): Promise<Dropbox | undefined> {
+async function initAuth(): Promise<Dropbox | undefined> {
   let auth: Record<string, unknown> | undefined = getAuth()
   if (!auth) return undefined
 
@@ -84,7 +93,7 @@ async function initAuth (): Promise<Dropbox | undefined> {
 
     const expiresInSeconds = auth.expires_in
     if (typeof expiresInSeconds === 'number') {
-      const accessTokenExpiresAt = new Date(Date.now() + (expiresInSeconds * 1000))
+      const accessTokenExpiresAt = new Date(Date.now() + expiresInSeconds * 1000)
       auth.expires_at = accessTokenExpiresAt.toJSON()
       delete auth.expires_in
     }
@@ -107,14 +116,14 @@ async function initAuth (): Promise<Dropbox | undefined> {
   dropboxAuth.setRefreshToken(refreshToken)
 
   dropboxSession = new Dropbox({
-    auth: dropboxAuth
+    auth: dropboxAuth,
   })
 
   return dropboxSession
 }
 
-async function tryRefreshAccessToken (): Promise<void> {
-  const refreshPromise = (dropboxAuth.checkAndRefreshAccessToken() as unknown)
+async function tryRefreshAccessToken(): Promise<void> {
+  const refreshPromise = dropboxAuth.checkAndRefreshAccessToken() as unknown
   await (refreshPromise as Promise<unknown>)
 
   const accessToken = dropboxAuth.getAccessToken()
@@ -125,21 +134,20 @@ async function tryRefreshAccessToken (): Promise<void> {
   setAuth({
     ...auth,
     access_token: accessToken,
-    expires_at: accessTokenExpiresAt
+    expires_at: accessTokenExpiresAt,
   })
 }
 
-function getRedirectUrl (): string {
-  const baseUrl = getPlatform() !== Platform.Static
-    ? 'http://localhost/'
-    : `${document.location.origin + document.location.pathname}`
+function getRedirectUrl(): string {
+  const baseUrl =
+    getPlatform() !== Platform.Static ? 'http://localhost/' : `${document.location.origin + document.location.pathname}`
 
   if (baseUrl.includes('/redirect')) return baseUrl
   return baseUrl.endsWith('/') ? `${baseUrl}redirect` : `${baseUrl}/redirect`
 }
 
-export async function saveList (mangaList: Manga[]): Promise<void> {
-  const dropbox = dropboxSession || await initAuth()
+export async function saveList(mangaList: Manga[]): Promise<void> {
+  const dropbox = dropboxSession ?? (await initAuth())
   if (!dropbox) throw new DropboxResponseError(401, 'Failed to init auth')
   await tryRefreshAccessToken()
 
@@ -153,9 +161,9 @@ export async function saveList (mangaList: Manga[]): Promise<void> {
       path: `/${constants.MANGA_LIST_FILENAME}`,
       contents,
       mode: {
-        '.tag': 'overwrite'
-      }
-    })
+        '.tag': 'overwrite',
+      },
+    }),
   )
 
   const shareId = getShareId()
@@ -168,7 +176,7 @@ export async function saveList (mangaList: Manga[]): Promise<void> {
 
   const shareContents: ShareContents = {
     id: shareId,
-    editCode
+    editCode,
   }
 
   promises.push(
@@ -176,16 +184,16 @@ export async function saveList (mangaList: Manga[]): Promise<void> {
       path: `/${constants.SHARE_FILENAME}`,
       contents: JSON.stringify(shareContents),
       mode: {
-        '.tag': 'overwrite'
-      }
-    })
+        '.tag': 'overwrite',
+      },
+    }),
   )
 
   await Promise.all(promises)
 }
 
-export async function readList (): Promise<ReadListResponse> {
-  const dropbox = dropboxSession || await initAuth()
+export async function readList(): Promise<ReadListResponse> {
+  const dropbox = dropboxSession ?? (await initAuth())
   if (!dropbox) throw new DropboxResponseError(401, 'Failed to init auth')
   await tryRefreshAccessToken()
 
@@ -193,21 +201,21 @@ export async function readList (): Promise<ReadListResponse> {
   const shareContents = shareText ? (JSON.parse(shareText) as ShareContents) : undefined
 
   const mangaListText = await readFile(`/${constants.MANGA_LIST_FILENAME}`, dropbox)
-  const migratedManga = mangaListText ? (await migrateInput(mangaListText)) : undefined
+  const migratedManga = mangaListText ? await migrateInput(mangaListText) : undefined
   const mangaList = migratedManga ? (JSON.parse(migratedManga) as Manga[]) : []
 
   return {
     mangaList,
-    shareContents
+    shareContents,
   }
 }
 
-async function readFile (path: string, dropbox: Dropbox): Promise<string | undefined> {
+async function readFile(path: string, dropbox: Dropbox): Promise<string | undefined> {
   let response: DropboxResponse<files.FileMetadata> | undefined
 
   try {
     response = await dropbox.filesDownload({
-      path
+      path,
     })
   } catch (error) {
     if (error instanceof DropboxResponseError) {
@@ -221,7 +229,7 @@ async function readFile (path: string, dropbox: Dropbox): Promise<string | undef
   const reader = new FileReader()
 
   const readPromise = new Promise<string | undefined>((resolve) => {
-    reader.onload = function () {
+    reader.onload = function (): void {
       if (typeof this.result !== 'string') {
         resolve(undefined)
         return

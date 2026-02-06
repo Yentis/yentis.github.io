@@ -1,6 +1,6 @@
 import moment from 'moment'
 import { Guya, SiteType } from 'src/enums/siteEnum'
-import HttpRequest from 'src/interfaces/httpRequest'
+import type { HttpRequest } from 'src/interfaces/httpRequest'
 import { requestHandler } from 'src/services/requestService'
 import { getUrl, parseHtmlFromString, parseNum, titleContainsQuery } from 'src/utils/siteUtils'
 import { Manga } from '../manga'
@@ -9,25 +9,25 @@ import { BaseData, BaseSite } from './baseSite'
 export class Cubari extends BaseSite {
   siteType = SiteType.Cubari
 
-  protected getChapter (data: BaseData): string {
+  protected override getChapter(data: BaseData): string {
     const textContent = data.chapter?.textContent
-    const dashIndex = textContent?.indexOf('-') || 0
+    const dashIndex = textContent?.indexOf('-') ?? 0
 
-    return textContent?.substring(dashIndex + 1)?.trim() || 'Unknown'
+    return textContent?.substring(dashIndex + 1)?.trim() ?? 'Unknown'
   }
 
-  protected getChapterUrl (data: BaseData): string {
+  protected override getChapterUrl(data: BaseData): string {
     const chapterUrl = data.chapter?.getAttribute('href')
     if (!chapterUrl) return ''
 
     return `${this.getDomainFromUrl(data.url)}${chapterUrl}`
   }
 
-  protected getChapterNum (data: BaseData): number {
+  protected override getChapterNum(data: BaseData): number {
     return parseNum(data.chapterNum?.getAttribute('data-chapter'))
   }
 
-  protected getChapterDate (data: BaseData): string {
+  protected override getChapterDate(data: BaseData): string {
     const dateText = data.chapterDate?.textContent
     if (!dateText?.startsWith('[')) return ''
 
@@ -38,7 +38,7 @@ export class Cubari extends BaseSite {
       day,
       hour,
       minute,
-      second
+      second,
     })
 
     if (chapterDate.isValid()) {
@@ -48,7 +48,7 @@ export class Cubari extends BaseSite {
     }
   }
 
-  protected getImage (data: BaseData): string {
+  protected override getImage(data: BaseData): string {
     const source = data.image?.querySelectorAll('source')[0]?.getAttribute('srcset')
     if (source?.startsWith('http')) return source
     if (source) return `${this.getDomainFromUrl(data.url)}${source}`
@@ -60,7 +60,7 @@ export class Cubari extends BaseSite {
     return `${this.getDomainFromUrl(data.url)}${imageUrl}`
   }
 
-  protected async readUrlImpl (url: string): Promise<Manga> {
+  protected async readUrlImpl(url: string): Promise<Manga> {
     const request: HttpRequest = { method: 'GET', url }
     const response = await requestHandler.sendRequest(request)
     const doc = await parseHtmlFromString(response.data)
@@ -77,14 +77,14 @@ export class Cubari extends BaseSite {
     return this.buildManga(data)
   }
 
-  protected async searchImpl (query: string): Promise<Error | Manga[]> {
+  protected async searchImpl(query: string): Promise<Error | Manga[]> {
     const guyaManga = await this.searchGuya(query)
     if (guyaManga instanceof Error) return guyaManga
 
     return guyaManga
   }
 
-  private async searchGuya (query: string): Promise<Error | Manga[]> {
+  private async searchGuya(query: string): Promise<Error | Manga[]> {
     const guyaUrl = getUrl(Guya)
     const request: HttpRequest = { method: 'GET', url: guyaUrl }
 
@@ -94,7 +94,7 @@ export class Cubari extends BaseSite {
 
     doc.querySelectorAll('.dropdown-item').forEach((element) => {
       const url = element.getAttribute('href')
-      if (!url || !url.startsWith('/read/manga')) return
+      if (!url?.startsWith('/read/manga')) return
 
       const title = element.textContent?.trim()
       if (!titleContainsQuery(query, title)) return
@@ -103,14 +103,14 @@ export class Cubari extends BaseSite {
     })
 
     const mangaList = await Promise.all(promises)
-    return mangaList.filter(manga => manga instanceof Manga) as Manga[]
+    return mangaList.filter((manga) => manga instanceof Manga)
   }
 
-  getTestUrl (): string {
+  getTestUrl(): string {
     return 'https://cubari.moe/read/gist/OPM/'
   }
 
-  private getDomainFromUrl (url: string): string {
+  private getDomainFromUrl(url: string): string {
     const domainIndex = url.indexOf('.moe')
     return url.substring(0, domainIndex + 4)
   }

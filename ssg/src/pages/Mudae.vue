@@ -51,8 +51,8 @@
 </template>
 
 <script lang="ts">
+import type { Ref } from 'vue'
 import { defineComponent, ref, watch } from 'vue'
-import { Ref } from '@vue/runtime-core/dist/runtime-core'
 import { Character } from '../classes/mudae/character'
 
 export default defineComponent({
@@ -65,7 +65,7 @@ export default defineComponent({
     watch(content, (newContent: string) => {
       const lines = newContent.split('\n')
 
-      const newCharacterList = lines.filter(line => line.trim() !== '').map(line => {
+      characterList.value = lines.filter(line => line.trim() !== '').map(line => {
         const imageText = line.substring(line.lastIndexOf('-') + 1)
         const url = imageText.substring(1).trim()
         line = line.replace(imageText, '')
@@ -89,8 +89,6 @@ export default defineComponent({
           !isNaN(parseInt(kakera)) ? parseInt(kakera) : 0
         )
       })
-
-      characterList.value = newCharacterList
     })
 
     return {

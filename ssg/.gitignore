@@ -1,11 +1,15 @@
 .DS_Store
 .thumbs.db
 node_modules
+
+# local .env files
+.env.local*
 .env
 
 # Quasar core related directories
 .quasar
 /dist
+/quasar.config.*.temporary.compiled*
 
 # Capacitor related directories and files
 /src-capacitor/www

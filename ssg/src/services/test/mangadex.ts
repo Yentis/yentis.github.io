@@ -1,6 +1,6 @@
 import moment from 'moment'
 import { Manga } from 'src/classes/manga'
-import { BaseSite } from 'src/classes/sites/baseSite'
+import type { BaseSite } from 'src/classes/sites/baseSite'
 import { MangaDex } from 'src/classes/sites/mangadex'
 import { SiteType } from 'src/enums/siteEnum'
 import { requestHandler } from '../requestService'
@@ -56,8 +56,8 @@ async function convertLegacyIds(): Promise<void> {
     if (convertedId === mappingId) return
 
     throw Error(
-      `ID ${id} did not match required mapping ${mappingId !== undefined ? mappingId : ''}
-      was: ${convertedId !== undefined ? convertedId : ''}`
+      `ID ${id} did not match required mapping ${mappingId ?? ''}
+      was: ${convertedId ?? ''}`,
     )
   })
 }

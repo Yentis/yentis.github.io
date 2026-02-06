@@ -1,13 +1,14 @@
 import { Manga } from '../manga'
 import { UrlNavigation } from '../urlNavigation'
-import { LinkingSiteType } from 'src/enums/linkingSiteEnum'
-import { SiteState, SiteType } from 'src/enums/siteEnum'
+import type { LinkingSiteType } from 'src/enums/linkingSiteEnum'
+import type { SiteType } from 'src/enums/siteEnum'
+import { SiteState } from 'src/enums/siteEnum'
 import PQueue from 'p-queue'
-import { QVueGlobals } from 'quasar/dist/types'
-import { Store } from 'vuex'
+import type { QVueGlobals } from 'quasar'
 import * as SiteUtils from 'src/utils/siteUtils'
-import HttpRequest from 'src/interfaces/httpRequest'
+import type { HttpRequest } from 'src/interfaces/httpRequest'
 import { HEADER_USER_AGENT } from '../requests/baseRequest'
+import { stateManager } from 'src/store/store-reader'
 
 export class BaseData {
   url: string
@@ -24,11 +25,15 @@ export class BaseData {
 }
 
 export abstract class BaseSite {
-  abstract siteType: SiteType | LinkingSiteType
-
   protected requestQueue = new PQueue({ interval: 1000, intervalCap: 10 })
   loggedIn = true
-  protected state = SiteState.REACHABLE
+  state = SiteState.REACHABLE
+
+  abstract siteType: SiteType | LinkingSiteType
+
+  protected static getUrl(siteType: SiteType | LinkingSiteType): string {
+    return SiteUtils.getUrl(siteType)
+  }
 
   statusOK(): boolean {
     return this.loggedIn && this.state === SiteState.REACHABLE
@@ -41,7 +46,8 @@ export abstract class BaseSite {
   async checkState(): Promise<void> {
     try {
       const response = await this.readUrl(this.getTestUrl())
-      this.state = response instanceof Error ? SiteState.OFFLINE : response.title === '' ? SiteState.INVALID : SiteState.REACHABLE
+      this.state =
+        response instanceof Error ? SiteState.OFFLINE : response.title === '' ? SiteState.INVALID : SiteState.REACHABLE
     } catch (error) {
       console.error(error)
       this.state = SiteState.OFFLINE
@@ -52,12 +58,12 @@ export abstract class BaseSite {
     return Promise.resolve(true)
   }
 
-  openLogin(_$q: QVueGlobals, store: Store<unknown>): Promise<boolean | Error> {
-    store.commit('reader/pushUrlNavigation', new UrlNavigation(this.getLoginUrl(), true))
+  openLogin(_$q: QVueGlobals): Promise<boolean | Error> {
+    stateManager.urlNavigation$.next(new UrlNavigation(this.getLoginUrl(), true))
     return Promise.resolve(false)
   }
 
-  getMangaId(_$q: QVueGlobals, _store: Store<unknown>, url: string): Promise<number | Error> {
+  getMangaId(_$q: QVueGlobals, url: string): Promise<number | Error> {
     const parsedUrl = parseInt(url)
     if (!isNaN(parsedUrl)) return Promise.resolve(parsedUrl)
 
@@ -74,12 +80,12 @@ export abstract class BaseSite {
       data.chapter?.textContent
         ?.replace(/[\n\t]/gm, ' ')
         .replace(/ {2,}/gm, ' ')
-        .trim() || 'Unknown'
+        .trim() ?? 'Unknown'
     )
   }
 
   protected getChapterUrl(data: BaseData): string {
-    const url = (data.chapterUrl ?? data.chapter)?.getAttribute('href') || ''
+    const url = (data.chapterUrl ?? data.chapter)?.getAttribute('href') ?? ''
     if (url.startsWith('/')) return `${this.getUrl()}${url}`
 
     return url
@@ -101,15 +107,11 @@ export abstract class BaseSite {
   }
 
   public readImage(url: string): Promise<string> {
-    return Promise.resolve(url);
+    return Promise.resolve(url)
   }
 
   protected getTitle(data: BaseData): string {
-    return data.title?.textContent?.trim() || ''
-  }
-
-  protected static getUrl(siteType: SiteType | LinkingSiteType): string {
-    return SiteUtils.getUrl(siteType)
+    return data.title?.textContent?.trim() ?? ''
   }
 
   getUrl(): string {
@@ -124,15 +126,9 @@ export abstract class BaseSite {
     return this.addToQueue(() => this.readUrlImpl(url))
   }
 
-  protected abstract readUrlImpl(url: string): Promise<Error | Manga>
-
   search(query: string): Promise<Error | Manga[]> {
     return this.addToQueue(() => this.searchImpl(query))
   }
-
-  protected abstract searchImpl(query: string): Promise<Error | Manga[]>
-
-  abstract getTestUrl(): string
 
   compare(b: BaseSite): number {
     if (this.state === SiteState.INVALID && b.state !== SiteState.INVALID) {
@@ -189,10 +185,16 @@ export abstract class BaseSite {
     return manga
   }
 
-  protected trySetUserAgent(request: HttpRequest, userAgent = navigator.userAgent) {
-    const headers = request.headers || {}
+  protected trySetUserAgent(request: HttpRequest, userAgent = navigator.userAgent): void {
+    const headers = request.headers ?? {}
     headers[HEADER_USER_AGENT] = userAgent
 
     request.headers = headers
   }
+
+  protected abstract readUrlImpl(url: string): Promise<Error | Manga>
+
+  protected abstract searchImpl(query: string): Promise<Error | Manga[]>
+
+  abstract getTestUrl(): string
 }

@@ -1,4 +1,4 @@
-import BaseRequest from 'src/classes/requests/baseRequest'
+import type BaseRequest from 'src/classes/requests/baseRequest'
 import BrowserRequest from 'src/classes/requests/browserRequest'
 import CapacitorRequest from 'src/classes/requests/capacitorRequest'
 import ElectronRequest from 'src/classes/requests/electronRequest'
@@ -7,7 +7,7 @@ import { getPlatform } from './platformService'
 
 export let requestHandler: BaseRequest
 
-export function init () {
+export function init(): void {
   switch (getPlatform()) {
     case Platform.Capacitor:
       requestHandler = new CapacitorRequest()

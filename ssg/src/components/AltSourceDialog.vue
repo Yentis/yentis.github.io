@@ -16,8 +16,8 @@
       </q-toolbar>
 
       <div class="q-mx-md q-mt-md text-body2">
-        This will let you add additional sources for your manga.
-        These will be used if your main source cannot be loaded.
+        This will let you add additional sources for your manga. These will be used if your main source cannot be
+        loaded.
       </div>
 
       <q-list
@@ -76,67 +76,67 @@
 
 <script lang="ts">
 import { useDialogPluginComponent, useQuasar } from 'quasar'
-import { defineComponent, ref, onMounted } from 'vue'
-import { Ref } from '@vue/runtime-core/dist/runtime-core'
-import { SiteName, SiteType } from '../enums/siteEnum'
+import type { Ref } from 'vue'
+import { defineComponent, onMounted, ref } from 'vue'
+import type { SiteName, SiteType } from '../enums/siteEnum'
 import { NotifyOptions } from '../classes/notifyOptions'
 import SearchDialog from './SearchDialog.vue'
 import { useClearingSearchResults } from '../composables/useSearchResults'
-import useNotification from '../composables/useNotification'
 import { getSiteByUrl, getSiteNameByUrl } from '../utils/siteUtils'
+import { stateManager } from 'src/store/store-reader'
 
 export default defineComponent({
   props: {
     sources: {
       type: Object,
-      required: true
+      required: true,
     },
     initialSearch: {
       type: String,
-      default: ''
+      default: '',
     },
     searchPlaceholder: {
       type: String,
-      default: ''
+      default: '',
     },
     manualPlaceholder: {
       type: String,
-      default: ''
+      default: '',
     },
     confirmButton: {
       type: String,
-      default: ''
-    }
+      default: '',
+    },
   },
 
   emits: [...useDialogPluginComponent.emits],
 
-  setup (props) {
+  setup(props) {
     const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } = useDialogPluginComponent()
     const { clearSearchResults } = useClearingSearchResults()
-    const { notification } = useNotification()
+    const { notification$ } = stateManager
 
-    const data: Ref<{ name: SiteName, site: SiteType, url: string }[]> = ref([])
+    const data: Ref<{ name: SiteName; site: SiteType; url: string }[]> = ref([])
     const sources: Ref<Record<string, string>> = ref(props.sources)
 
-    const getSources = () => {
+    const getSources = (): void => {
       sources.value = {}
-      data.value.forEach(item => {
+      data.value.forEach((item) => {
         sources.value[item.site] = item.url
       })
     }
 
-    const getData = () => {
+    const getData = (): void => {
       const dataList: typeof data.value = []
       Object.entries(sources.value).forEach(([source, url]) => {
         const siteType = getSiteByUrl(source)
         const siteName = getSiteNameByUrl(source)
 
-        if (!siteType || !siteName) return
+        if (siteType === undefined || siteName === undefined) return
         dataList.push({
           name: siteName,
           site: siteType,
-          url
+          url,
         })
       })
       data.value = dataList
@@ -144,7 +144,7 @@ export default defineComponent({
     onMounted(getData)
 
     const $q = useQuasar()
-    const showAddDialog = () => {
+    const showAddDialog = (): void => {
       $q.dialog({
         component: SearchDialog,
         componentProps: {
@@ -153,13 +153,13 @@ export default defineComponent({
           searchPlaceholder: props.searchPlaceholder,
           manualPlaceholder: props.manualPlaceholder,
           confirmButton: props.confirmButton,
-          excludedUrls: data.value.map((item) => item.url)
-        }
+          excludedUrls: data.value.map((item) => item.url),
+        },
       }).onOk((url: string) => {
         const siteType = getSiteByUrl(url)
         const siteName = getSiteNameByUrl(url)
         if (siteType === undefined || siteName === undefined) {
-          notification.value = new NotifyOptions(Error('Valid site not found'))
+          notification$.next(new NotifyOptions(Error('Valid site not found')))
           return
         }
 
@@ -167,33 +167,31 @@ export default defineComponent({
       })
     }
 
-    const removeUrl = (url: string) => {
+    const removeUrl = (url: string): void => {
       data.value = data.value.filter((site) => site.url !== url)
     }
 
     return {
       dialogRef,
-      onDialogHide: () => {
+      onDialogHide: (): void => {
         clearSearchResults()
         onDialogHide()
       },
-      onOKClick: () => {
+      onOKClick: (): void => {
         getSources()
         onDialogOK(sources.value)
       },
       onCancelClick: onDialogCancel,
       data,
       showAddDialog,
-      removeUrl
+      removeUrl,
     }
-  }
+  },
 })
 </script>
 
 <style lang="scss" scoped>
-
 .content {
   white-space: pre-wrap;
 }
-
 </style>

@@ -15,9 +15,7 @@
         />
       </q-toolbar>
 
-      <q-form
-        @submit="onOKClick"
-      >
+      <q-form @submit="onOKClick">
         <q-input
           v-model="username"
           filled
@@ -50,20 +48,29 @@
 </template>
 
 <script lang="ts">
+import type { QDialog } from 'quasar'
 import { useDialogPluginComponent } from 'quasar'
+import type { Ref, UnwrapRef } from 'vue'
 import { ref } from 'vue'
 
 export default {
   props: {
     siteName: {
       required: true,
-      type: String
-    }
+      type: String,
+    },
   },
 
   emits: [...useDialogPluginComponent.emits],
 
-  setup () {
+  setup(): {
+    dialogRef: Ref<QDialog | undefined>
+    onDialogHide: () => void
+    onOKClick: () => void
+    onCancelClick: () => void
+    username: Ref<UnwrapRef<string>, UnwrapRef<string>>
+    password: Ref<UnwrapRef<string>, UnwrapRef<string>>
+  } {
     const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } = useDialogPluginComponent()
 
     const username = ref('')
@@ -72,21 +79,19 @@ export default {
     return {
       dialogRef,
       onDialogHide,
-      onOKClick: () => {
+      onOKClick: (): void => {
         onDialogOK({ username: username.value, password: password.value })
       },
       onCancelClick: onDialogCancel,
       username,
-      password
+      password,
     }
-  }
+  },
 }
 </script>
 
 <style lang="scss" scoped>
-
 .confirmation-image-size {
-  max-height: 256px
+  max-height: 256px;
 }
-
 </style>

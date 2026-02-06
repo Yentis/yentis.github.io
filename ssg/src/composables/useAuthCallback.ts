@@ -1,35 +1,35 @@
 import { NotifyOptions } from 'src/classes/notifyOptions'
 import { onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import useNotification from './useNotification'
 import qs from 'qs'
 import { setAuth as setDropboxAuth } from '../services/dropboxService'
-import ElectronWindow from 'src/interfaces/electronWindow'
+import type ElectronWindow from 'src/interfaces/electronWindow'
 import { tryMigrateDropbox } from 'src/services/migrationService'
+import { stateManager } from 'src/store/store-reader'
 
-export function useAuth () {
-  const { notification } = useNotification()
+export function useAuth(): { onDropboxRedirect: (queryString?: qs.ParsedQs) => void } {
+  const { notification$ } = stateManager
 
-  const onDropboxRedirect = (queryString?: qs.ParsedQs) => {
+  const onDropboxRedirect = (queryString?: qs.ParsedQs): void => {
     const notifyOptions = new NotifyOptions('Logged in successfully! Please import / export again')
     notifyOptions.type = 'positive'
-    notification.value = notifyOptions
+    notification$.next(notifyOptions)
 
     setDropboxAuth(queryString)
   }
 
   return {
-    onDropboxRedirect
+    onDropboxRedirect,
   }
 }
 
-export function useAppAuth () {
+export function useAppAuth(): void {
   onMounted(() => {
     tryMigrateDropbox()
   })
 }
 
-export function useElectronAuth () {
+export function useElectronAuth(): void {
   const { onDropboxRedirect } = useAuth()
 
   onMounted(() => {
@@ -41,22 +41,19 @@ export function useElectronAuth () {
   })
 }
 
-export function useCapacitorAuth () {
-  const onUrlLoadStart = (url: string): qs.ParsedQs | null => {
-    if (url.startsWith('http://localhost') && url.includes('code=')) {
-      const queryString = qs.parse(url.substring(url.indexOf('code=')))
-      return queryString
-    }
-
-    return null
-  }
-
+export function useCapacitorAuth(): { onUrlLoadStart: (url: string) => qs.ParsedQs | undefined } {
   return {
-    onUrlLoadStart
+    onUrlLoadStart: (url: string): qs.ParsedQs | undefined => {
+      if (url.startsWith('http://localhost') && url.includes('code=')) {
+        return qs.parse(url.substring(url.indexOf('code=')))
+      }
+
+      return undefined
+    },
   }
 }
 
-export function useStaticAuth () {
+export function useStaticAuth(): void {
   const { onDropboxRedirect } = useAuth()
 
   onMounted(() => {

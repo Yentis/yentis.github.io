@@ -83,20 +83,21 @@
 </template>
 
 <script lang="ts">
+import type { Ref } from 'vue';
 import { computed, defineComponent, onMounted, ref } from 'vue'
-import { Ref } from '@vue/runtime-core/dist/runtime-core'
 import { useRoute } from 'vue-router'
-import { Manga } from '../classes/manga'
+import type { Manga } from '../classes/manga'
 import { SimpleSortType } from '../enums/sortingEnum'
 import { mangaSort } from '../services/sortService'
 import MangaItemSimple from '../components/manga-item-simple/MangaItemSimple.vue'
 import { Status } from '../enums/statusEnum'
 import { SiteName } from '../enums/siteEnum'
-import useNotification from '../composables/useNotification'
 import { NotifyOptions } from '../classes/notifyOptions'
-import HttpRequest from '../interfaces/httpRequest'
+import type { HttpRequest } from '../interfaces/httpRequest'
 import { requestHandler } from '../services/requestService'
+import type { FileEntry} from '@zip.js/zip.js';
 import { Data64URIReader, TextWriter, ZipReader } from '@zip.js/zip.js'
+import { stateManager } from 'src/store/store-reader'
 
 export default defineComponent({
   name: 'PageManga',
@@ -111,7 +112,7 @@ export default defineComponent({
     const filters: Ref<Status[]> = ref([])
     const sortedBy = ref(SimpleSortType.TITLE)
     const loading = ref(true)
-    const { notification } = useNotification()
+    const { notification$ } = stateManager
 
     const filteredMangaList = computed(() => {
       return mangaList.value
@@ -155,18 +156,18 @@ export default defineComponent({
       })
     })
 
-    const updateSortedBy = (newSortedBy: SimpleSortType) => {
+    const updateSortedBy = (newSortedBy: SimpleSortType): void => {
       sortedBy.value = newSortedBy
       localStorage.setItem('sorted_by', newSortedBy)
     }
 
-    const updateFilters = () => {
+    const updateFilters = (): void => {
       localStorage.setItem('filters', JSON.stringify(filters.value))
     }
 
     const $route = useRoute()
 
-    const fetchFromRentry = async (id: string) => {
+    const fetchFromRentry = async (id: string): Promise<void> => {
       if (id === '2059191') {
         const request: HttpRequest = {
           method: 'GET',
@@ -191,19 +192,19 @@ export default defineComponent({
       let parsedMangaList: Manga[]
       try {
         parsedMangaList = JSON.parse(data.content) as Manga[]
-      } catch (_) {
+      } catch {
         parsedMangaList = JSON.parse(await readZip(data.content)) as Manga[]
       }
 
       mangaList.value = parsedMangaList
     }
 
-    const readZip = async (content: string) => {
+    const readZip = async (content: string): Promise<string> => {
       const zipFileReader = new Data64URIReader(content)
       const listWriter = new TextWriter()
       const zipReader = new ZipReader(zipFileReader)
 
-      const firstEntry = (await zipReader.getEntries()).shift()
+      const firstEntry = (await zipReader.getEntries()).shift() as FileEntry | undefined
       const listText = await firstEntry?.getData?.(listWriter)
       await zipReader.close()
 
@@ -224,7 +225,7 @@ export default defineComponent({
       fetchFromRentry(id)
         .catch((error: Error) => {
           console.error(error)
-          notification.value = new NotifyOptions(error, 'Failed to retrieve manga list')
+          notification$.next(new NotifyOptions(error, 'Failed to retrieve manga list'))
         })
         .finally(() => {
           loading.value = false

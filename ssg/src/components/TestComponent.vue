@@ -37,23 +37,31 @@
     <p class="q-mt-sm q-mb-none message">
       {{ message }}
     </p>
+
+    <q-btn
+      label="Preview"
+      @click="preview"
+    />
+
+    <MangaItem
+      v-if="url"
+      :url="url"
+    />
   </q-card-actions>
 </template>
 
 <script lang="ts">
-import { defineComponent, ref } from 'vue'
-import { Ref } from '@vue/runtime-core/dist/runtime-core'
+import type { Ref } from 'vue'
+import { defineAsyncComponent, defineComponent, ref } from 'vue'
 import testAll from '../services/testService'
 import { SiteType } from '../enums/siteEnum'
 import { testAsuraScans } from '../services/test/asurascans'
-import { testBatoto } from '../services/test/batoto'
 import { testLikeManga } from '../services/test/likemanga'
 import { testHiperDEX } from '../services/test/hiperdex'
 import { testMangaDex } from '../services/test/mangadex'
 import { testMangago } from '../services/test/mangago'
 import { testMangakakalot } from '../services/test/mangakakalot'
 import { testWebtoons } from '../services/test/webtoons'
-import { testZeroScans } from '../services/test/zeroscans'
 import { testFlameComics } from '../services/test/flamecomics'
 import { useQuasar } from 'quasar'
 import { LinkingSiteType } from '../enums/linkingSiteEnum'
@@ -63,15 +71,20 @@ import { testCubari } from '../services/test/cubari'
 import { testTapas } from 'src/services/test/tapas'
 import { testComikey } from 'src/services/test/comikey'
 import { testTappytoon } from 'src/services/test/tappytoon'
-import { testMangaPark } from 'src/services/test/mangapark'
+import { testKagane } from 'src/services/test/kagane'
+import { getSite } from 'src/services/siteService'
 
 export default defineComponent({
   name: 'MangaTest',
+  components: {
+    MangaItem: defineAsyncComponent(() => import('../components/manga-item/MangaItem.vue')),
+  },
 
   setup() {
     const $q = useQuasar()
     const testing = ref(false)
     const message = ref('')
+    const url = ref('')
 
     let sortedSites: (SiteType | LinkingSiteType)[] = Object.values(SiteType)
     sortedSites = sortedSites
@@ -79,7 +92,7 @@ export default defineComponent({
       .sort()
     const selectedSite: Ref<SiteType | LinkingSiteType | undefined> = ref(sortedSites[0])
 
-    const testAllSites = () => {
+    const testAllSites = (): void => {
       testing.value = true
       message.value = ''
 
@@ -117,13 +130,20 @@ export default defineComponent({
         })
     }
 
-    const testSite = async () => {
+    const preview = (): void => {
+      const site = selectedSite.value
+      if (site === undefined) return
+      url.value = ''
+
+      setTimeout(() => {
+        url.value = getSite(site)?.getTestUrl() ?? ''
+      }, 0)
+    }
+
+    const testSite = async (): Promise<void> => {
       switch (selectedSite.value) {
         case SiteType.AsuraScans:
           await doTest(testAsuraScans)
-          break
-        case SiteType.Batoto:
-          await doTest(testBatoto)
           break
         case SiteType.Comikey:
           await doTest(testComikey)
@@ -140,6 +160,9 @@ export default defineComponent({
         case SiteType.HiperDEX:
           await doTest(testHiperDEX)
           break
+        case SiteType.Kagane:
+          await doTest(testKagane)
+          break
         case LinkingSiteType.Kitsu:
           await doTest(testKitsu($q))
           break
@@ -151,9 +174,6 @@ export default defineComponent({
           break
         case SiteType.Mangakakalot:
           await doTest(testMangakakalot)
-          break
-        case SiteType.MangaPark:
-          await doTest(testMangaPark)
           break
         case SiteType.ResetScans:
           await doTest(testResetScans)
@@ -167,15 +187,13 @@ export default defineComponent({
         case SiteType.Webtoons:
           await doTest(testWebtoons)
           break
-        case SiteType.ZeroScans:
-          await doTest(testZeroScans)
-          break
-        default:
+        case LinkingSiteType.MangaDex:
+        case undefined:
           break
       }
     }
 
-    const doTest = async (target: (() => Promise<void>) | Promise<void>) => {
+    const doTest = async (target: (() => Promise<void>) | Promise<void>): Promise<void> => {
       testing.value = true
       message.value = ''
 
@@ -193,7 +211,7 @@ export default defineComponent({
       }
     }
 
-    const handleError = (error: unknown) => {
+    const handleError = (error: unknown): void => {
       console.error(error)
 
       if (error instanceof Error) {
@@ -215,6 +233,8 @@ export default defineComponent({
       selectedSite,
       testAllSites,
       testSite,
+      url,
+      preview,
     }
   },
 })

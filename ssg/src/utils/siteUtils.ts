@@ -1,7 +1,7 @@
 import moment from 'moment'
 import { LinkingSiteType } from 'src/enums/linkingSiteEnum'
 import { Guya, SiteName, SiteType } from 'src/enums/siteEnum'
-import ChromeWindow from 'src/interfaces/chromeWindow'
+import type ChromeWindow from 'src/interfaces/chromeWindow'
 
 type DOMParserSupportedType = 'text/html' | 'text/xml'
 
@@ -25,27 +25,26 @@ export const siteAliases = [
   { url: 'reset-scans.us', site: SiteType.ResetScans },
   { url: 'reset-scans.xyz', site: SiteType.ResetScans },
   { url: 'resetscan.com', site: SiteType.ResetScans },
-  { url: 'zeroscans.com', site: SiteType.ZeroScans },
   { url: 'mangakakalot.com', site: SiteType.Mangakakalot },
 ]
 
-export function getUrl(url: string) {
+export function getUrl(url: string): string {
   return `https://${url}`
 }
 
 export function parseHtmlFromString(
   html: string,
   parser?: DOMParser,
-  type: DOMParserSupportedType = 'text/html'
+  type: DOMParserSupportedType = 'text/html',
 ): Promise<Document> {
   const chromeWindow = window as unknown as ChromeWindow
 
   return new Promise((resolve) => {
     chromeWindow.requestIdleCallback(
       () => {
-        resolve((parser || new DOMParser()).parseFromString(html, type))
+        resolve((parser ?? new DOMParser()).parseFromString(html, type))
       },
-      { timeout: 1000 }
+      { timeout: 1000 },
     )
   })
 }
@@ -71,7 +70,7 @@ export function parseNum(elem?: string | null): number {
   }
 }
 
-export function matchNum(text: string | undefined) {
+export function matchNum(text: string | undefined): number {
   if (!text) return 0
 
   const pattern = /[0-9]{1,}([,.][0-9]*)?/gm
@@ -94,7 +93,7 @@ export function matchNum(text: string | undefined) {
 
 export function getDateFromNow(input?: string | null): string {
   const date = moment()
-  const chapterDate = input?.trim().split(' ') || []
+  const chapterDate = input?.trim().split(' ') ?? []
   let amount = -1
 
   if (chapterDate[0] !== undefined) {
@@ -126,7 +125,7 @@ export function getDateFromNow(input?: string | null): string {
 }
 
 export function getSiteByUrl(url: string): SiteType | undefined {
-  const site = Object.values(SiteType).find((site) => url.includes(site))
+  const site = Object.values(SiteType).find((curSite) => url.includes(curSite))
   if (site !== undefined) return site
 
   return siteAliases.find((alias) => url.includes(alias.url))?.site

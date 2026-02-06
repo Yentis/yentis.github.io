@@ -1,94 +1,49 @@
-import { useStore } from '../store/index'
-import { computed, onMounted } from 'vue'
-import { Manga } from '../classes/manga'
+import { onMounted } from 'vue'
+import type { Manga } from '../classes/manga'
 import { tryMigrateMangaList } from '../services/migrationService'
+import type { DialogChainObject } from 'quasar'
 import { LocalStorage, useQuasar } from 'quasar'
-import { DialogChainObject } from 'quasar/dist/types'
-import { Status } from 'src/enums/statusEnum'
 import SearchDialog from '../components/SearchDialog.vue'
 import SiteDialog from '../components/SiteDialog.vue'
 import EditMangaItemDialog from '../components/EditMangaItemDialog.vue'
-import useNotification from './useNotification'
 import { NotifyOptions } from 'src/classes/notifyOptions'
 import { getMangaInfoByUrl, getSite, searchManga } from 'src/services/siteService'
 import { SiteType } from 'src/enums/siteEnum'
 import { LinkingSiteType } from 'src/enums/linkingSiteEnum'
-import { useSearchResults } from './useSearchResults'
 import relevancy from 'relevancy'
 import constants from 'src/classes/constants'
+import { stateManager } from 'src/store/store-reader'
 
-export default function useMangaList () {
-  const $store = useStore()
-  const { notification } = useNotification()
+export default function useMangaList(): {
+  addManga: (manga: Manga) => boolean
+  storeManga: () => void
+  showAddMangaDialog: () => Promise<string | undefined>
+  showUpdateMangaDialog: (query: string) => Promise<string | undefined>
+  showEditMangaDialog: (url: string) => Promise<void>
+  fetchManga: (url: string) => Promise<Manga | undefined>
+  findManga: (siteTypeName: string, query: string, excludedUrls: string[]) => Promise<boolean>
+} {
+  const { notification$, searchResults$, getManga, getMangaList } = stateManager
 
-  const mangaMap = computed(() => $store.state.reader.mangaMap)
-  const setMangaList = (val: Manga[]) => { $store.commit('reader/updateMangaList', val) }
   const addManga = (manga: Manga): boolean => {
-    const existingManga = $store.state.reader.mangaMap.get(manga.url)
-    if (existingManga !== undefined) {
-      notification.value = new NotifyOptions(Error('Manga already exists'))
+    const existingManga = getManga(manga.url)
+    if (existingManga) {
+      notification$.next(new NotifyOptions(Error('Manga already exists')))
       return false
     }
 
-    $store.commit('reader/addManga', manga)
+    stateManager.addManga(manga)
     return true
   }
-  const removeManga = (url: string) => { $store.commit('reader/removeManga', url) }
 
-  const updateManga = (url: string, manga: Manga) => {
-    $store.commit('reader/updateManga', { url, manga })
-  }
-  const updateMangaAltSources = (url: string, altSources: Record<string, string> | undefined) => {
-    $store.commit('reader/updateMangaAltSources', { url, altSources })
-  }
-  const updateMangaChapterNum = (url: string, chapterNum: number) => {
-    $store.commit('reader/updateMangaChapterNum', { url, chapterNum })
-  }
-  const updateMangaChapterUrl = (url: string, chapterUrl: string) => {
-    $store.commit('reader/updateMangaChapterUrl', { url, chapterUrl })
-  }
-  const updateMangaChapterDate = (url: string, chapterDate: string) => {
-    $store.commit('reader/updateMangaChapterDate', { url, chapterDate })
-  }
-  const updateMangaImage = (url: string, image: string) => {
-    $store.commit('reader/updateMangaImage', { url, image })
-  }
-  const updateMangaTitle = (url: string, title: string) => {
-    $store.commit('reader/updateMangaTitle', { url, title })
-  }
-  const updateMangaRead = (url: string, read: string | undefined) => {
-    $store.commit('reader/updateMangaRead', { url, read })
-  }
-  const updateMangaReadNum = (url: string, readNum: number | undefined) => {
-    $store.commit('reader/updateMangaReadNum', { url, readNum })
-  }
-  const updateMangaReadUrl = (url: string, readUrl: string | undefined) => {
-    $store.commit('reader/updateMangaReadUrl', { url, readUrl })
-  }
-  const updateMangaLinkedSites = (url: string, linkedSites: Record<string, number>) => {
-    $store.commit('reader/updateMangaLinkedSites', { url, linkedSites })
-  }
-  const updateMangaStatus = (url: string, status: Status) => {
-    $store.commit('reader/updateMangaStatus', { url, status })
-  }
-  const updateMangaNotes = (url: string, notes: string | undefined) => {
-    $store.commit('reader/updateMangaNotes', { url, notes })
-  }
-  const updateMangaRating = (url: string, rating: number | undefined) => {
-    $store.commit('reader/updateMangaRating', { url, rating })
-  }
-  const updateMangaShouldUpdate = (url: string, shouldUpdate: boolean | undefined) => {
-    $store.commit('reader/updateMangaShouldUpdate', { url, shouldUpdate })
-  }
-
-  const storeManga = () => {
+  const storeManga = (): void => {
     setTimeout(() => {
-      LocalStorage.set(constants.MANGA_LIST_KEY, Array.from($store.state.reader.mangaMap.values()))
+      LocalStorage.set(constants.MANGA_LIST_KEY, getMangaList())
     }, 0)
   }
 
   const $q = useQuasar()
-  const showMangaDialog = (type: string, query = ''): Promise<string | null> => {
+  const showMangaDialog = (type: string, query = ''): Promise<string | undefined> => {
     return new Promise((resolve) => {
       $q.dialog({
         component: SearchDialog,
@@ -97,53 +52,57 @@ export default function useMangaList () {
           searchPlaceholder: 'Search for a manga',
           manualPlaceholder: 'Or enter a manga url manually',
           confirmButton: type,
-          initialSearch: query
-        }
-      }).onOk((url: string) => {
-        resolve(url)
-      }).onDismiss(() => {
-        if (siteDialog) {
-          siteDialog.hide()
-        }
-        resolve(null)
+          initialSearch: query,
+        },
       })
+        .onOk((url: string) => {
+          resolve(url)
+        })
+        .onDismiss(() => {
+          if (siteDialog) {
+            siteDialog.hide()
+          }
+          resolve(undefined)
+        })
 
       const siteDialog: DialogChainObject | undefined = $q.dialog({
-        component: SiteDialog
+        component: SiteDialog,
       })
     })
   }
 
-  const showAddMangaDialog = () => showMangaDialog('Add')
-  const showUpdateMangaDialog = (query: string) => showMangaDialog('Update', query)
+  const showAddMangaDialog = (): Promise<string | undefined> => showMangaDialog('Add')
+  const showUpdateMangaDialog = (query: string): Promise<string | undefined> => showMangaDialog('Update', query)
 
   const showEditMangaDialog = (url: string): Promise<void> => {
     return new Promise((resolve) => {
       $q.dialog({
         component: EditMangaItemDialog,
         componentProps: {
-          url
-        }
-      }).onOk(() => {
-        resolve()
-      }).onDismiss(() => {
-        resolve()
+          url,
+        },
       })
+        .onOk(() => {
+          resolve()
+        })
+        .onDismiss(() => {
+          resolve()
+        })
     })
   }
 
-  const fetchManga = async (url: string): Promise<Manga | null> => {
+  const fetchManga = async (url: string): Promise<Manga | undefined> => {
     let manga: Manga | Error
     try {
       manga = await getMangaInfoByUrl(url)
     } catch (error) {
-      notification.value = new NotifyOptions(error as string | Error)
-      return null
+      notification$.next(new NotifyOptions(error as string | Error))
+      return undefined
     }
 
     if (manga instanceof Error) {
-      notification.value = new NotifyOptions(manga)
-      return null
+      notification$.next(new NotifyOptions(manga))
+      return undefined
     } else {
       manga.read = '0'
       manga.readNum = 0
@@ -156,34 +115,38 @@ export default function useMangaList () {
     if (site === undefined) return false
     if (site.loggedIn) return true
 
-    site.openLogin($q, $store).then((loggedIn) => {
-      if (loggedIn instanceof Error) {
-        notification.value = new NotifyOptions(loggedIn)
-        return
-      }
-      if (!loggedIn) return
+    site
+      .openLogin($q)
+      .then((loggedIn) => {
+        if (loggedIn instanceof Error) {
+          notification$.next(new NotifyOptions(loggedIn))
+          return
+        }
+        if (!loggedIn) return
 
-      const notifyOptions = new NotifyOptions('Logged in successfully!')
-      notifyOptions.type = 'positive'
-      notification.value = notifyOptions
+        const notifyOptions = new NotifyOptions('Logged in successfully!')
+        notifyOptions.type = 'positive'
+        notification$.next(notifyOptions)
 
-      findManga(siteType, query, excludedUrls).catch((error: Error) => {
-        notification.value = new NotifyOptions(error)
+        findManga(siteType, query, excludedUrls).catch((error: Error) => {
+          notification$.next(new NotifyOptions(error))
+        })
       })
-    }).catch((error: Error) => {
-      notification.value = new NotifyOptions(error)
-    })
+      .catch((error: Error) => {
+        notification$.next(new NotifyOptions(error))
+      })
 
     return false
   }
 
-  const { searchResults } = useSearchResults()
   const findManga = async (siteTypeName: string, query: string, excludedUrls: string[]): Promise<boolean> => {
-    const siteType = Object.values(SiteType).find((siteType) => {
-      return siteTypeName === siteType.toString()
-    }) || Object.values(LinkingSiteType).find((siteType) => {
-      return siteTypeName === siteType.toString()
-    })
+    const siteType =
+      Object.values(SiteType).find((curSiteType) => {
+        return siteTypeName === curSiteType.toString()
+      }) ??
+      Object.values(LinkingSiteType).find((curSiteType) => {
+        return siteTypeName === curSiteType.toString()
+      })
 
     if (siteTypeName !== '') {
       if (siteType === undefined) return false
@@ -194,14 +157,14 @@ export default function useMangaList () {
     if (!query) return false
 
     $q.loading.show({
-      delay: 100
+      delay: 100,
     })
 
     let result: Manga[]
     try {
       result = await searchManga(query, siteType)
     } catch (error) {
-      notification.value = new NotifyOptions(error as string | Error)
+      notification$.next(new NotifyOptions(error as string | Error))
       $q.loading.hide()
       return false
     }
@@ -209,58 +172,43 @@ export default function useMangaList () {
     // Some websites return results from other websites...
     const processedResults: string[] = []
 
-    const mangaResults = result.filter(resultManga => {
-      const alreadyAdded = !$store.state.reader.mangaMap.get(resultManga.url) &&
-                           !processedResults.includes(resultManga.url) &&
-                           !excludedUrls.includes(resultManga.url)
+    const mangaResults = result.filter((resultManga) => {
+      const alreadyAdded =
+        !getManga(resultManga.url) &&
+        !processedResults.includes(resultManga.url) &&
+        !excludedUrls.includes(resultManga.url)
       processedResults.push(resultManga.url)
 
       return alreadyAdded
     })
 
     if (mangaResults.length === 0) {
-      notification.value = new NotifyOptions('No results found')
+      notification$.next(new NotifyOptions('No results found'))
     }
 
-    searchResults.value = mangaSearchSorter.sort(mangaResults, query, (obj, calc) => {
-      return calc(obj.title)
-    })
+    searchResults$.next(
+      mangaSearchSorter.sort(mangaResults, query, (obj, calc) => {
+        return calc(obj.title)
+      }),
+    )
     $q.loading.hide()
 
     return true
   }
 
   return {
-    mangaMap,
-    setMangaList,
     addManga,
-    removeManga,
-    updateManga,
-    updateMangaAltSources,
-    updateMangaChapterNum,
-    updateMangaChapterUrl,
-    updateMangaChapterDate,
-    updateMangaImage,
-    updateMangaTitle,
-    updateMangaRead,
-    updateMangaReadNum,
-    updateMangaReadUrl,
-    updateMangaLinkedSites,
-    updateMangaStatus,
-    updateMangaNotes,
-    updateMangaRating,
-    updateMangaShouldUpdate,
     storeManga,
     showAddMangaDialog,
     showUpdateMangaDialog,
     showEditMangaDialog,
     fetchManga,
-    findManga
+    findManga,
   }
 }
 
-export function useAppMangaList () {
-  const { setMangaList } = useMangaList()
+export function useAppMangaList(): void {
+  const { setMangaList } = stateManager
 
   onMounted(async () => {
     try {
@@ -269,17 +217,17 @@ export function useAppMangaList () {
       console.error(error)
     }
 
-    const localMangaList: Manga[] = LocalStorage.getItem(constants.MANGA_LIST_KEY) || []
+    const localMangaList: Manga[] = LocalStorage.getItem(constants.MANGA_LIST_KEY) ?? []
     setMangaList(localMangaList)
   })
 }
 
 const mangaSearchSorter = new relevancy.Sorter({
-  comparator: (a: Manga, b: Manga) => {
+  comparator: (a: Manga, b: Manga): number => {
     return mangaSort(a, b)
-  }
+  },
 })
 
-function mangaSort (a: Manga, b: Manga): number {
+function mangaSort(a: Manga, b: Manga): number {
   return a.title.toLowerCase() > b.title.toLowerCase() ? 1 : -1
 }

@@ -43,70 +43,78 @@
 </template>
 
 <script lang="ts">
+import type { QDialog } from 'quasar'
 import { useDialogPluginComponent } from 'quasar'
+import type { Ref, UnwrapRef } from 'vue'
 import { ref } from 'vue'
 import MangaSearch from './SearchComponent.vue'
 import { useClearingSearchResults } from 'src/composables/useSearchResults'
 
 export default {
   components: {
-    MangaSearch
+    MangaSearch,
   },
 
   props: {
     title: {
       type: String,
-      default: ''
+      default: '',
     },
     content: {
       type: String,
-      default: ''
+      default: '',
     },
     initialSearch: {
       type: String,
-      default: ''
+      default: '',
     },
     searchPlaceholder: {
       type: String,
-      default: ''
+      default: '',
     },
     manualPlaceholder: {
       type: String,
-      default: ''
+      default: '',
     },
     siteType: {
       type: String,
-      default: undefined
+      default: undefined,
     },
     confirmButton: {
       type: String,
-      default: ''
+      default: '',
     },
     excludedUrls: {
       type: Array,
-      default: () => []
-    }
+      default: (): string[] => [],
+    },
   },
 
   emits: [...useDialogPluginComponent.emits],
 
-  setup () {
+  setup(): {
+    dialogRef: Ref<QDialog | undefined>
+    onDialogHide: () => void
+    onOKClick: () => void
+    onCancelClick: () => void
+    url: Ref<UnwrapRef<string>, UnwrapRef<string>>
+  } {
     const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } = useDialogPluginComponent()
     const { clearSearchResults } = useClearingSearchResults()
     const url = ref('')
 
     return {
       dialogRef,
-      onDialogHide: () => {
+      onDialogHide: (): void => {
         clearSearchResults()
         onDialogHide()
       },
-      onOKClick: () => {
+      onOKClick: (): void => {
         onDialogOK(url.value)
       },
       onCancelClick: onDialogCancel,
-      url
+      url,
     }
-  }
+  },
 }
 </script>

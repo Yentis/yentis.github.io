@@ -1,33 +1,29 @@
-import { useStore } from 'src/store/index'
-import { computed, ref } from 'vue'
-import { Ref } from '@vue/runtime-core/dist/runtime-core'
-import { RefreshOptions } from 'src/classes/refreshOptions'
+import type { Ref } from 'vue'
+import { ref } from 'vue'
+import type { RefreshOptions } from 'src/classes/refreshOptions'
 import useMangaList from './useMangaList'
 import { Status } from 'src/enums/statusEnum'
 import { getMangaInfo } from 'src/services/siteService'
-import useNotification from 'src/composables/useNotification'
 import { NotifyOptions } from 'src/classes/notifyOptions'
-import useUrlNavigation from 'src/composables/useUrlNavigation'
 import { UrlNavigation } from 'src/classes/urlNavigation'
 import usePushNotification from 'src/composables/usePushNotification'
 import { getSiteNameByUrl } from 'src/utils/siteUtils'
-import ChromeWindow from 'src/interfaces/chromeWindow'
+import type ChromeWindow from 'src/interfaces/chromeWindow'
+import { stateManager } from 'src/store/store-reader'
 
-export default function useRefreshing(refreshProgress: Ref<number>) {
+export default function useRefreshing(refreshProgress: Ref<number>): {
+  refreshTimer: Ref<NodeJS.Timeout | undefined, NodeJS.Timeout | undefined>
+  startRefreshTimer: (refreshOptions: RefreshOptions) => void
+  refreshManga: (url: string, step?: number) => Promise<void>
+  refreshAllManga: () => Promise<void>
+} {
   const autoRefreshing = ref(false)
-  const { storeManga, updateManga } = useMangaList()
-  const { notification } = useNotification()
-  const { urlNavigation } = useUrlNavigation()
+  const { storeManga } = useMangaList()
   const { sendPushNotification } = usePushNotification()
+  const { urlNavigation$, notification$, refreshing$, getMangaList, getManga, setManga } = stateManager
 
-  const $store = useStore()
-  const refreshing = computed({
-    get: () => $store.state.reader.refreshing,
-    set: (val) => $store.commit('reader/updateRefreshing', val),
-  })
-
-  const refreshManga = async (url: string, step?: number) => {
-    const manga = $store.state.reader.mangaMap.get(url)
+  const refreshManga = async (url: string, step?: number): Promise<void> => {
+    const manga = getManga(url)
     if (!manga) {
       if (step !== undefined) refreshProgress.value += step
       return
@@ -36,20 +32,20 @@ export default function useRefreshing(refreshProgress: Ref<number>) {
     const result = await getMangaInfo(manga.url, manga.site, manga.altSources)
     if (result instanceof Error) {
       const errorMessage = (result.message.length === 0 ? result.stack : result.message) ?? 'Unknown'
-      const message = `${getSiteNameByUrl(manga.site) || 'Unknown site'} | ${errorMessage}`
+      const message = `${getSiteNameByUrl(manga.site) ?? 'Unknown site'} | ${errorMessage}`
 
       const notifyOptions = new NotifyOptions(message, `Failed to refresh ${manga.title}`)
       notifyOptions.actions = [
         {
           label: 'Visit',
-          handler: () => {
-            urlNavigation.value = new UrlNavigation(manga.url, true)
+          handler: (): void => {
+            urlNavigation$.next(new UrlNavigation(manga.url, true))
           },
           color: 'white',
         },
       ]
 
-      notification.value = notifyOptions
+      notification$.next(notifyOptions)
 
       if (step !== undefined) refreshProgress.value += step
       return
@@ -74,24 +70,24 @@ export default function useRefreshing(refreshProgress: Ref<number>) {
 
       chromeWindow.requestIdleCallback(
         () => {
-          updateManga(manga.url, newManga)
+          setManga({ url: manga.url, manga: newManga })
           resolve()
         },
-        { timeout: 2000 }
+        { timeout: 2000 },
       )
     })
   }
 
   const refreshAllManga = async (): Promise<void> => {
-    if (refreshing.value) return
+    if (refreshing$.value) return
     refreshProgress.value = 0.01
-    refreshing.value = true
+    refreshing$.next(true)
 
     const filteredMangaUrlList: string[] = []
 
-    $store.state.reader.mangaMap.forEach((manga, url) => {
+    getMangaList().forEach((manga) => {
       if (manga.status !== Status.READING && manga.shouldUpdate !== true) return
-      filteredMangaUrlList.push(url)
+      filteredMangaUrlList.push(manga.url)
     })
 
     const step = filteredMangaUrlList.length > 0 ? 1 / filteredMangaUrlList.length : 0
@@ -102,33 +98,35 @@ export default function useRefreshing(refreshProgress: Ref<number>) {
     } finally {
       storeManga()
       autoRefreshing.value = false
-      refreshing.value = false
+      refreshing$.next(false)
       refreshProgress.value = 0
     }
   }
 
   const refreshTimer: Ref<ReturnType<typeof setTimeout> | undefined> = ref()
-  const startRefreshTimer = (refreshOptions: RefreshOptions) => {
+  const startRefreshTimer = (refreshOptions: RefreshOptions): void => {
     if (refreshTimer.value) clearTimeout(refreshTimer.value)
-    refreshTimer.value = setTimeout(() => {
-      refreshTimer.value = undefined
-      if (!refreshOptions.enabled || refreshing.value) {
-        startRefreshTimer(refreshOptions)
-        return
-      }
-
-      autoRefreshing.value = true
-      refreshAllManga()
-        .finally(() => {
-          if (refreshTimer.value) return
+    refreshTimer.value = setTimeout(
+      () => {
+        refreshTimer.value = undefined
+        if (!refreshOptions.enabled || refreshing$.value) {
           startRefreshTimer(refreshOptions)
-        })
-        .catch(console.error)
-    }, refreshOptions.period * 60 * 1000)
+          return
+        }
+
+        autoRefreshing.value = true
+        refreshAllManga()
+          .finally(() => {
+            if (refreshTimer.value) return
+            startRefreshTimer(refreshOptions)
+          })
+          .catch(console.error)
+      },
+      refreshOptions.period * 60 * 1000,
+    )
   }
 
   return {
-    refreshing,
     refreshTimer,
     startRefreshTimer,
     refreshManga,

@@ -1,10 +1,10 @@
 import moment from 'moment'
 import { BaseData } from 'src/classes/sites/baseSite'
-import HttpRequest from 'src/interfaces/httpRequest'
+import type { HttpRequest } from 'src/interfaces/httpRequest'
 import { requestHandler } from 'src/services/requestService'
 import { parseHtmlFromString } from 'src/utils/siteUtils'
 
-export async function getRssData (props: { url: string, request: HttpRequest, index?: number }): Promise<BaseData> {
+export async function getRssData(props: { url: string; request: HttpRequest; index?: number }): Promise<BaseData> {
   const { url, request } = props
   const index = props.index ?? 0
 
@@ -26,11 +26,11 @@ export async function getRssData (props: { url: string, request: HttpRequest, in
   return data
 }
 
-function removeCdata (content: string): string {
+function removeCdata(content: string): string {
   return content.replace('<![CDATA[', '').replace(']]>', '').trim()
 }
 
-export function getRssChapter (data: BaseData): string {
+export function getRssChapter(data: BaseData): string {
   const chapterTitle = data.chapter?.querySelectorAll('title')[0]
   const chapterText = chapterTitle?.textContent
   if (!chapterText) return 'Unknown'
@@ -38,12 +38,12 @@ export function getRssChapter (data: BaseData): string {
   return removeCdata(chapterText)
 }
 
-export function getRssChapterUrl (data: BaseData): string {
+export function getRssChapterUrl(data: BaseData): string {
   const chapterLink = data.chapter?.querySelectorAll('link')[0]
-  return chapterLink?.textContent || ''
+  return chapterLink?.textContent ?? ''
 }
 
-export function getRssChapterDate (data: BaseData): string {
+export function getRssChapterDate(data: BaseData): string {
   const chapterDateText = data.chapterDate?.textContent?.trim()
   if (!chapterDateText) return ''
 
@@ -55,11 +55,11 @@ export function getRssChapterDate (data: BaseData): string {
   }
 }
 
-export function getRssImage (data: BaseData): string {
-  return data.image?.textContent || ''
+export function getRssImage(data: BaseData): string {
+  return data.image?.textContent ?? ''
 }
 
-export function getRssTitle (data: BaseData): string {
+export function getRssTitle(data: BaseData): string {
   const titleText = data.title?.textContent
   if (!titleText) return ''
 

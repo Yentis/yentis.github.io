@@ -66,7 +66,7 @@
       <q-btn-dropdown
         no-caps
         class="q-mr-sm"
-        :label="'Sort by: ' + settings.sortedBy"
+        :label="'Sort by: ' + settings?.sortedBy"
       >
         <q-list
           v-for="type in sortTypes"
@@ -101,17 +101,16 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, watch, onMounted, computed } from 'vue'
-import { Ref } from '@vue/runtime-core/dist/runtime-core'
+import type { Ref } from 'vue'
+import { computed, defineComponent, onMounted, ref } from 'vue'
 import { Status } from '../enums/statusEnum'
 import { SortType } from '../enums/sortingEnum'
-import { Settings } from '../classes/settings'
 import useSettings from '../composables/useSettings'
 import useRefreshing from '../composables/useRefreshing'
 import useMangaList from '../composables/useMangaList'
-import useMobileView from '../composables/useMobileView'
-import useSearchValue from '../composables/useSearchValue'
 import useCloudSync from '../composables/useCloudSync'
+import { stateManager } from 'src/store/store-reader'
+import { useObservable, useSubject, useSubscription } from '@vueuse/rxjs'
 
 export default defineComponent({
   name: 'MangaHeader',
@@ -127,8 +126,8 @@ export default defineComponent({
 
   setup(props, context) {
     const { importList, exportList } = useCloudSync()
-
     const { addManga, storeManga, showAddMangaDialog, showEditMangaDialog, fetchManga } = useMangaList()
+    const { refreshing$, settings$, mobileView$, searchValue$ } = stateManager
 
     const refreshProgress = computed({
       get: () => props.refreshProgress,
@@ -137,46 +136,48 @@ export default defineComponent({
       },
     })
 
-    const { refreshing, refreshTimer, startRefreshTimer, refreshAllManga } = useRefreshing(refreshProgress)
+    const { refreshTimer, startRefreshTimer, refreshAllManga } = useRefreshing(refreshProgress)
 
-    const doFullRefresh = () => {
+    const doFullRefresh = (): void => {
       if (refreshTimer.value) clearTimeout(refreshTimer.value)
 
       refreshAllManga()
-        .finally(() => startRefreshTimer(settings.value.refreshOptions))
+        .finally(() => startRefreshTimer(settings$.value.refreshOptions))
         .catch(console.error)
     }
 
-    const onAddManga = async () => {
+    const onAddManga = async (): Promise<void> => {
       const url = await showAddMangaDialog()
-      if (url === null) return
+      if (!url) return
 
-      refreshing.value = true
+      refreshing$.next(true)
       const manga = await fetchManga(url)
-      refreshing.value = false
-      if (manga === null) return
+      refreshing$.next(false)
+      if (!manga) return
 
       const added = addManga(manga)
       if (added) storeManga()
 
       await showEditMangaDialog(url)
-      refreshing.value = false
+      refreshing$.next(false)
     }
 
     const newFilters: Ref<Status[]> = ref([])
-    const { settings, showSettingsDialog, setSortedBy, setFilters } = useSettings()
+    const { showSettingsDialog, setSortedBy, setFilters } = useSettings()
 
     onMounted(() => {
-      startRefreshTimer(settings.value.refreshOptions)
-      newFilters.value = settings.value.filters
+      startRefreshTimer(settings$.value.refreshOptions)
+      newFilters.value = settings$.value.filters
     })
 
-    watch(settings, (newSettings: Settings) => {
-      startRefreshTimer(newSettings.refreshOptions)
-    })
+    useSubscription(
+      settings$.subscribe((settings) => {
+        startRefreshTimer(settings.refreshOptions)
+      }),
+    )
 
     const importing = ref(false)
-    const onImportList = () => {
+    const onImportList = (): void => {
       importing.value = true
 
       importList()
@@ -187,7 +188,7 @@ export default defineComponent({
     }
 
     const exporting = ref(false)
-    const onExportList = () => {
+    const onExportList = (): void => {
       exporting.value = true
 
       exportList()
@@ -197,8 +198,6 @@ export default defineComponent({
         .catch(console.error)
     }
 
-    const { mobileView } = useMobileView()
-    const { searchValue } = useSearchValue()
     const statusList = Object.values(Status).map((value) => {
       return {
         label: value,
@@ -210,8 +209,8 @@ export default defineComponent({
       sortTypes: SortType,
       status: Status,
 
-      mobileView,
-      searchValue,
+      mobileView: useObservable(mobileView$),
+      searchValue: useSubject(searchValue$),
       statusList,
 
       importing,
@@ -220,7 +219,7 @@ export default defineComponent({
       onExportList,
 
       newFilters,
-      settings,
+      settings: useObservable(settings$),
       showSettingsDialog,
       setSortedBy,
       setFilters,

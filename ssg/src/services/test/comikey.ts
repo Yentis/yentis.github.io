@@ -1,5 +1,5 @@
 import { Manga } from 'src/classes/manga'
-import { BaseSite } from 'src/classes/sites/baseSite'
+import type { BaseSite } from 'src/classes/sites/baseSite'
 import { SiteType } from 'src/enums/siteEnum'
 import { getMangaInfo, getSite, searchManga } from '../siteService'
 import { mangaEqual, searchValid } from '../testService'

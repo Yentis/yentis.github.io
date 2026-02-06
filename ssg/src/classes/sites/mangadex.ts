@@ -1,24 +1,23 @@
 import { BaseData, BaseSite } from './baseSite'
 import PQueue from 'p-queue'
-import { QVueGlobals } from 'quasar/dist/types'
-import { Store } from 'vuex'
+import type { QVueGlobals } from 'quasar'
 import { SiteType } from 'src/enums/siteEnum'
 import moment from 'moment'
 import { Manga } from '../manga'
 import qs from 'qs'
-import HttpRequest from 'src/interfaces/httpRequest'
+import type { HttpRequest } from 'src/interfaces/httpRequest'
 import { requestHandler } from 'src/services/requestService'
-import BaseRequest from '../requests/baseRequest'
+import type BaseRequest from '../requests/baseRequest'
 import { ContentType } from 'src/enums/contentTypeEnum'
 import relevancy from 'relevancy'
 import { parseNum, titleContainsQuery } from 'src/utils/siteUtils'
 
 interface ChapterResult {
-  id: string,
+  id: string
   attributes: {
-    title?: string,
-    volume?: string,
-    chapter?: string,
+    title?: string
+    volume?: string
+    chapter?: string
     updatedAt: string
   }
 }
@@ -28,13 +27,13 @@ interface ChapterResponse {
 }
 
 interface MangaResult {
-  id: string,
+  id: string
   attributes: {
     title: Record<string, string>
-    altTitles: (Record<string, string>)[]
-  },
+    altTitles: Record<string, string>[]
+  }
   relationships: {
-    type: string,
+    type: string
     attributes?: {
       fileName: string
     }
@@ -52,20 +51,20 @@ interface SearchResponse {
 interface LegacyIdResponse {
   data: {
     attributes: {
-      legacyId: number,
+      legacyId: number
       newId: string
     }
   }[]
 }
 
 class MangaDexData extends BaseData {
-  url: string
+  override url: string
 
   chapterResult?: ChapterResult
 
   mangaResult: MangaResult
 
-  constructor (url: string, chapterResult: ChapterResult | undefined, mangaResult: MangaResult) {
+  constructor(url: string, chapterResult: ChapterResult | undefined, mangaResult: MangaResult) {
     super(url)
 
     this.url = url
@@ -75,15 +74,36 @@ class MangaDexData extends BaseData {
 }
 
 export class MangaDex extends BaseSite {
-  static siteType = SiteType.MangaDex
-  siteType = MangaDex.siteType
-  requestQueue = new PQueue({ interval: 1000, intervalCap: 5 })
+  siteType = SiteType.MangaDex
+  override requestQueue = new PQueue({ interval: 1000, intervalCap: 5 })
 
-  syncReadChapter (_mangaId: number, _chapterNum: number): Promise<void | Error> {
+  static override getUrl(): string {
+    return BaseSite.getUrl(SiteType.MangaDex)
+  }
+
+  static async convertLegacyIds(ids: number[], targetRequestHandler: BaseRequest): Promise<Record<number, string>> {
+    const response = await targetRequestHandler.sendRequest({
+      method: 'POST',
+      url: `https://api.${SiteType.MangaDex}/legacy/mapping`,
+      data: `{"type": "manga", "ids": [${ids.join(',')}]}`,
+      headers: { 'Content-Type': ContentType.JSON },
+    })
+    const legacyIdResponse = JSON.parse(response.data) as LegacyIdResponse
+    const legacyIdMap: Record<number, string> = {}
+
+    legacyIdResponse.data.forEach((item) => {
+      const attributes = item.attributes
+      legacyIdMap[attributes.legacyId] = attributes.newId
+    })
+
+    return legacyIdMap
+  }
+
+  override syncReadChapter(_mangaId: number, _chapterNum: number): Promise<void | Error> {
     return Promise.resolve(Error('MangaDex syncing is currently not functional'))
   }
 
-  getChapter (data: MangaDexData): string {
+  protected override getChapter(data: MangaDexData): string {
     const attributes = data.chapterResult?.attributes
     if (!attributes) return 'Unknown'
 
@@ -109,18 +129,18 @@ export class MangaDex extends BaseSite {
     return chapterText
   }
 
-  getChapterUrl (data: MangaDexData): string {
+  protected override getChapterUrl(data: MangaDexData): string {
     const chapterId = data.chapterResult?.id
     if (!chapterId) return ''
 
     return `${this.getUrl()}/chapter/${chapterId}`
   }
 
-  getChapterNum (data: MangaDexData): number {
+  protected override getChapterNum(data: MangaDexData): number {
     return parseNum(data.chapterResult?.attributes.chapter)
   }
 
-  getChapterDate (data: MangaDexData): string {
+  protected override getChapterDate(data: MangaDexData): string {
     const updatedAt = data.chapterResult?.attributes.updatedAt
     if (!updatedAt) return ''
 
@@ -132,7 +152,7 @@ export class MangaDex extends BaseSite {
     }
   }
 
-  getImage (data: MangaDexData): string {
+  protected override getImage(data: MangaDexData): string {
     const coverFileName = data.mangaResult.relationships?.find((relationship) => {
       return relationship.type === 'cover_art'
     })?.attributes?.fileName
@@ -144,23 +164,26 @@ export class MangaDex extends BaseSite {
     return `https://uploads.${this.siteType}/covers/${mangaId}/${coverFileName}`
   }
 
-  getTitle (data: MangaDexData): string {
+  protected override getTitle(data: MangaDexData): string {
     // Use the first title we find
     return this.getTitlesFromAttributes(data.mangaResult.attributes)[0] ?? ''
   }
 
-  private getTitlesFromAttributes (attributes: MangaResult['attributes']): string[] {
+  private getTitlesFromAttributes(attributes: MangaResult['attributes']): string[] {
     const titleObj = attributes?.title ?? []
-    const altTitles = attributes.altTitles.map((entry) => {
-      return Object.values(entry);
-    }).flat().filter((title): title is string => {
-      return (title ?? '').trim() !== '';
-    })
+    const altTitles = attributes.altTitles
+      .map((entry) => {
+        return Object.values(entry)
+      })
+      .flat()
+      .filter((title): title is string => {
+        return (title ?? '').trim() !== ''
+      })
 
     return [...Object.values(titleObj), ...altTitles]
   }
 
-  protected async readUrlImpl (url: string): Promise<Error | Manga> {
+  protected async readUrlImpl(url: string): Promise<Error | Manga> {
     const mangaId = url.replace(`${this.getUrl()}/title/`, '').split('/')[0]
     if (!mangaId) return Error('Manga ID not found')
 
@@ -169,10 +192,13 @@ export class MangaDex extends BaseSite {
       'order[volume]': 'desc',
       'order[chapter]': 'desc',
       limit: 1,
-      'translatedLanguage[]': 'en'
+      'translatedLanguage[]': 'en',
     })
 
-    const chapterRequest: HttpRequest = { method: 'GET', url: `https://api.${this.siteType}/chapter?${chapterQueryString}` }
+    const chapterRequest: HttpRequest = {
+      method: 'GET',
+      url: `https://api.${this.siteType}/chapter?${chapterQueryString}`,
+    }
     const chapterResponse = await requestHandler.sendRequest(chapterRequest)
     const chapterData = JSON.parse(chapterResponse.data) as ChapterResponse
 
@@ -180,37 +206,22 @@ export class MangaDex extends BaseSite {
     if (!chapterResult) return new Error('No chapters found')
 
     const mangaQueryString = qs.stringify({
-      'includes[]': 'cover_art'
+      'includes[]': 'cover_art',
     })
 
-    const mangaRequest: HttpRequest = { method: 'GET', url: `https://api.${this.siteType}/manga/${mangaId}?${mangaQueryString}` }
+    const mangaRequest: HttpRequest = {
+      method: 'GET',
+      url: `https://api.${this.siteType}/manga/${mangaId}?${mangaQueryString}`,
+    }
     const mangaResponse = await requestHandler.sendRequest(mangaRequest)
     const mangaResult = (JSON.parse(mangaResponse.data) as MangaResponse).data
 
     return this.buildManga(new MangaDexData(url, chapterResult, mangaResult))
   }
 
-  static async convertLegacyIds (ids: number[], requestHandler: BaseRequest): Promise<Record<number, string>> {
-    const response = await requestHandler.sendRequest({
-      method: 'POST',
-      url: `https://api.${MangaDex.siteType}/legacy/mapping`,
-      data: `{"type": "manga", "ids": [${ids.join(',')}]}`,
-      headers: { 'Content-Type': ContentType.JSON }
-    })
-    const legacyIdResponse = JSON.parse(response.data) as LegacyIdResponse
-    const legacyIdMap: Record<number, string> = {}
-
-    legacyIdResponse.data.forEach((item) => {
-      const attributes = item.attributes
-      legacyIdMap[attributes.legacyId] = attributes.newId
-    })
-
-    return legacyIdMap
-  }
-
-  protected async searchImpl (query: string): Promise<Error | Manga[]> {
+  protected async searchImpl(query: string): Promise<Error | Manga[]> {
     const queryString = qs.stringify({
-      title: query
+      title: query,
     })
 
     const request: HttpRequest = { method: 'GET', url: `https://api.${this.siteType}/manga?${queryString}` }
@@ -218,12 +229,14 @@ export class MangaDex extends BaseSite {
     const mangaData = JSON.parse(response.data) as SearchResponse
     const promises: Promise<Error | Manga>[] = []
 
-    let candidateUrls = mangaData.data.filter((result) => {
-      const titles = this.getTitlesFromAttributes(result.attributes)
-      return titles.some((title) => titleContainsQuery(query, title))
-    }).map((result) => {
-      return `${this.getUrl()}/title/${result.id}`
-    })
+    let candidateUrls = mangaData.data
+      .filter((result) => {
+        const titles = this.getTitlesFromAttributes(result.attributes)
+        return titles.some((title) => titleContainsQuery(query, title))
+      })
+      .map((result) => {
+        return `${this.getUrl()}/title/${result.id}`
+      })
 
     // 5 most relevant results
     candidateUrls = relevancy.sort(candidateUrls, query).slice(0, 5)
@@ -232,11 +245,11 @@ export class MangaDex extends BaseSite {
     })
 
     const mangaList = await Promise.all(promises)
-    return mangaList.filter(manga => manga instanceof Manga) as Manga[]
+    return mangaList.filter((manga) => manga instanceof Manga)
   }
 
-  getMangaId (_$q: QVueGlobals, _store: Store<unknown>, url: string): Promise<number | Error> {
-    const matches = /\/title\/(\d*)/gm.exec(url) || []
+  override getMangaId(_$q: QVueGlobals, url: string): Promise<number | Error> {
+    const matches = /\/title\/(\d*)/gm.exec(url) ?? []
     let mangaId = -1
 
     for (const match of matches) {
@@ -247,15 +260,11 @@ export class MangaDex extends BaseSite {
     return Promise.resolve(mangaId)
   }
 
-  static getUrl (): string {
-    return BaseSite.getUrl(MangaDex.siteType)
-  }
-
-  getUrl (): string {
+  override getUrl(): string {
     return MangaDex.getUrl()
   }
 
-  getTestUrl (): string {
+  getTestUrl(): string {
     return `${this.getUrl()}/title/1044287a-73df-48d0-b0b2-5327f32dd651/jojo-s-bizarre-adventure-part-7-steel-ball-run-official-colored`
   }
 }

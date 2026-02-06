@@ -1,8 +1,6 @@
 <template>
   <q-page class="q-ma-sm">
-    <MangaHeader
-      v-model:refresh-progress="refreshProgress"
-    />
+    <MangaHeader v-model:refresh-progress="refreshProgress" />
 
     <q-linear-progress
       v-if="refreshing"
@@ -19,21 +17,16 @@
         :key="url"
         class="q-mb-xs full-width manga-item"
       >
-        <MangaItem
-          :url="url"
-        />
+        <MangaItem :url="url" />
       </q-intersection>
     </div>
   </q-page>
 </template>
 
 <script lang="ts">
-import { defineComponent, computed, ref } from 'vue'
+import { defineComponent, ref } from 'vue'
 import MangaHeader from '../components/Header.vue'
 import MangaItem from '../components/manga-item/MangaItem.vue'
-import useSettings from '../composables/useSettings'
-import useSearchValue from '../composables/useSearchValue'
-import useRefreshing from '../composables/useRefreshing'
 import { getSiteNameByUrl } from '../utils/siteUtils'
 import {
   useAppInitialized,
@@ -43,64 +36,69 @@ import {
 } from '../composables/useInitialized'
 import { getPlatform } from '../services/platformService'
 import { Platform } from '../enums/platformEnum'
-import { useStore } from '../store'
-import { Manga } from '../classes/manga'
+import type { Manga } from '../classes/manga'
 import { mangaSort } from '../services/sortService'
+import { stateManager } from 'src/store/store-reader'
+import { combineLatest, map } from 'rxjs'
+import { useObservable } from '@vueuse/rxjs'
 
 export default defineComponent({
   components: {
     MangaHeader,
-    MangaItem
+    MangaItem,
   },
 
-  setup () {
+  setup() {
     useAppInitialized()
 
-    const $store = useStore()
-    const { settings } = useSettings()
-    const { searchValue } = useSearchValue()
     const refreshProgress = ref(0)
-    const { refreshing } = useRefreshing(refreshProgress)
+    const { mangaMap$, settings$, searchValue$, refreshing$ } = stateManager
 
-    const mangaMap = computed(() => $store.state.reader.mangaMap)
-    const mangaUrls = computed(() => {
-      const matchedManga: Manga[] = []
+    const mangaUrls$ = combineLatest([mangaMap$, settings$, searchValue$]).pipe(
+      map(([mangaMap, settings, searchValue]) => {
+        const matchedManga: Manga[] = []
 
-      mangaMap.value.forEach((manga) => {
-        if (!settings.value.filters.includes(manga.status)) return
+        mangaMap.forEach((manga) => {
+          if (!settings.filters.includes(manga.status)) return
 
-        const searchWords = searchValue.value.split(' ')
-        let title = true
-        let notes = true
-        let site = true
+          const searchWords = searchValue.split(' ')
+          let title = true
+          let notes = true
+          let site = true
 
-        const containsWords = searchWords.every((word) => {
-          const lowerCaseWord = word.toLowerCase()
+          const containsWords = searchWords.every((word) => {
+            const lowerCaseWord = word.toLowerCase()
 
-          if (!manga.title.toLowerCase().includes(lowerCaseWord)) {
-            title = false
-          }
+            if (!manga.title.toLowerCase().includes(lowerCaseWord)) {
+              title = false
+            }
 
-          if (manga.notes?.toLowerCase().includes(lowerCaseWord) !== true) {
-            notes = false
-          }
+            if (manga.notes?.toLowerCase().includes(lowerCaseWord) !== true) {
+              notes = false
+            }
 
-          const siteName = getSiteNameByUrl(manga.site)
-          if (siteName?.toLowerCase().includes(lowerCaseWord) !== true) {
-            site = false
-          }
+            const siteName = getSiteNameByUrl(manga.site)
+            if (
+              siteName?.toLowerCase().includes(lowerCaseWord) !== true &&
+              !manga.site.replace('.', '').includes(lowerCaseWord)
+            ) {
+              site = false
+            }
 
-          return title || notes || site
+            return title || notes || site
+          })
+          if (!containsWords) return
+
+          matchedManga.push(manga)
         })
-        if (!containsWords) return
 
-        matchedManga.push(manga)
-      })
-
-      return matchedManga.sort((a, b) => {
-        return mangaSort(a, b, $store.state.reader.settings.sortedBy)
-      }).map((manga) => manga.url)
-    })
+        return matchedManga
+          .sort((a, b) => {
+            return mangaSort(a, b, settings.sortedBy)
+          })
+          .map((manga) => manga.url)
+      }),
+    )
 
     switch (getPlatform()) {
       case Platform.Capacitor:
@@ -115,16 +113,15 @@ export default defineComponent({
     }
 
     return {
-      mangaUrls,
-      refreshing,
-      refreshProgress
+      mangaUrls: useObservable(mangaUrls$),
+      refreshing: useObservable(refreshing$),
+      refreshProgress,
     }
-  }
+  },
 })
 </script>
 
 <style lang="scss">
-
 .flex-column-between {
   display: flex;
   flex-direction: column;
@@ -143,5 +140,4 @@ a {
 .manga-item {
   min-height: 11rem;
 }
-
 </style>

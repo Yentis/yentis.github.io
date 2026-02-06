@@ -1,5 +1,5 @@
 import { Manga } from 'src/classes/manga'
-import { BaseSite } from 'src/classes/sites/baseSite'
+import type { BaseSite } from 'src/classes/sites/baseSite'
 import { SiteType } from 'src/enums/siteEnum'
 import { getMangaInfo, getSite, searchManga } from '../siteService'
 import { mangaEqual, searchValid } from '../testService'
@@ -26,7 +26,7 @@ async function readUrl(site: BaseSite): Promise<void> {
   desired.title = 'The Unwanted Undead Adventurer'
   desired.chapterUrl = `${site.getUrl()}/manga/the-unwanted-undead-adventurer/chapter-${chapter}/`
   desired.chapterNum = chapter
-  desired.chapterDate = moment('10-Oct', 'DD-MMM').fromNow()
+  desired.chapterDate = moment('05-Jan', 'DD-MMM').fromNow()
 
   mangaEqual(manga, desired)
 }

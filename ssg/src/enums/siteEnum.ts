@@ -8,15 +8,13 @@ export enum SiteType {
   HiperDEX = 'hiperdex.com',
   AsuraScans = 'asuracomic.net',
   Mangago = 'mangago.me',
-  ZeroScans = 'zscans.com',
-  Batoto = 'bato.to',
   FlameComics = 'flamecomics.xyz',
   ResetScans = 'reset-scans.org',
   Cubari = 'cubari.moe',
   Tapas = 'tapas.io',
   Comikey = 'comikey.com',
   Tappytoon = 'tappytoon.com',
-  MangaPark = 'mangapark.net',
+  Kagane = 'kagane.org',
 }
 
 export enum SiteName {
@@ -28,15 +26,13 @@ export enum SiteName {
   'asuracomic.net' = 'Asura Scans',
   'mangago.me' = 'Mangago',
   'kitsu.io' = 'Kitsu',
-  'zscans.com' = 'Zero Scans',
-  'bato.to' = 'Batoto',
   'flamecomics.xyz' = 'Flame Comics',
   'reset-scans.org' = 'Reset Scans',
   'cubari.moe' = 'Cubari / Guya',
   'tapas.io' = 'Tapas',
   'comikey.com' = 'Comikey',
   'tappytoon.com' = 'Tappytoon',
-  'mangapark.net' = 'MangaPark',
+  'kagane.org' = 'Kagane',
 }
 
 export enum SiteState {

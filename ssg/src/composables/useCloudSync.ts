@@ -2,30 +2,31 @@ import { useQuasar } from 'quasar'
 import { NotifyOptions } from 'src/classes/notifyOptions'
 import { UrlNavigation } from 'src/classes/urlNavigation'
 import { DropboxResponseError, getAuth, getAuthUrl, readList, saveList } from 'src/services/dropboxService'
-import useNotification from './useNotification'
-import useUrlNavigation from './useUrlNavigation'
 import ConfirmationDialog from '../components/ConfirmationDialog.vue'
 import useMangaList from './useMangaList'
-import { ReadListResponse } from '../services/dropboxService'
+import type { ReadListResponse } from '../services/dropboxService'
 import { setEditCode, setShareId } from 'src/services/rentryService'
-import { useStore } from 'src/store'
+import { stateManager } from 'src/store/store-reader'
 
-export default function useCloudSync () {
+export default function useCloudSync(): {
+  importList: () => Promise<void>
+  exportList: () => Promise<void>
+} {
   const $q = useQuasar()
-  const $store = useStore()
-  const { urlNavigation } = useUrlNavigation()
-  const { notification } = useNotification()
-  const { setMangaList, storeManga } = useMangaList()
+  const { storeManga } = useMangaList()
+  const { urlNavigation$, notification$, getMangaList, setMangaList } = stateManager
 
-  const openDropboxLogin = () => {
-    getAuthUrl().then((authUrl) => {
-      urlNavigation.value = new UrlNavigation(authUrl, true)
-    }).catch((error: Error) => {
-      notification.value = new NotifyOptions(error, 'Failed to get auth url')
-    })
+  const openDropboxLogin = (): void => {
+    getAuthUrl()
+      .then((authUrl) => {
+        urlNavigation$.next(new UrlNavigation(authUrl, true))
+      })
+      .catch((error: Error) => {
+        notification$.next(new NotifyOptions(error, 'Failed to get auth url'))
+      })
   }
 
-  const importList = async () => {
+  const importList = async (): Promise<void> => {
     if (!getAuth()) {
       openDropboxLogin()
       return
@@ -41,11 +42,11 @@ export default function useCloudSync () {
           return
         }
 
-        notification.value = new NotifyOptions(`${error.status}: ${JSON.stringify(error)}`)
+        notification$.next(new NotifyOptions(`${error.status}: ${JSON.stringify(error)}`))
       } else if (error instanceof Error) {
-        notification.value = new NotifyOptions(error)
+        notification$.next(new NotifyOptions(error))
       } else {
-        notification.value = new NotifyOptions(error as string)
+        notification$.next(new NotifyOptions(error as string))
       }
     }
 
@@ -56,61 +57,63 @@ export default function useCloudSync () {
         component: ConfirmationDialog,
         componentProps: {
           title: 'Import from Dropbox',
-          content: `Are you sure you want to import ${storedMangaList.length} titles from Dropbox?\nYou currently have ${$store.state.reader.mangaMap.size} titles.`
-        }
-      }).onOk(() => {
-        const notifyOptions = new NotifyOptions('Imported!')
-        notifyOptions.type = 'positive'
-        notification.value = notifyOptions
-
-        setMangaList(storedMangaList)
-        storeManga()
-
-        if (!shareContents) {
-          resolve()
-          return
-        }
-
-        setShareId(shareContents.id)
-        setEditCode(shareContents.editCode)
-
-        resolve()
-      }).onCancel(() => {
-        resolve()
+          content: `Are you sure you want to import ${storedMangaList.length} titles from Dropbox?\nYou currently have ${getMangaList().length} titles.`,
+        },
       })
+        .onOk(() => {
+          const notifyOptions = new NotifyOptions('Imported!')
+          notifyOptions.type = 'positive'
+          notification$.next(notifyOptions)
+
+          setMangaList(storedMangaList)
+          storeManga()
+
+          if (!shareContents) {
+            resolve()
+            return
+          }
+
+          setShareId(shareContents.id)
+          setEditCode(shareContents.editCode)
+
+          resolve()
+        })
+        .onCancel(() => {
+          resolve()
+        })
     })
   }
 
-  const exportList = async () => {
+  const exportList = async (): Promise<void> => {
     if (!getAuth()) {
       openDropboxLogin()
       return
     }
-
-    const mangaMap = $store.state.reader.mangaMap
 
     const confirmed = await new Promise<boolean>((resolve) => {
       $q.dialog({
         component: ConfirmationDialog,
         componentProps: {
           title: 'Export to Dropbox',
-          content: `Are you sure you want to export ${mangaMap.size} titles to Dropbox?`
-        }
-      }).onOk(() => {
-        resolve(true)
-      }).onCancel(() => {
-        resolve(false)
+          content: `Are you sure you want to export ${getMangaList().length} titles to Dropbox?`,
+        },
       })
+        .onOk(() => {
+          resolve(true)
+        })
+        .onCancel(() => {
+          resolve(false)
+        })
     })
 
     if (!confirmed) return
 
     try {
-      await saveList(Array.from(mangaMap.values()))
+      await saveList(getMangaList())
 
       const notifyOptions = new NotifyOptions('Exported!')
       notifyOptions.type = 'positive'
-      notification.value = notifyOptions
+      notification$.next(notifyOptions)
     } catch (error: unknown) {
       if (error instanceof DropboxResponseError) {
         if (error.status === 401 || error.status === 400) {
@@ -118,11 +121,11 @@ export default function useCloudSync () {
           return
         }
 
-        notification.value = new NotifyOptions(`${error.status}: ${JSON.stringify(error)}`)
+        notification$.next(new NotifyOptions(`${error.status}: ${JSON.stringify(error)}`))
       } else if (error instanceof Error) {
-        notification.value = new NotifyOptions(error)
+        notification$.next(new NotifyOptions(error))
       } else {
-        notification.value = new NotifyOptions(error as string)
+        notification$.next(new NotifyOptions(error as string))
       }
     }
   }

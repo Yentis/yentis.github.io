@@ -1,11 +1,34 @@
 import moment from 'moment'
 import { SiteType } from 'src/enums/siteEnum'
-import HttpRequest from 'src/interfaces/httpRequest'
+import type { HttpRequest } from 'src/interfaces/httpRequest'
 import { requestHandler } from 'src/services/requestService'
 import { getDateFromNow, parseHtmlFromString, titleContainsQuery } from 'src/utils/siteUtils'
-import constants from '../constants'
-import { Manga } from '../manga'
+import type { Manga } from '../manga'
 import { BaseData, BaseSite } from './baseSite'
+import qs from 'qs'
+
+interface Chapter {
+  chapter_name: string
+  chapter_slug: string
+  chapter_num: number
+  updated_at: string
+}
+
+interface ChaptersResponse {
+  success: boolean
+  data: {
+    chapters: Chapter[]
+  }
+}
+
+class MangakakalotData extends BaseData {
+  chapterData: Chapter
+
+  constructor(chapterData: Chapter, url: string) {
+    super(url)
+    this.chapterData = chapterData
+  }
+}
 
 export class Mangakakalot extends BaseSite {
   siteType = SiteType.Mangakakalot
@@ -24,57 +47,106 @@ export class Mangakakalot extends BaseSite {
     return `data:image/png;base64,${response.data}`
   }
 
-  getChapterNum (data: BaseData): number {
-    const chapter = this.getChapter(data)
-    const matches = /Chapter ([-+]?[0-9]*\.?[0-9]+)/gm.exec(chapter) || []
-    let num = 0
-
-    for (const match of matches) {
-      const parsedMatch = parseFloat(match)
-      if (!isNaN(parsedMatch)) num = parsedMatch
-    }
-
-    return num
-  }
-
-  getChapterDate (data: BaseData): string {
-    const chapterDate = moment(data.chapterDate?.getAttribute('title'), 'MMM-DD-YYYY')
-    if (chapterDate.isValid()) {
-      return chapterDate.fromNow()
+  protected override getChapter(data: MangakakalotData | BaseData): string {
+    if (data instanceof MangakakalotData) {
+      return data.chapterData.chapter_name
     } else {
-      return getDateFromNow(data.chapterDate?.getAttribute('title'))
+      return super.getChapter(data)
     }
   }
 
-  protected async readUrlImpl (url: string): Promise<Error | Manga> {
+  protected override getChapterUrl(data: MangakakalotData | BaseData): string {
+    if (data instanceof MangakakalotData) {
+      const url = new URL(data.url)
+
+      if (!url.pathname.endsWith('/')) {
+        url.pathname = url.pathname + '/'
+      }
+      url.pathname = url.pathname + data.chapterData.chapter_slug
+
+      return url.toString()
+    } else {
+      return super.getChapterUrl(data)
+    }
+  }
+
+  protected override getChapterNum(data: MangakakalotData | BaseData): number {
+    if (data instanceof MangakakalotData) {
+      return data.chapterData.chapter_num
+    } else {
+      const chapter = this.getChapter(data)
+      const matches = /Chapter ([-+]?[0-9]*\.?[0-9]+)/gm.exec(chapter) || []
+      let num = 0
+
+      for (const match of matches) {
+        const parsedMatch = parseFloat(match)
+        if (!isNaN(parsedMatch)) num = parsedMatch
+      }
+
+      return num
+    }
+  }
+
+  protected override getChapterDate(data: MangakakalotData | BaseData): string {
+    if (data instanceof MangakakalotData) {
+      const chapterDate = moment(data.chapterData.updated_at)
+      if (chapterDate.isValid()) {
+        return chapterDate.fromNow()
+      } else {
+        return ''
+      }
+    } else {
+      const chapterDate = moment(data.chapterDate?.getAttribute('title'), 'MMM-DD-YYYY')
+      if (chapterDate.isValid()) {
+        return chapterDate.fromNow()
+      } else {
+        return getDateFromNow(data.chapterDate?.getAttribute('title'))
+      }
+    }
+  }
+
+  protected async readUrlImpl(url: string): Promise<Error | Manga> {
     const request: HttpRequest = { method: 'GET', url }
     this.trySetUserAgent(request)
 
     const response = await requestHandler.sendRequest(request)
     const doc = await parseHtmlFromString(response.data)
 
-    const script = doc.querySelectorAll('script')[0]?.innerHTML.trim() || ''
-    if (script.startsWith('window.location.assign')) {
-      const target = script.replace('window.location.assign("', '').replace('");', '')
-      return Error(`${constants.REDIRECT_PREFIX}${target}`)
-    }
+    const chapters = await this.getChapters(url)
+    const chapter = chapters.data.chapters[0]
+    if (!chapter) return new Error('No chapter found')
 
-    const data = new BaseData(url)
-    data.chapter = doc.querySelectorAll('.chapter-list a')[0]
+    const data = new MangakakalotData(chapter, url)
     data.image = doc.querySelectorAll('.manga-info-pic img')[0]
     data.title = doc.querySelectorAll('.manga-info-text h1')[0]
-    const spanElements = doc.querySelectorAll('.chapter-list .row')[0]?.querySelectorAll('span')
-    data.chapterDate = spanElements?.item(spanElements.length - 1)
 
     return this.buildManga(data)
   }
 
-  protected async searchImpl (query: string): Promise<Error | Manga[]> {
+  private async getChapters(url: string): Promise<ChaptersResponse> {
+    const queryString = qs.stringify({
+      limit: '1',
+      offset: '0',
+    })
+
+    const request: HttpRequest = {
+      method: 'GET',
+      url: `${url.replace('/manga/', '/api/manga/')}/chapters?${queryString}`,
+      headers: {
+        referer: `${this.getUrl()}/`,
+      },
+    }
+
+    const response = await requestHandler.sendRequest(request)
+    return JSON.parse(response.data) as ChaptersResponse
+  }
+
+  protected async searchImpl(query: string): Promise<Error | Manga[]> {
     const request: HttpRequest = {
       method: 'GET',
       url: `${this.getUrl()}/search/story/${this.changeAlias(query)}`,
       headers: {
-        referer: `${this.getUrl()}/`
+        referer: `${this.getUrl()}/`,
       },
     }
     const response = await requestHandler.sendRequest(request)
@@ -102,31 +174,31 @@ export class Mangakakalot extends BaseSite {
   }
 
   // Taken directly from the site
-  private changeAlias(alias: string) {
-    let str = alias;
-    str = str.toLowerCase();
-    str = str.replace(/Ã |Ã¡|áº¡|áº£|Ã£|Ã¢|áº§|áº¥|áº­|áº©|áº«|Äƒ|áº±|áº¯|áº·|áº³|áºµ/g, 'a');
-    str = str.replace(/Ã¨|Ã©|áº¹|áº»|áº½|Ãª|á»|áº¿|á»‡|á»ƒ|á»…/g, 'e');
-    str = str.replace(/Ã¬|Ã­|á»‹|á»‰|Ä©/g, 'i');
-    str = str.replace(/Ã²|Ã³|á»|á»|Ãµ|Ã´|á»“|á»‘|á»™|á»•|á»—|Æ¡|á»|á»›|á»£|á»Ÿ|á»¡/g, 'o');
-    str = str.replace(/Ã¹|Ãº|á»¥|á»§|Å©|Æ°|á»«|á»©|á»±|á»­|á»¯/g, 'u');
-    str = str.replace(/á»³|Ã½|á»µ|á»·|á»¹/g, 'y');
-    str = str.replace(/Ä‘/g, 'd');
-    str = str.replace(/!|@|%|\^|\*|\(|\)|\+|\=|\<|\>|\?|\/|,|\.|\:|\;|\'| |\"|\&|\#|\[|\]|~|-|$|_/g, '_');
-    str = str.replace(/_+_/g, '_');
-    str = str.replace(/^\_+|\_+$/g, '');
-    return str;
+  private changeAlias(alias: string): string {
+    let str = alias
+    str = str.toLowerCase()
+    str = str.replace(/Ã |Ã¡|áº¡|áº£|Ã£|Ã¢|áº§|áº¥|áº­|áº©|áº«|Äƒ|áº±|áº¯|áº·|áº³|áºµ/g, 'a')
+    str = str.replace(/Ã¨|Ã©|áº¹|áº»|áº½|Ãª|á»|áº¿|á»‡|á»ƒ|á»…/g, 'e')
+    str = str.replace(/Ã¬|Ã­|á»‹|á»‰|Ä©/g, 'i')
+    str = str.replace(/Ã²|Ã³|á»|á»|Ãµ|Ã´|á»“|á»‘|á»™|á»•|á»—|Æ¡|á»|á»›|á»£|á»Ÿ|á»¡/g, 'o')
+    str = str.replace(/Ã¹|Ãº|á»¥|á»§|Å©|Æ°|á»«|á»©|á»±|á»­|á»¯/g, 'u')
+    str = str.replace(/á»³|Ã½|á»µ|á»·|á»¹/g, 'y')
+    str = str.replace(/Ä‘/g, 'd')
+    str = str.replace(/!|@|%|\^|\*|\(|\)|\+|=|<|>|\?|\/|,|\.|:|;|'| |"|&|#|\[|]|~|-|$|_/g, '_')
+    str = str.replace(/_+_/g, '_')
+    str = str.replace(/^_+|_+$/g, '')
+    return str
   }
 
-  getUrl (): string {
+  override getUrl(): string {
     return `https://www.${this.siteType}`
   }
 
-  getLoginUrl (): string {
+  override getLoginUrl(): string {
     return 'https://user.manganelo.com/login?l=mangakakalot'
   }
 
-  getTestUrl (): string {
+  getTestUrl(): string {
     return `${this.getUrl()}/manga/osananajimi-ni-najimitai`
   }
 }

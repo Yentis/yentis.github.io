@@ -7,7 +7,7 @@
       <q-list class="q-mt-md">
         <q-item
           v-for="error in errors"
-          :key="error.message + error.caption"
+          :key="error.message + (error.caption ?? '')"
           class="column"
         >
           <q-item-section class="overflow-auto">
@@ -51,31 +51,42 @@
 </template>
 
 <script lang="ts">
+import type { QDialog } from 'quasar'
 import { useDialogPluginComponent } from 'quasar'
-import { computed } from 'vue'
-import useErrors from 'src/composables/useErrors'
-import useMobileView from 'src/composables/useMobileView'
+import type { Ref } from 'vue'
+import type { NotifyOptions } from 'src/classes/notifyOptions'
+import { stateManager } from 'src/store/store-reader'
+import { map } from 'rxjs'
+import { useObservable } from '@vueuse/rxjs'
 
 export default {
   emits: [...useDialogPluginComponent.emits],
 
-  setup () {
+  setup(): {
+    errors: Ref<NotifyOptions[]>
+    mobileView: Ref<boolean, boolean>
+    itemSize: Ref<'sm' | 'md'>
+    dialogRef: Ref<QDialog | undefined>
+    onDialogHide: () => void
+    onOKClick: (payload?: unknown) => void
+  } {
     const { dialogRef, onDialogHide, onDialogOK } = useDialogPluginComponent()
-    const { errors } = useErrors()
-    const { mobileView } = useMobileView()
+    const { mobileView$, errors$ } = stateManager
 
-    const itemSize = computed(() => {
-      return mobileView.value ? 'sm' : 'md'
-    })
+    const itemSize$ = mobileView$.pipe(
+      map((mobileView) => {
+        return mobileView ? 'sm' : 'md'
+      }),
+    )
 
     return {
-      errors,
-      mobileView,
-      itemSize,
+      errors: useObservable(errors$),
+      mobileView: useObservable(mobileView$),
+      itemSize: useObservable(itemSize$),
       dialogRef,
       onDialogHide,
-      onOKClick: onDialogOK
+      onOKClick: onDialogOK,
     }
-  }
+  },
 }
 </script>

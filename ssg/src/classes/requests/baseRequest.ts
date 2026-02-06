@@ -1,5 +1,5 @@
-import HttpRequest from 'src/interfaces/httpRequest'
-import HttpResponse from 'src/interfaces/httpResponse'
+import type { HttpRequest } from 'src/interfaces/httpRequest'
+import type HttpResponse from 'src/interfaces/httpResponse'
 
 export const HEADER_USER_AGENT = 'User-Agent'
 
@@ -10,7 +10,7 @@ export function getCookies(data: HttpResponse | string): Record<string, string |
   if (typeof data === 'string') {
     cookieData = data
   } else {
-    const key = Object.keys(data.headers).find((key) => key.toLowerCase() === 'set-cookie')
+    const key = Object.keys(data.headers).find((curKey) => curKey.toLowerCase() === 'set-cookie')
     cookieData = (key ? data.headers[key] : '') ?? ''
   }
 
@@ -33,10 +33,8 @@ export function getCookies(data: HttpResponse | string): Record<string, string |
 }
 
 export default abstract class BaseRequest {
-  abstract sendRequest(request: HttpRequest, ignoreErrorStatus?: boolean): Promise<HttpResponse>
-
   protected convertToUrlEncoded(data?: string): string {
-    const parsedData = JSON.parse(data || '{}') as Record<string, string>
+    const parsedData = JSON.parse(data ?? '{}') as Record<string, string>
 
     return Object.entries(parsedData)
       .map(([key, value]) => {
@@ -44,4 +42,6 @@ export default abstract class BaseRequest {
       })
       .join('&')
   }
+
+  abstract sendRequest(request: HttpRequest, ignoreErrorStatus?: boolean): Promise<HttpResponse>
 }

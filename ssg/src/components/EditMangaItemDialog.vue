@@ -14,32 +14,39 @@
 </template>
 
 <script lang="ts">
+import type { QDialog } from 'quasar'
 import { useDialogPluginComponent } from 'quasar'
 import MangaItem from '../components/manga-item/MangaItem.vue'
+import type { Ref } from 'vue'
 
 export default {
   components: {
-    MangaItem
+    MangaItem,
   },
 
   props: {
     url: {
       type: String,
-      required: true
-    }
+      required: true,
+    },
   },
 
   emits: [...useDialogPluginComponent.emits],
 
-  setup () {
+  setup(): {
+    dialogRef: Ref<QDialog | undefined>
+    onDialogHide: () => void
+    onOKClick: (payload?: unknown) => void
+    onCancelClick: () => void
+  } {
     const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } = useDialogPluginComponent()
 
     return {
       dialogRef,
       onDialogHide,
       onOKClick: onDialogOK,
-      onCancelClick: onDialogCancel
+      onCancelClick: onDialogCancel,
     }
-  }
+  },
 }
 </script>

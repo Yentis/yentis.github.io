@@ -1,8 +1,9 @@
-import { BaseData, BaseSite } from './baseSite'
+import type { BaseData } from './baseSite'
+import { BaseSite } from './baseSite'
 import { SiteType } from 'src/enums/siteEnum'
 import moment from 'moment'
 import { Manga } from 'src/classes/manga'
-import HttpRequest from 'src/interfaces/httpRequest'
+import type { HttpRequest } from 'src/interfaces/httpRequest'
 import { requestHandler } from 'src/services/requestService'
 import qs from 'qs'
 import { parseHtmlFromString, titleContainsQuery } from 'src/utils/siteUtils'
@@ -19,7 +20,7 @@ import {
 interface WebtoonsSearch {
   result: {
     searchedList: {
-      title: string,
+      title: string
       titleNo: number
     }[]
   }
@@ -28,15 +29,15 @@ interface WebtoonsSearch {
 export class Webtoons extends BaseSite {
   siteType = SiteType.Webtoons
 
-  protected getChapter (data: BaseData): string {
+  protected override getChapter(data: BaseData): string {
     return getRssChapter(data)
   }
 
-  protected getChapterUrl (data: BaseData): string {
+  protected override getChapterUrl(data: BaseData): string {
     return getRssChapterUrl(data)
   }
 
-  protected getChapterNum (data: BaseData): number {
+  protected override getChapterNum(data: BaseData): number {
     const chapterLink = data.chapter?.querySelectorAll('link')[0]
     const chapterUrl = chapterLink?.textContent
     if (!chapterUrl) return 0
@@ -54,27 +55,27 @@ export class Webtoons extends BaseSite {
     return episode
   }
 
-  protected getChapterDate (data: BaseData): string {
+  protected override getChapterDate(data: BaseData): string {
     return getRssChapterDate(data)
   }
 
-  protected getImage (data: BaseData): string {
+  protected override getImage(data: BaseData): string {
     return getRssImage(data)
   }
 
-  protected getTitle (data: BaseData): string {
+  protected override getTitle(data: BaseData): string {
     return getRssTitle(data)
   }
 
-  protected async readUrlImpl (url: string): Promise<Error | Manga> {
+  protected async readUrlImpl(url: string): Promise<Error | Manga> {
     let baseUrl: string
     if (url.includes('episodeList?')) {
       const baseRequest: HttpRequest = {
         method: 'GET',
         url,
         headers: {
-          cookie: `pagGDPR=true;timezoneOffset=${(moment().utcOffset() / 60).toString()}`
-        }
+          cookie: `pagGDPR=true;timezoneOffset=${(moment().utcOffset() / 60).toString()}`,
+        },
       }
 
       const baseResponse = await requestHandler.sendRequest(baseRequest)
@@ -98,14 +99,14 @@ export class Webtoons extends BaseSite {
     const request: HttpRequest = {
       method: 'GET',
       url: rssUrl,
-      headers
+      headers,
     }
 
     const data = await getRssData({ url, request })
     return this.buildManga(data)
   }
 
-  protected async searchImpl (query: string): Promise<Error | Manga[]> {
+  protected async searchImpl(query: string): Promise<Error | Manga[]> {
     const queryString = qs.stringify({ keyword: query })
     const request: HttpRequest = { method: 'GET', url: `${this.getUrl()}/en/search/immediate?${queryString}` }
     const response = await requestHandler.sendRequest(request)
@@ -121,18 +122,18 @@ export class Webtoons extends BaseSite {
     })
 
     const mangaList = await Promise.all(promises)
-    return mangaList.filter(manga => manga instanceof Manga) as Manga[]
+    return mangaList.filter((manga) => manga instanceof Manga)
   }
 
-  getUrl (): string {
+  override getUrl(): string {
     return `https://www.${this.siteType}`
   }
 
-  getLoginUrl (): string {
+  override getLoginUrl(): string {
     return this.getUrl()
   }
 
-  getTestUrl (): string {
+  getTestUrl(): string {
     return `${this.getUrl()}/en/comedy/wolf-and-red-riding-hood/list?title_no=2142`
   }
 }

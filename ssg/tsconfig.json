@@ -1,15 +1,6 @@
 {
-  "extends": "@quasar/app-webpack/tsconfig-preset",
+  "extends": "./.quasar/tsconfig.json",
   "compilerOptions": {
-    "baseUrl": ".",
-    "module": "commonjs",
-    "typeRoots": ["node_modules/@types", "./typings"],
-    "esModuleInterop": true,
-    "types": ["quasar"],
-    "noUncheckedIndexedAccess": true
-  },
-  "exclude": ["node_modules", ".quasar", "dist", "public", "src-cordova"],
-  "ts-node": {
-    "files": true
+    "exactOptionalPropertyTypes": false
   }
 }
