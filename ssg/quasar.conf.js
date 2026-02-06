@@ -1,20 +1,30 @@
+/*
+ * This file runs in a Node context (it's NOT transpiled by Babel), so use only
+ * the ES6 features that are supported by your Node version. https://node.green/
+ */
+
 // Configuration for your app
-// https://v2.quasar.dev/quasar-cli-webpack/quasar-config-file
+// https://quasar.dev/quasar-cli/quasar-conf-js
+/* eslint-env node */
+/* eslint-disable @typescript-eslint/no-var-requires */
+const { configure } = require('quasar/wrappers')
+const NodePolyfillPlugin = require('node-polyfill-webpack-plugin')
+const ESLintPlugin = require('eslint-webpack-plugin')
 
-import { defineConfig } from '#q-app/wrappers'
-import nodePolyfillWebpackPlugin from 'node-polyfill-webpack-plugin'
-
-export default defineConfig((_ctx) => {
+module.exports = configure(function (ctx) {
   return {
-    eslint: {
-      // fix: true,
-      // include: [],
-      // exclude: [],
-      // cache: false,
-      // rawEsbuildEslintOptions: {},
-      // rawWebpackEslintPluginOptions: {},
-      warnings: true,
-      errors: true,
+    // https://quasar.dev/quasar-cli/supporting-ts
+    supportTS: {
+      tsCheckerConfig: {
+        eslint: {
+          enabled: true,
+          files: './src/**/*.{ts,tsx,js,jsx,vue}',
+          memoryLimit: 8192,
+        },
+        typescript: {
+          memoryLimit: 8192,
+        },
+      },
     },
 
     // https://quasar.dev/quasar-cli/prefetch-feature
@@ -29,18 +39,23 @@ export default defineConfig((_ctx) => {
     css: [],
 
     // https://github.com/quasarframework/quasar/tree/dev/extras
-    extras: ['roboto-font', 'material-icons'],
+    extras: [
+      // 'ionicons-v4',
+      // 'mdi-v5',
+      // 'fontawesome-v5',
+      // 'eva-icons',
+      // 'themify',
+      // 'line-awesome',
+      // 'roboto-font-latin-ext', // this or either 'roboto-font', NEVER both!
+
+      'roboto-font', // optional, you are not bound to it
+      'material-icons', // optional, you are not bound to it
+    ],
 
     // Full list of options: https://quasar.dev/quasar-cli/quasar-conf-js#Property%3A-build
     build: {
-      vueRouterMode: 'hash', // available values: 'hash', 'history'
-      typescript: {
-        strict: true,
-        vueShim: true,
-      },
-      chainWebpack(chain): void {
-        chain.plugin('node-polyfill').use(nodePolyfillWebpackPlugin)
-      },
+      vueRouterMode: 'history', // available values: 'hash', 'history'
+      env: require('dotenv').config().parsed,
 
       // transpile: false,
 
@@ -57,6 +72,18 @@ export default defineConfig((_ctx) => {
 
       // Options below are automatically set depending on the env, set them if you want to override
       // extractCSS: false,
+
+      // https://quasar.dev/quasar-cli/handling-webpack
+      extendWebpack(cfg) {
+        // linting is slow in TS projects, we execute it only for production builds
+        if (ctx.prod) {
+          cfg.plugins.push(new ESLintPlugin())
+        }
+        cfg.plugins.push(new NodePolyfillPlugin())
+      },
+      chainWebpack(chain) {
+        chain.plugin('eslint-webpack-plugin').use(ESLintPlugin, [{ extensions: ['js', 'vue'] }])
+      },
     },
 
     // Full list of options: https://quasar.dev/quasar-cli/quasar-conf-js#Property%3A-devServer
@@ -94,7 +121,7 @@ export default defineConfig((_ctx) => {
 
     // https://quasar.dev/quasar-cli/developing-pwa/configuring-pwa
     pwa: {
-      workboxMode: 'GenerateSW', // 'GenerateSW' or 'InjectManifest'
+      workboxPluginMode: 'GenerateSW', // 'GenerateSW' or 'InjectManifest'
       workboxOptions: {}, // only for GenerateSW
       manifest: {
         name: 'yentis.github.io',
@@ -168,8 +195,9 @@ export default defineConfig((_ctx) => {
       // More info: https://quasar.dev/quasar-cli/developing-electron-apps/node-integration
       nodeIntegration: true,
     },
+
     ssg: {
       routes: ['/emotes', '/mangalist', '/mangareader', '/mangareader/redirect', '/mudae', '/p5sfusion'],
-    }
+    },
   }
 })
