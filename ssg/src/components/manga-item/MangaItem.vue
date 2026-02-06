@@ -117,7 +117,7 @@
 
             <q-rating
               v-if="manga.rating"
-              v-model="newRating"
+              v-model="manga.rating"
               readonly
               size="1em"
               class="q-mt-sm"
