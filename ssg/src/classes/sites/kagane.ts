@@ -30,6 +30,7 @@ interface KaganeSearch {
   content: {
     id: string
     name: string
+    source: string
     books_count: number
     alternate_titles: {
       title: string
@@ -130,7 +131,7 @@ export class Kagane extends BaseSite {
       const url = `${this.getUrl()}/series/${entry.id}`
       const manga = new Manga(url, this.siteType)
 
-      manga.title = entry.name
+      manga.title = `${entry.name} (${entry.source})`
       manga.chapter = entry.books_count.toString()
       manga.image = this.getImageBySeries(entry.id)
 
