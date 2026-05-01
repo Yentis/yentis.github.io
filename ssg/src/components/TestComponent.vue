@@ -56,7 +56,6 @@ import { defineAsyncComponent, defineComponent, ref } from 'vue'
 import testAll from '../services/testService'
 import { SiteType } from '../enums/siteEnum'
 import { testAsuraScans } from '../services/test/asurascans'
-import { testLikeManga } from '../services/test/likemanga'
 import { testHiperDEX } from '../services/test/hiperdex'
 import { testMangaDex } from '../services/test/mangadex'
 import { testMangago } from '../services/test/mangago'
@@ -150,9 +149,6 @@ export default defineComponent({
           break
         case SiteType.Cubari:
           await doTest(testCubari)
-          break
-        case SiteType.LikeManga:
-          await doTest(testLikeManga)
           break
         case SiteType.FlameComics:
           await doTest(testFlameComics)

@@ -6,14 +6,9 @@ import type ChromeWindow from 'src/interfaces/chromeWindow'
 type DOMParserSupportedType = 'text/html' | 'text/xml'
 
 export const siteAliases = [
-  { url: '1stkissmanga.love', site: SiteType.LikeManga },
-  { url: '1stkissmanga.com', site: SiteType.LikeManga },
-  { url: '1stkissmanga.io', site: SiteType.LikeManga },
-  { url: '1stkissmanga.me', site: SiteType.LikeManga },
-  { url: 'likemanga.io', site: SiteType.LikeManga },
   { url: Guya, site: SiteType.Cubari },
   { url: 'www.asurascans.com', site: SiteType.AsuraScans },
-  { url: 'asurascans.com', site: SiteType.AsuraScans },
+  { url: 'asuracomic.net', site: SiteType.AsuraScans },
   { url: 'asura.gg', site: SiteType.AsuraScans },
   { url: 'asuratoon.com', site: SiteType.AsuraScans },
   { url: 'asura.nacm.xyz', site: SiteType.AsuraScans },

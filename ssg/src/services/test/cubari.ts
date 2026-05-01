@@ -19,7 +19,7 @@ export async function testCubari(): Promise<void> {
 async function readUrl(site: BaseSite): Promise<void> {
   const manga = await getMangaInfo(site.getTestUrl(), SITE_TYPE)
   const desired = new Manga(site.getTestUrl(), SITE_TYPE)
-  const chapter = 222
+  const chapter = 228
 
   desired.image = 'https://services.f-ck.me/v1/image/aHR0cHM6Ly9maWxlcy5jYXRib3gubW9lLzM1dXE1NS5wbmc='
   desired.title = 'One Punch Man'

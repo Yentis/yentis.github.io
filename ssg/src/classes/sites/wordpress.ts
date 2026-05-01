@@ -16,13 +16,13 @@ class WordPressData extends BaseData {
 }
 
 export class WordPress extends BaseSite {
-  siteType: SiteType.LikeManga | SiteType.HiperDEX | SiteType.ResetScans
+  siteType: SiteType.HiperDEX | SiteType.ResetScans
   userAgent: string
 
-  constructor(siteType: SiteType.LikeManga | SiteType.HiperDEX | SiteType.ResetScans) {
+  constructor(siteType: SiteType.HiperDEX | SiteType.ResetScans) {
     super()
     this.siteType = siteType
-    this.userAgent = siteType === SiteType.LikeManga ? 'Lorem Ipsum' : navigator.userAgent
+    this.userAgent = navigator.userAgent
 
     if (siteType === SiteType.HiperDEX) {
       this.requestQueue = new PQueue({ interval: 1000, intervalCap: 1 })
@@ -74,8 +74,6 @@ export class WordPress extends BaseSite {
 
     if (this.siteType === SiteType.HiperDEX) {
       chapterDate = moment(chapterDateText, 'DD/MM/YYYY')
-    } else if (this.siteType === SiteType.LikeManga) {
-      chapterDate = moment(chapterDateText, 'DD MMMM, YYYY')
     } else {
       let format
       if (chapterDateText?.includes('/')) {
@@ -113,33 +111,6 @@ export class WordPress extends BaseSite {
     return this.getImageSrc(data.image)
   }
 
-  public override async readImage(url: string): Promise<string> {
-    if (this.siteType !== SiteType.LikeManga) return url
-
-    const request: HttpRequest = {
-      method: 'GET',
-      url,
-      headers: {
-        referer: `${this.getUrl()}/`,
-        responseType: 'arraybuffer',
-      },
-    }
-
-    const response = await requestHandler.sendRequest(request)
-    return `data:image/png;base64,${response.data}`
-  }
-
-  protected override getTitle(data: BaseData): string {
-    let title = data.title?.getAttribute('content') ?? ''
-    if (this.siteType === SiteType.LikeManga) {
-      title = title.replace('LIKE MANGA', '').trim()
-    } else if (this.siteType === SiteType.HiperDEX) {
-      title = title.replace('» Hiperdex', '').replace(' Manhwa Free Chapters | HiperDEX', '').trim()
-    }
-
-    return title
-  }
-
   protected async readUrlImpl(url: string): Promise<Error | Manga> {
     const request: HttpRequest = { method: 'GET', url }
     this.trySetUserAgent(request, this.userAgent)
@@ -172,8 +143,7 @@ export class WordPress extends BaseSite {
       data.image = doc.querySelectorAll('meta[property="og:image"]')[0]
     }
 
-    const metaTitles = doc.querySelectorAll('meta[property="og:title"]')
-    data.title = metaTitles.length > 0 ? metaTitles[metaTitles.length - 1] : undefined
+    data.title = doc.querySelectorAll('.post-title h1')[0]
 
     return this.buildManga(data)
   }
@@ -334,8 +304,6 @@ export class WordPress extends BaseSite {
 
   getTestUrl(): string {
     switch (this.siteType) {
-      case SiteType.LikeManga:
-        return `${this.getUrl()}/manga/the-elegant-sea-of-savagery/`
       case SiteType.HiperDEX:
         return `${this.getUrl()}/manga/10-years-in-the-friend-zone/`
       case SiteType.ResetScans:

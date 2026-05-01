@@ -27,7 +27,6 @@ const globalRequestQueue = new PQueue({
 const mangaDex = new MangaDex()
 const siteMap = new Map<string, BaseSite>([
   [SiteType.Webtoons, new Webtoons()],
-  [SiteType.LikeManga, new WordPress(SiteType.LikeManga)],
   [SiteType.Mangakakalot, new Mangakakalot()],
   [SiteType.MangaDex, mangaDex],
   [SiteType.HiperDEX, new WordPress(SiteType.HiperDEX)],

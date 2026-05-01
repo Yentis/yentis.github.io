@@ -5,12 +5,47 @@ import moment from 'moment'
 import { Manga } from 'src/classes/manga'
 import type { HttpRequest } from 'src/interfaces/httpRequest'
 import { requestHandler } from 'src/services/requestService'
-import { ContentType } from 'src/enums/contentTypeEnum'
-import { parseHtmlFromString, parseNum, titleContainsQuery } from 'src/utils/siteUtils'
+import { parseHtmlFromString, titleContainsQuery } from 'src/utils/siteUtils'
 import qs from 'qs'
 
+interface AsuraProps {
+  title: [number, string]
+  coverUrl: [number, string]
+}
+
+interface AsuraChapterProps {
+  chapters: [number, [number, AsuraChapter][]]
+  publicUrl: [number, string]
+}
+
+interface AsuraChapter {
+  created_at: [number, string]
+  is_premium: [number, boolean]
+  is_locked: [number, boolean]
+  number: [number, number]
+}
+
+interface AsuraSearch {
+  data: {
+    title: string
+    alt_titles: string[]
+    cover: string
+    latest_chapters: {
+      number: number
+    }[]
+    source_url: string
+  }[]
+}
+
 class AsuraData extends BaseData {
-  chapterList?: Element
+  props: AsuraProps
+  chapterProps: AsuraChapterProps
+
+  constructor(url: string, props: AsuraProps, chapterProps: AsuraChapterProps) {
+    super(url)
+    this.props = props
+    this.chapterProps = chapterProps
+  }
 }
 
 export class AsuraScans extends BaseSite {
@@ -23,26 +58,40 @@ export class AsuraScans extends BaseSite {
     this.requestQueue = new PQueue({ interval: 2000, intervalCap: 1 })
   }
 
-  protected override getChapterNum(data: AsuraData): number {
-    const chapterNum = parseNum(data.chapterNum?.textContent?.trim().split(' ')[1])
-    if (chapterNum !== 0) return chapterNum
+  private getAsuraChapter(data: AsuraData): AsuraChapter | undefined {
+    const [, chapters] = data.chapterProps.chapters
 
-    const chapters = data.chapterList?.querySelectorAll('div h3:nth-child(1)')
-    if (!chapters) return 0
-
-    // Derive current chapter number based on last valid chapter number
-    for (const [index, chapter] of chapters.entries()) {
-      const curChapterNum = parseNum(chapter.textContent?.trim().split(' ')[1])
-      if (curChapterNum === 0) continue
-
-      return curChapterNum + index
-    }
-
-    return 0
+    const chapterArray = chapters[0]
+    if (!chapterArray) return undefined
+    return chapterArray[1]
   }
 
-  protected override getChapterDate(data: BaseData): string {
-    const chapterDate = moment(data.chapterDate?.textContent, 'MMMM DD YYYY')
+  protected override getChapter(data: AsuraData): string {
+    const chapterNum = this.getChapterNum(data)
+    return `Chapter ${chapterNum}`
+  }
+
+  protected override getChapterUrl(data: AsuraData): string {
+    const [, comicUrl] = data.chapterProps.publicUrl
+    const chapterNum = this.getChapterNum(data)
+    return `${this.getUrl()}${comicUrl}/chapter/${chapterNum}`
+  }
+
+  protected override getChapterNum(data: AsuraData): number {
+    const chapter = this.getAsuraChapter(data)
+    if (!chapter) return 0
+
+    const [, chapterNum] = chapter.number
+    return chapterNum
+  }
+
+  protected override getChapterDate(data: AsuraData): string {
+    const chapter = this.getAsuraChapter(data)
+    if (!chapter) return ''
+
+    const [, chapterDateString] = chapter.created_at
+    const chapterDate = moment(chapterDateString)
+
     if (chapterDate.isValid()) {
       return chapterDate.fromNow()
     } else {
@@ -50,12 +99,14 @@ export class AsuraScans extends BaseSite {
     }
   }
 
-  protected override getChapterUrl(data: BaseData): string {
-    return `${this.getUrl()}/series/${super.getChapterUrl(data)}`
+  protected override getImage(data: AsuraData): string {
+    const [, image] = data.props.coverUrl
+    return image
   }
 
-  protected override getImage(data: BaseData): string {
-    return data.image?.getAttribute('content') ?? data.image?.getAttribute('src') ?? ''
+  protected override getTitle(data: AsuraData): string {
+    const [, title] = data.props.title
+    return title
   }
 
   protected async readUrlImpl(url: string): Promise<Error | Manga> {
@@ -63,17 +114,25 @@ export class AsuraScans extends BaseSite {
     const response = await requestHandler.sendRequest(request)
 
     const doc = await parseHtmlFromString(response.data)
-    const chapterList = doc.querySelectorAll('.scrollbar-thumb-themecolor')[0]
-    const chapterItem = chapterList?.querySelectorAll('div')[0]
-    const chapter = chapterItem?.querySelectorAll('a')[0]
+    const astroIslands = Array.from(doc.querySelectorAll('astro-island'))
 
-    const data = new AsuraData(url)
-    data.chapter = chapter?.querySelectorAll('h3')[0]
-    data.chapterUrl = chapter
-    data.chapterNum = chapter?.querySelectorAll('h3')[0]
-    data.chapterDate = chapterItem?.querySelectorAll('h3')[1]
-    data.chapterList = chapterList
-    data.title = doc.querySelectorAll('.text-xl')[0]
+    const propsString = astroIslands
+      .find((element) => {
+        return element.getAttribute('component-url')?.includes('Description')
+      })
+      ?.getAttribute('props')
+    if (!propsString) return new Error('No props found')
+
+    const chapterPropsString = astroIslands
+      .find((element) => {
+        return element.getAttribute('component-url')?.includes('ChapterList')
+      })
+      ?.getAttribute('props')
+    if (!chapterPropsString) return new Error('No chapter props found')
+
+    const props = JSON.parse(propsString)
+    const chapterProps = JSON.parse(chapterPropsString) as AsuraChapterProps
+    const data = new AsuraData(url, props, chapterProps)
 
     const imageElements = doc.querySelectorAll('meta[property="og:image"]')
     let image: Element | undefined
@@ -86,36 +145,28 @@ export class AsuraScans extends BaseSite {
   }
 
   protected async searchImpl(query: string): Promise<Error | Manga[]> {
-    const queryString = qs.stringify({ name: query.replace(/’/g, "'") })
+    const queryString = qs.stringify({ q: query.replace(/’/g, "'") })
     const request: HttpRequest = {
       method: 'GET',
-      url: `${this.getUrl()}/series?${queryString}`,
-      headers: { 'Content-Type': `${ContentType.URLENCODED}; charset=UTF-8` },
+      url: `https://api.asurascans.com/api/search?${queryString}`,
+      headers: { 'Content-Type': 'application/json' },
     }
 
     const response = await requestHandler.sendRequest(request)
-    const doc = await parseHtmlFromString(response.data)
+    const searchData = JSON.parse(response.data) as AsuraSearch
     const mangaList: Manga[] = []
 
-    doc.querySelectorAll('.grid-cols-2 a').forEach((elem) => {
-      const url = `${this.getUrl()}/${elem.getAttribute('href') ?? ''}`
+    searchData.data.forEach((entry) => {
+      const url = `${this.getUrl()}${entry.source_url}`
+      const manga = new Manga(url, this.siteType)
+      manga.title = entry.title
+      manga.image = entry.cover
 
-      const manga = new Manga('', this.siteType)
-      const titleElem = elem.querySelectorAll('.font-bold')[1]
-      manga.title = titleElem?.textContent?.trim() ?? ''
+      const chapterNum = entry.latest_chapters[0]?.number
+      manga.chapter = chapterNum !== undefined ? `Chapter ${chapterNum}` : 'Unknown'
 
-      const image = elem.querySelectorAll('img')[0]
-      manga.image = image?.getAttribute('src') ?? ''
-
-      manga.chapter = titleElem?.nextElementSibling?.textContent?.trim() ?? 'Unknown'
-      manga.url = url ?? ''
-
-      const modifiedTitle = manga.title
-        .split(' ')
-        .filter((word) => !word.endsWith('...'))
-        .join(' ')
-
-      if (titleContainsQuery(modifiedTitle, query)) {
+      const titles = [entry.title, ...entry.alt_titles]
+      if (titles.some((title) => titleContainsQuery(title, query))) {
         mangaList.push(manga)
       }
     })
@@ -124,6 +175,6 @@ export class AsuraScans extends BaseSite {
   }
 
   getTestUrl(): string {
-    return `${this.getUrl()}/series/mookhyang-the-origin-105d9ca4`
+    return `${this.getUrl()}/s/1993`
   }
 }

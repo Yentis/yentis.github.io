@@ -13,6 +13,7 @@ export async function testKagane(): Promise<void> {
   if (!site) throw Error('Site not found')
 
   await readUrl(site)
+  await readUrlAlt()
   await search(site)
 }
 
@@ -26,6 +27,22 @@ async function readUrl(site: BaseSite): Promise<void> {
     'https://kagane.org/series/019c29bc-0812-7957-a697-94a6f70f09d6/reader/019c29e1-91b3-7174-b5ad-42e54ac5f310'
   desired.chapterNum = 120
   desired.chapterDate = moment('2025-08-02', 'YYYY-MM-DD').fromNow()
+
+  mangaEqual(manga, desired)
+}
+
+async function readUrlAlt(): Promise<void> {
+  const url = 'https://kagane.org/series/019c2a33-d3b2-777b-871b-a093e2cf7701'
+  const manga = await getMangaInfo(url, SITE_TYPE)
+  const desired = new Manga(url, SITE_TYPE)
+
+  desired.chapter = 'Chapter 66'
+  desired.image = 'https://yuzuki.kagane.org/api/v2/image/019c2a33-d384-76ce-9c63-66887baf4394/compressed'
+  desired.title = 'All My Neighbors are Convinced the Female Knight from My Rice Field Is My Wife'
+  desired.chapterUrl =
+    'https://kagane.org/series/019c2a33-d3b2-777b-871b-a093e2cf7701/reader/019cd22a-ce9b-7401-ba65-ecf2cf73254c'
+  desired.chapterNum = 66
+  desired.chapterDate = moment('2026-03-09', 'YYYY-MM-DD').fromNow()
 
   mangaEqual(manga, desired)
 }

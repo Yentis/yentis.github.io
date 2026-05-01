@@ -22,26 +22,26 @@ async function readUrl(site: BaseSite): Promise<void> {
   const desired = new Manga(site.getTestUrl(), SITE_TYPE)
 
   desired.chapter = 'Chapter 47'
-  desired.image = 'https://gg.asuracomic.net/storage/media/114/conversions/367e3d17-optimized.webp'
+  desired.image = 'https://cdn.asurascans.com/asura-images/covers/mookhyang-the-origin.1f831b.webp'
   desired.title = 'Mookhyang The Origin'
-  desired.chapterUrl = 'https://asuracomic.net/series/mookhyang-the-origin-1b29b452/chapter/47'
+  desired.chapterUrl = 'https://asurascans.com/comics/mookhyang-the-origin-0984835a/chapter/47'
   desired.chapterNum = 47
-  desired.chapterDate = moment('August 15th 2021', 'MMMM Do YYYY').fromNow()
+  desired.chapterDate = moment('2021-08-15T21:19:26Z').fromNow()
 
   mangaEqual(manga, desired)
 }
 
 async function readUrlAdvanced(site: BaseSite): Promise<void> {
-  const testUrl = `${site.getUrl()}/series/solo-bug-player-e800d15b`
+  const testUrl = `${site.getUrl()}/s/2038`
   const manga = await getMangaInfo(testUrl, SITE_TYPE)
   const desired = new Manga(testUrl, SITE_TYPE)
 
   desired.chapter = 'Chapter 88'
-  desired.image = 'https://gg.asuracomic.net/storage/media/245/01J3BAR5EFJJSB84FC5GDZYSW7.webp'
+  desired.image = 'https://cdn.asurascans.com/asura-images/covers/solo-bug-player.e28bc2.webp'
   desired.title = 'Solo Bug Player'
-  desired.chapterUrl = 'https://asuracomic.net/series/solo-bug-player-931c81e0/chapter/88'
+  desired.chapterUrl = 'https://asurascans.com/comics/solo-bug-player-0984835a/chapter/88'
   desired.chapterNum = 88
-  desired.chapterDate = moment('April 17th 2022', 'MMMM Do YYYY').fromNow()
+  desired.chapterDate = moment('2022-04-17T18:05:45Z').fromNow()
 
   mangaEqual(manga, desired)
 }
@@ -49,9 +49,9 @@ async function readUrlAdvanced(site: BaseSite): Promise<void> {
 async function search(site: BaseSite): Promise<void> {
   const results = await searchManga(QUERY, SITE_TYPE)
   const desired = new Manga(site.getTestUrl(), SITE_TYPE)
-  desired.image = 'https://gg.asuracomic.net/storage/media/114/conversions/367e3d17-thumb-small.webp'
+  desired.image = 'https://cdn.asurascans.com/asura-images/covers/mookhyang-the-origin.1f831b.webp'
   desired.chapter = 'Chapter 47'
-  desired.url = 'https://asuracomic.net/series/mookhyang-the-origin-1b29b452'
+  desired.url = 'https://asurascans.com/s/1993'
 
   return searchValid(results, desired, QUERY)
 }

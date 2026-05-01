@@ -9,8 +9,8 @@ interface Runtime {
   sendMessage: (
     extensionId: string,
     message: HttpRequest | string,
-    responseCallback: (response?: HttpResponse | Error | string) => void,
-  ) => void
+    options?: { includeTlsChannelId?: boolean },
+  ) => Promise<HttpResponse | Error | string | undefined>
   lastError?: { message: string }
 }
 
@@ -34,16 +34,8 @@ export async function hasExtension(): Promise<boolean> {
   const runtime = getRuntime()
   if (!runtime) return false
 
-  return new Promise((resolve) => {
-    runtime.sendMessage(EXTENSION_ID, 'ping', (response) => {
-      if (runtime.lastError) {
-        resolve(false)
-        return
-      }
-
-      resolve(response === '1.5.1')
-    })
-  })
+  const response = await runtime.sendMessage(EXTENSION_ID, 'ping')
+  return response === '1.5.2'
 }
 
 export default class BrowserRequest extends BaseRequest {
@@ -59,39 +51,24 @@ export default class BrowserRequest extends BaseRequest {
     const runtime = getRuntime()
     if (!runtime) return this.doFallbackRequest(request, ignoreErrorStatus)
 
-    const result = await new Promise<HttpResponse | undefined>((resolve, reject) => {
-      runtime.sendMessage(EXTENSION_ID, request, (response) => {
-        if (runtime.lastError) {
-          console.error(Error(`Could not send extension message: ${runtime.lastError.message}`))
-          resolve(undefined)
-          return
-        }
+    const response = await runtime.sendMessage(EXTENSION_ID, request)
+    if (runtime.lastError) {
+      console.error(new Error(`Could not send extension message: ${runtime.lastError.message}`))
+      return this.doFallbackRequest(request, ignoreErrorStatus)
+    }
 
-        if (response instanceof Error) {
-          reject(response)
-          return
-        }
+    if (response instanceof Error) throw response
+    if (typeof response === 'string') throw new Error(`Invalid response received: ${response}`)
 
-        if (typeof response === 'string') {
-          reject(Error(`Invalid response received: ${response}`))
-          return
-        }
+    if (response === undefined) {
+      return this.doFallbackRequest(request, ignoreErrorStatus)
+    }
 
-        if (!response) {
-          resolve(response)
-          return
-        }
+    if (!ignoreErrorStatus && response.status >= 400) {
+      throw new Error(`Status Code ${response.status} ${response.statusText}`.trim())
+    }
 
-        if (!ignoreErrorStatus && response.status >= 400) {
-          reject(Error(`Status Code ${response.status} ${response.statusText}`.trim()))
-          return
-        }
-
-        resolve(response)
-      })
-    })
-
-    return result ?? this.doFallbackRequest(request, ignoreErrorStatus)
+    return response
   }
 
   private async doFallbackRequest(request: HttpRequest, ignoreErrorStatus?: boolean): Promise<HttpResponse> {

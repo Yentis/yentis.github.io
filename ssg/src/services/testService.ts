@@ -4,7 +4,6 @@ import { LinkingSiteType } from 'src/enums/linkingSiteEnum'
 import { SiteType } from 'src/enums/siteEnum'
 import { getMangaInfoByUrl } from './siteService'
 import { testAsuraScans } from './test/asurascans'
-import { testLikeManga } from './test/likemanga'
 import { testFlameComics } from './test/flamecomics'
 import { testHiperDEX } from './test/hiperdex'
 import { testMangaDex } from './test/mangadex'
@@ -46,11 +45,6 @@ export default async function testAll(
   promises.push(
     testCubari().catch((error) => {
       errors.push({ site: SiteType.Cubari, error: error })
-    }),
-  )
-  promises.push(
-    testLikeManga().catch((error) => {
-      errors.push({ site: SiteType.LikeManga, error: error })
     }),
   )
   promises.push(
@@ -156,7 +150,7 @@ export function mangaEqual(actual: Manga | Error, desired: Manga, options?: Equa
   }
 }
 
-export async function searchValid(results: Manga[], desired: Manga, query: string): Promise<void> {
+export async function searchValid(results: Manga[], desired: Manga, query: string = desired.title): Promise<void> {
   const matchingManga = results.filter((manga) => {
     if (manga.site !== desired.site) {
       console.error(`Site did not match: ${manga.site} | ${desired.site}`)

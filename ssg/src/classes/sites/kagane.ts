@@ -13,15 +13,19 @@ interface KaganeManga {
   series_alternate_titles: {
     title: string
   }[]
-  series_books: {
-    book_id: string
-    title: string
-    published_on: string
-    sort_no: number
-  }[]
+  series_books: KaganeChapter[]
   series_covers: {
     image_id: string
   }[]
+}
+
+interface KaganeChapter {
+  book_id: string
+  title: string
+  created_at: string
+  published_on: string
+  chapter_no: string
+  sort_no: number
 }
 
 interface KaganeSearch {
@@ -57,26 +61,37 @@ export class Kagane extends BaseSite {
   siteType = SiteType.Kagane
   private sources: Record<string, KaganeSource> = {}
 
+  private getKaganeChapter(data: KaganeData): KaganeChapter | undefined {
+    return data.manga.series_books[0]
+  }
+
   protected override getChapter(data: KaganeData): string {
-    return data.manga.series_books[0]?.title ?? 'Unknown'
+    const chapter = this.getKaganeChapter(data)
+    if (!chapter) return 'Unknown'
+
+    if (chapter.title.trim() === '') {
+      return `Chapter ${chapter.chapter_no}`
+    }
+
+    return chapter.title
   }
 
   protected override getChapterUrl(data: KaganeData): string {
-    const chapterId = data.manga.series_books[0]?.book_id
+    const chapterId = this.getKaganeChapter(data)?.book_id
     if (!chapterId) return ''
 
     return `${this.getUrl()}/series/${data.manga.series_id}/reader/${chapterId}`
   }
 
   protected override getChapterNum(data: KaganeData): number {
-    return data.manga.series_books[0]?.sort_no ?? 0
+    return this.getKaganeChapter(data)?.sort_no ?? 0
   }
 
   protected override getChapterDate(data: KaganeData): string {
-    const chapter = data.manga.series_books[0]
+    const chapter = this.getKaganeChapter(data)
     if (!chapter) return ''
 
-    const chapterDate = moment(chapter.published_on)
+    const chapterDate = moment(chapter.published_on ?? chapter.created_at)
     if (chapterDate.isValid()) {
       return chapterDate.fromNow()
     } else {

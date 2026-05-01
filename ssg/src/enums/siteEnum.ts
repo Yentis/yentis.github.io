@@ -2,11 +2,10 @@ export const Guya = 'guya.moe'
 
 export enum SiteType {
   Webtoons = 'webtoons.com',
-  LikeManga = 'likemanga.in',
   Mangakakalot = 'mangakakalot.gg',
   MangaDex = 'mangadex.org',
   HiperDEX = 'hiperdex.com',
-  AsuraScans = 'asuracomic.net',
+  AsuraScans = 'asurascans.com',
   Mangago = 'mangago.me',
   FlameComics = 'flamecomics.xyz',
   ResetScans = 'reset-scans.org',
@@ -23,7 +22,7 @@ export enum SiteName {
   'mangakakalot.gg' = 'Mangakakalot',
   'mangadex.org' = 'MangaDex',
   'hiperdex.com' = 'HiperDEX',
-  'asuracomic.net' = 'Asura Scans',
+  'asurascans.com' = 'Asura Scans',
   'mangago.me' = 'Mangago',
   'kitsu.io' = 'Kitsu',
   'flamecomics.xyz' = 'Flame Comics',

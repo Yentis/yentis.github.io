@@ -26,12 +26,12 @@ export async function testTapas(): Promise<void> {
 async function readUrl(site: BaseSite): Promise<void> {
   const manga = await getMangaInfo(site.getTestUrl(), SITE_TYPE)
   const desired = new Manga(site.getTestUrl(), SITE_TYPE)
-  const chapter = 187
+  const chapter = 202
 
   desired.title = 'Villains Are Destined to Die'
   desired.chapter = `${chapter}.`
   desired.chapterNum = chapter + 12
-  desired.chapterDate = moment('Dec 31, 2025', 'MMM DD, YYYY').fromNow()
+  desired.chapterDate = moment('Apr 22, 2026', 'MMM DD, YYYY').fromNow()
 
   mangaEqual(manga, desired, EQUALITY_OPTIONS)
 }
@@ -39,12 +39,12 @@ async function readUrl(site: BaseSite): Promise<void> {
 async function readUrlReverseOrder(): Promise<void> {
   const manga = await getMangaInfo('https://tapas.io/series/mystic-musketeer/info', SITE_TYPE)
   const desired = new Manga('https://tapas.io/series/mystic-musketeer/info', SITE_TYPE)
-  const chapter = 195
+  const chapter = 207
 
   desired.title = 'Mystic Musketeer'
   desired.chapter = `Episode ${chapter}`
   desired.chapterNum = chapter
-  desired.chapterDate = moment('Feb 01, 2026', 'MMM DD, YYYY').fromNow()
+  desired.chapterDate = moment('Apr 26, 2026', 'MMM DD, YYYY').fromNow()
 
   mangaEqual(manga, desired, EQUALITY_OPTIONS)
 }
@@ -53,7 +53,7 @@ async function search(site: BaseSite): Promise<void> {
   const results = await searchManga(QUERY, SITE_TYPE)
   const desired = new Manga(site.getTestUrl(), SITE_TYPE)
   desired.image = 'https://us-a.tapas.io/sa/32/f137786b-242f-4257-aeac-070175da5dd6_z.jpg'
-  desired.chapter = 'Episode 195'
+  desired.chapter = 'Episode 207'
   desired.url = 'https://tapas.io/series/mystic-musketeer/info'
 
   return searchValid(results, desired, QUERY)
