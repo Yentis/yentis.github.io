@@ -29,7 +29,7 @@ export function useAppUrlNavigation(): void {
 
     browser.addEventListener('loadstart', (event) => {
       const queryString = onUrlLoadStart(event.url)
-      if (queryString === null) return
+      if (!queryString) return
 
       browser.close()
       onDropboxRedirect(queryString)

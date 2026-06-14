@@ -21,6 +21,7 @@ export const siteAliases = [
   { url: 'reset-scans.xyz', site: SiteType.ResetScans },
   { url: 'resetscan.com', site: SiteType.ResetScans },
   { url: 'mangakakalot.com', site: SiteType.Mangakakalot },
+  { url: 'kagane.org', site: SiteType.Kagane },
 ]
 
 export function getUrl(url: string): string {

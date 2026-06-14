@@ -35,7 +35,7 @@ export async function hasExtension(): Promise<boolean> {
   if (!runtime) return false
 
   const response = await runtime.sendMessage(EXTENSION_ID, 'ping')
-  return response === '1.5.2'
+  return response === '1.5.3'
 }
 
 export default class BrowserRequest extends BaseRequest {

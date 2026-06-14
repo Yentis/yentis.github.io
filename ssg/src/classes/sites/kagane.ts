@@ -125,14 +125,14 @@ export class Kagane extends BaseSite {
   }
 
   private getImageById(imageId: string): string {
-    return `https://yuzuki.kagane.org/api/v2/image/${imageId}/compressed`
+    return `https://yuzuki.kagane.to/api/v2/image/${imageId}/compressed`
   }
 
   protected async readUrlImpl(url: string): Promise<Error | Manga> {
     const seriesId = url.split('/series/')[1]
     if (seriesId === undefined) return new Error('No series id found')
 
-    const request: HttpRequest = { method: 'GET', url: `https://yuzuki.kagane.org/api/v2/series/${seriesId}` }
+    const request: HttpRequest = { method: 'GET', url: `https://yuzuki.kagane.to/api/v2/series/${seriesId}` }
     const response = await requestHandler.sendRequest(request)
 
     const mangaData = JSON.parse(response.data) as KaganeManga
@@ -144,7 +144,7 @@ export class Kagane extends BaseSite {
   protected async searchImpl(query: string): Promise<Error | Manga[]> {
     const request: HttpRequest = {
       method: 'POST',
-      url: `https://yuzuki.kagane.org/api/v2/search/series?page=0&size=10&scanlations=true`,
+      url: `https://yuzuki.kagane.to/api/v2/search/series?page=0&size=10&scanlations=true`,
       data: `{ "title": "${query}" }`,
       headers: { 'Content-Type': ContentType.JSON },
     }
@@ -179,7 +179,7 @@ export class Kagane extends BaseSite {
   private async fetchSources(): Promise<void> {
     const sourcesRequest: HttpRequest = {
       method: 'POST',
-      url: 'https://yuzuki.kagane.org/api/v2/sources/list',
+      url: 'https://yuzuki.kagane.to/api/v2/sources/list',
       data: '{ "source_types": null }',
       headers: { 'Content-Type': ContentType.JSON },
     }
