@@ -1,4 +1,3 @@
 export enum LinkingSiteType {
-  MangaDex = 'mangadex.org',
-  Kitsu = 'kitsu.io'
+  Kitsu = 'kitsu.io',
 }

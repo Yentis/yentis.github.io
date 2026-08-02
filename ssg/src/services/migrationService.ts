@@ -86,6 +86,8 @@ async function doMigration(mangaList: MigrationManga[]): Promise<MigrationManga[
 
       item.linkedSites = linkedSites
       delete item.mangaDexId
+    } else {
+      delete item.linkedSites[SiteType.MangaDex]
     }
 
     if (item.status === undefined) {

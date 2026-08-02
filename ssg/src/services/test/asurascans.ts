@@ -24,7 +24,7 @@ async function readUrl(site: BaseSite): Promise<void> {
   desired.chapter = 'Chapter 47'
   desired.image = 'https://cdn.asurascans.com/asura-images/covers/mookhyang-the-origin.1f831b.webp'
   desired.title = 'Mookhyang The Origin'
-  desired.chapterUrl = 'https://asurascans.com/comics/mookhyang-the-origin-0984835a/chapter/47'
+  desired.chapterUrl = 'https://asurascans.com/comics/mookhyang-the-origin-059befe1/chapter/47'
   desired.chapterNum = 47
   desired.chapterDate = moment('2021-08-15T21:19:26Z').fromNow()
 
@@ -39,7 +39,7 @@ async function readUrlAdvanced(site: BaseSite): Promise<void> {
   desired.chapter = 'Chapter 88'
   desired.image = 'https://cdn.asurascans.com/asura-images/covers/solo-bug-player.e28bc2.webp'
   desired.title = 'Solo Bug Player'
-  desired.chapterUrl = 'https://asurascans.com/comics/solo-bug-player-0984835a/chapter/88'
+  desired.chapterUrl = 'https://asurascans.com/comics/solo-bug-player-059befe1/chapter/88'
   desired.chapterNum = 88
   desired.chapterDate = moment('2022-04-17T18:05:45Z').fromNow()
 

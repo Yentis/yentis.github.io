@@ -9,7 +9,6 @@ import { testHiperDEX } from './test/hiperdex'
 import { testMangaDex } from './test/mangadex'
 import { testMangago } from './test/mangago'
 import { testMangakakalot } from './test/mangakakalot'
-import { testResetScans } from './test/resetscans'
 import { testWebtoons } from './test/webtoons'
 import { testKitsu } from './test/kitsu'
 import { testCubari } from './test/cubari'
@@ -80,11 +79,6 @@ export default async function testAll(
   promises.push(
     testMangakakalot().catch((error) => {
       errors.push({ site: SiteType.Mangakakalot, error: error })
-    }),
-  )
-  promises.push(
-    testResetScans().catch((error) => {
-      errors.push({ site: SiteType.ResetScans, error: error })
     }),
   )
   promises.push(

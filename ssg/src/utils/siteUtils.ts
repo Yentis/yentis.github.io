@@ -15,11 +15,6 @@ export const siteAliases = [
   { url: 'flamescans.org', site: SiteType.FlameComics },
   { url: 'flamecomics.com', site: SiteType.FlameComics },
   { url: 'flamecomics.me', site: SiteType.FlameComics },
-  { url: 'reset-scans.co', site: SiteType.ResetScans },
-  { url: 'reset-scans.com', site: SiteType.ResetScans },
-  { url: 'reset-scans.us', site: SiteType.ResetScans },
-  { url: 'reset-scans.xyz', site: SiteType.ResetScans },
-  { url: 'resetscan.com', site: SiteType.ResetScans },
   { url: 'mangakakalot.com', site: SiteType.Mangakakalot },
   { url: 'kagane.org', site: SiteType.Kagane },
 ]

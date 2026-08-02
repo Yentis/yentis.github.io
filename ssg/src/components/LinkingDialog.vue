@@ -62,7 +62,7 @@
         :search-placeholder="searchPlaceholder"
         :manual-placeholder="manualPlaceholder"
         :initial-search="initialSearch"
-        :site-type="selected[0]?.value ?? linkingSiteType.MangaDex"
+        :site-type="selected[0]?.value ?? linkingSiteType.Kitsu"
       />
 
       <q-card-actions>
@@ -157,8 +157,8 @@ export default defineComponent({
     const url = ref('')
     const selected = ref([
       {
-        name: SiteName[LinkingSiteType.MangaDex],
-        value: LinkingSiteType.MangaDex,
+        name: SiteName[LinkingSiteType.Kitsu],
+        value: LinkingSiteType.Kitsu,
       },
     ])
 

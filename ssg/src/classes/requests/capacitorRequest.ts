@@ -4,7 +4,7 @@ import type HttpResponse from 'src/interfaces/httpResponse'
 import BaseRequest from './baseRequest'
 import { CapacitorCookies, CapacitorHttp } from '@capacitor/core'
 
-const COOKIE_NAMES = ['cf_clearance', '__ddg1', '__ddg2', '__ddgid', '__ddgmark']
+const COOKIE_NAMES = ['cf_clearance', '__ddg1', '__ddg2', '__ddgid', '__ddgmark', '__st']
 
 export default class CapacitorRequest extends BaseRequest {
   async sendRequest(request: HttpRequest, ignoreErrorStatus?: boolean): Promise<HttpResponse> {

@@ -19,7 +19,7 @@ export async function testCubari(): Promise<void> {
 async function readUrl(site: BaseSite): Promise<void> {
   const manga = await getMangaInfo(site.getTestUrl(), SITE_TYPE)
   const desired = new Manga(site.getTestUrl(), SITE_TYPE)
-  const chapter = 228
+  const chapter = 230
 
   desired.image = 'https://services.f-ck.me/v1/image/aHR0cHM6Ly9maWxlcy5jYXRib3gubW9lLzM1dXE1NS5wbmc='
   desired.title = 'One Punch Man'
@@ -28,7 +28,7 @@ async function readUrl(site: BaseSite): Promise<void> {
 
   mangaEqual(manga, desired, {
     chapterEqual: (_, actual) => actual.startsWith(`Chapter ${chapter}`),
-    chapterDateEqual: (_, actual) => actual.endsWith('days ago'),
+    chapterDateEqual: (_, actual) => actual.endsWith('months ago'),
   })
 }
 

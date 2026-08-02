@@ -99,10 +99,6 @@ export class MangaDex extends BaseSite {
     return legacyIdMap
   }
 
-  override syncReadChapter(_mangaId: number, _chapterNum: number): Promise<void | Error> {
-    return Promise.resolve(Error('MangaDex syncing is currently not functional'))
-  }
-
   protected override getChapter(data: MangaDexData): string {
     const attributes = data.chapterResult?.attributes
     if (!attributes) return 'Unknown'

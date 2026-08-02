@@ -3,7 +3,7 @@ import { SiteType } from '../enums/siteEnum'
 import { Webtoons } from '../classes/sites/webtoons'
 import { Mangakakalot } from '../classes/sites/mangakakalot'
 import { MangaDex } from '../classes/sites/mangadex'
-import { WordPress } from '../classes/sites/wordpress'
+import { HiperDex } from '../classes/sites/hiperdex'
 import type { BaseSite } from '../classes/sites/baseSite'
 import { FlameComics } from '../classes/sites/flamecomics'
 import { Mangago } from '../classes/sites/mangago'
@@ -29,21 +29,17 @@ const siteMap = new Map<string, BaseSite>([
   [SiteType.Webtoons, new Webtoons()],
   [SiteType.Mangakakalot, new Mangakakalot()],
   [SiteType.MangaDex, mangaDex],
-  [SiteType.HiperDEX, new WordPress(SiteType.HiperDEX)],
+  [SiteType.HiperDEX, new HiperDex()],
   [SiteType.AsuraScans, new AsuraScans()],
   [SiteType.Mangago, new Mangago()],
   [SiteType.FlameComics, new FlameComics()],
-  [SiteType.ResetScans, new WordPress(SiteType.ResetScans)],
   [SiteType.Cubari, new Cubari()],
   [SiteType.Tapas, new Tapas()],
   [SiteType.Comikey, new Comikey()],
   [SiteType.Tappytoon, new TappyToon()],
   [SiteType.Kagane, new Kagane()],
 ])
-const linkingSiteMap = new Map<string, BaseSite>([
-  [LinkingSiteType.MangaDex, mangaDex],
-  [LinkingSiteType.Kitsu, new Kitsu()],
-])
+const linkingSiteMap = new Map<string, BaseSite>([[LinkingSiteType.Kitsu, new Kitsu()]])
 function createRace(promise: Promise<Error | Manga[]>): Promise<Error | Manga[]> {
   const timeoutPromise = new Promise<Error | Manga[]>((resolve) => setTimeout(() => resolve(Error('Timed out')), 10000))
   return Promise.race([promise, timeoutPromise])

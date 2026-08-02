@@ -24,8 +24,8 @@ async function readUrl(site: BaseSite): Promise<void> {
   const desired = new Manga(site.getTestUrl(), SITE_TYPE)
   desired.chapter = 'Volume 24 - Chapter 95 - World of Stars and Stripes - Outro'
   desired.image =
-    'https://uploads.mangadex.org/covers/1044287a-73df-48d0-b0b2-5327f32dd651/e7e5e267-502f-4b77-9f19-b7ea1344f68f.jpg'
-  desired.title = 'JoJo no Kimyou na Bouken: Steel Ball Run(Official Colored)'
+    'https://uploads.mangadex.org/covers/1044287a-73df-48d0-b0b2-5327f32dd651/92e82cbb-de1e-47f0-a3ae-22f480a59994.jpg'
+  desired.title = 'JoJo no Kimyou na Bouken: Part 7 - Steel Ball Run Color-ban'
   desired.chapterUrl = 'https://mangadex.org/chapter/8a984365-fd9d-4f6e-85f9-0d58e0a592a3'
   desired.chapterNum = 95
   desired.chapterDate = moment('31/01/2018, 00:08:19', 'DD/MM/YYYY, hh:mm:ss').fromNow()
