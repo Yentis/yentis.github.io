@@ -1,6 +1,6 @@
 {
   "name": "yentis.github.io",
-  "version": "2.27.4",
+  "version": "2.27.5",
   "description": "Yentis' static site",
   "productName": "yentis.github.io",
   "author": "Yentis#5218",
@@ -12,6 +12,7 @@
     "sign:android": "apksigner sign --verbose --ks my-release-key.keystore --ks-key-alias manga_reader ./dist/capacitor/android/apk/release/app-release-unsigned.apk",
     "build:electron": "node --max-old-space-size=8192 node_modules/@quasar/cli/bin/quasar build -m electron",
     "build:ssg": "quasar ssg generate",
+    "copy:ssg": "node copy-ssg.js",
     "serve:ssg": "quasar ssg serve dist/ssg",
     "dev:ssg": "quasar ssg dev"
   },
